@@ -72,15 +72,25 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
 /* Area Section */
 .area-section{margin-bottom:40px}
 .area-header{
-  display:flex;align-items:center;gap:10px;
-  padding:12px 16px;background:var(--paper-h);
-  border-radius:10px;margin-bottom:16px;border:1px solid var(--paper-l);
+  display:flex;align-items:center;gap:14px;
+  padding:14px 18px;background:var(--paper-h);
+  border-radius:14px;margin-bottom:16px;border:1px solid var(--paper-l);
+  transition:all .25s var(--ease);
 }
-.area-icon{font-size:1.4rem}
+.area-header:hover{border-color:rgba(255,255,255,.08);background:rgba(22,22,31,.9)}
+.area-icon-wrap{
+  width:44px;height:44px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;position:relative;overflow:hidden;
+  box-shadow:0 2px 8px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.12);
+}
+.area-icon-wrap svg{width:22px;height:22px;position:relative;z-index:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.3))}
+.area-icon-sm svg{width:11px;height:11px;display:block}
 .area-name{font-family:'Fraunces',serif;font-size:1.1rem;font-weight:700}
 .area-count{
-  margin-left:auto;padding:3px 10px;border-radius:6px;
+  margin-left:auto;padding:4px 12px;border-radius:8px;
   background:rgba(99,102,241,.15);color:#a5b4fc;font-size:.72rem;font-weight:600;
+  backdrop-filter:blur(4px);
 }
 
 .dept-section{margin-bottom:20px}
@@ -155,10 +165,10 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
 .pc-btn-del:hover{background:rgba(239,68,68,.22)}
 
 /* Area badges on cards */
-.pc-areas{display:flex;flex-wrap:wrap;gap:4px;padding:0 18px 14px}
+.pc-areas{display:flex;flex-wrap:wrap;gap:5px;padding:0 18px 14px}
 .pc-area-badge{
-  display:inline-flex;align-items:center;gap:3px;
-  padding:2px 8px;border-radius:5px;font-size:.58rem;font-weight:700;letter-spacing:.03em;
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 9px 3px 4px;border-radius:7px;font-size:.58rem;font-weight:700;letter-spacing:.03em;
 }
 
 /* Area checkboxes in form */
@@ -172,7 +182,6 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
 .area-check-item:hover{border-color:var(--paper-m)}
 .area-check-item.selected{border-color:#6366f1;background:rgba(99,102,241,.08)}
 .area-check-item input[type=checkbox]{accent-color:#6366f1;width:14px;height:14px;cursor:pointer}
-.area-check-icon{font-size:1rem}
 .area-check-label{font-size:.76rem;font-weight:600;color:var(--paper-s)}
 
 /* Area section add-subdivision button */
@@ -298,7 +307,8 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
       Nuova Persona
     </button>
     <button id="btn-manage-roles" class="btn-secondary" onclick="openRolesManagement()" style="display:none">
-      ⚙️ Gestisci Ruoli
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      Gestisci Ruoli
     </button>
   </div>
 
@@ -322,7 +332,7 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
 
   <div id="team-container">
     <div class="empty-state">
-      <div class="empty-state-icon">👥</div>
+      <div class="empty-state-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></div>
       <div style="font-size:1rem;font-weight:600;color:var(--paper-s);margin-bottom:6px">Caricamento team...</div>
     </div>
   </div>
@@ -389,7 +399,7 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
       </div>
 
       <div class="form-actions">
-        <button type="submit" class="btn-save">💾 Salva Persona</button>
+        <button type="submit" class="btn-save" style="display:flex;align-items:center;justify-content:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Salva Persona</button>
         <button type="button" class="btn-cancel" onclick="closePersonForm()">Annulla</button>
       </div>
     </form>
@@ -400,7 +410,7 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
 <div id="roles-modal" class="modal">
   <div class="modal-content" style="max-width:1100px">
     <div class="modal-header">
-      <div class="modal-title">⚙️ Gestisci Ruoli e Reparti</div>
+      <div class="modal-title" style="display:flex;align-items:center;gap:10px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg> Gestisci Ruoli e Reparti</div>
       <button class="modal-close" onclick="closeRolesManagement()">✕</button>
     </div>
 
@@ -409,7 +419,7 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
       1. Seleziona il <strong>Ruolo</strong> per ogni persona<br>
       2. Seleziona il <strong>Reparto principale</strong><br>
       3. (Solo Area Manager) Seleziona quale <strong>Area gestisce</strong><br>
-      4. Click <strong>"💾 Salva Tutte le Modifiche"</strong>
+      4. Click <strong>"Salva Tutte le Modifiche"</strong>
     </div>
 
     <div id="roles-status-container"></div>
@@ -418,7 +428,7 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
     </div>
 
     <div id="roles-save-container" style="margin-top:20px;text-align:right;display:none">
-      <button class="btn-primary" onclick="saveAllRoles()">💾 Salva Tutte le Modifiche</button>
+      <button class="btn-primary" onclick="saveAllRoles()" style="display:inline-flex;align-items:center;gap:6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Salva Tutte le Modifiche</button>
     </div>
   </div>
 </div>
@@ -433,6 +443,32 @@ let CURRENT_USER=null;
 let ROLE_CHANGES={};
 let EDITING_PERSON=null;
 let SELECTED_CAPACITIES={};
+
+/* Apple-style SVG icon system for areas */
+const AREA_SVG_ICONS={
+  'area_artdirection':`<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>`,
+  'area_creativita':`<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>`,
+  'area_grafica':`<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 9-14 9V3z" fill="rgba(255,255,255,.15)"/><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M9 2v20M2 12h20"/></svg>`,
+  'area_modelli':`<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z" fill="rgba(255,255,255,.1)"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>`,
+  'area_immagini':`<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3" fill="rgba(255,255,255,.08)"/><circle cx="8.5" cy="8.5" r="1.5" fill="rgba(255,255,255,.3)"/><path d="M21 15l-5-5L5 21"/></svg>`,
+  'area_fotografia':`<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" fill="rgba(255,255,255,.08)"/><circle cx="12" cy="13" r="4"/></svg>`,
+  'area_ai':`<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="4" fill="rgba(255,255,255,.08)"/><circle cx="9" cy="10" r="1" fill="white"/><circle cx="15" cy="10" r="1" fill="white"/><path d="M9 15c.83 1 2.17 1.5 3 1.5s2.17-.5 3-1.5"/><path d="M12 2v2M22 12h-2M12 22v-2M2 12h2"/></svg>`,
+  'area_video':`<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="15" height="16" rx="2" fill="rgba(255,255,255,.08)"/><path d="M17 10l5-3v10l-5-3"/></svg>`,
+  'area_montaggio':`<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12"/></svg>`,
+  'area_color':`<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="4.5" fill="rgba(255,100,100,.2)" stroke="rgba(255,255,255,.8)"/><circle cx="17.5" cy="14.5" r="4.5" fill="rgba(100,255,100,.2)" stroke="rgba(255,255,255,.8)"/><circle cx="8.5" cy="14.5" r="4.5" fill="rgba(100,100,255,.2)" stroke="rgba(255,255,255,.8)"/></svg>`,
+  'area_configuratore':`<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>`
+};
+
+function areaIconHtml(areaId,color){
+  const svg=AREA_SVG_ICONS[areaId]||`<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 12h6M12 9v6"/></svg>`;
+  const lighterColor=color||'#6366f1';
+  return`<div class="area-icon-wrap" style="background:linear-gradient(145deg,${lighterColor},${lighterColor}cc)">${svg}</div>`;
+}
+
+function areaIconSmall(areaId,color){
+  const svg=AREA_SVG_ICONS[areaId]||`<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 12h6M12 9v6"/></svg>`;
+  return`<span style="display:inline-flex;width:18px;height:18px;border-radius:5px;align-items:center;justify-content:center;background:linear-gradient(145deg,${color||'#6366f1'},${color||'#6366f1'}cc);box-shadow:0 1px 3px rgba(0,0,0,.2);vertical-align:middle;flex-shrink:0"><span style="display:flex;width:11px;height:11px;overflow:hidden" class="area-icon-sm">${svg}</span></span>`;
+}
 
 /* Stable color map per initial letter */
 const AVATAR_COLORS=[
@@ -506,7 +542,7 @@ function renderTeam(){
     const accentBg=area.color+'22';
     html+=`<div class="area-section">
       <div class="area-header" style="border-left:3px solid ${area.color}">
-        <div class="area-icon">${area.icon||'🏢'}</div>
+        ${areaIconHtml(area.id,area.color)}
         <div>
           <div class="area-name">${area.name}</div>
           ${depts.length>0
@@ -525,7 +561,7 @@ function renderTeam(){
 
   if(TEAM.length===0 && AREAS.length===0){
     container.innerHTML=`<div class="empty-state">
-      <div class="empty-state-icon">👥</div>
+      <div class="empty-state-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></div>
       <div style="font-size:1rem;font-weight:600;color:var(--paper-s);margin-bottom:6px">Nessuna persona nel team</div>
       <div style="font-size:.8rem">Click "+ Nuova Persona" per iniziare</div>
     </div>`;
@@ -536,7 +572,7 @@ function renderTeam(){
   if(unassigned.length>0){
     html+=`<div class="area-section">
       <div class="area-header" style="border-left:3px solid #6b7280">
-        <div class="area-icon">👤</div>
+        <div class="area-icon-wrap" style="background:linear-gradient(145deg,#6b7280,#6b7280cc)"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:22px;height:22px"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
         <div class="area-name" style="color:var(--paper-m)">Senza area</div>
         <div class="area-count">${unassigned.length}</div>
       </div>
@@ -544,7 +580,7 @@ function renderTeam(){
     </div>`;
   }
 
-  container.innerHTML=html||'<div class="empty-state"><div class="empty-state-icon">🏢</div><div style="font-size:.9rem;color:var(--paper-m)">Aree caricate. Aggiungi persone con "+ Nuova Persona"</div></div>';
+  container.innerHTML=html||'<div class="empty-state"><div class="empty-state-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 12h6M12 9v6"/></svg></div><div style="font-size:.9rem;color:var(--paper-m)">Aree caricate. Aggiungi persone con "+ Nuova Persona"</div></div>';
 }
 
 function renderPersonCard(person){
@@ -560,13 +596,13 @@ function renderPersonCard(person){
     <div>
       <div class="pc-caps-label">Mansioni</div>
       ${caps.map(c=>`<div class="pc-cap-item">
-        <span class="pc-cap-name">${c.task_type.icon||''} ${c.task_type.name}</span>
+        <span class="pc-cap-name">${c.task_type.name}</span>
         <span class="pc-cap-val">${c.capacity_per_day} <span style="font-weight:400;color:var(--paper-m)">${c.task_type.unit||'u/gg'}</span></span>
       </div>`).join('')}
     </div>`:'';
 
-  const deptHtml=dept?`<div style="font-size:.68rem;color:var(--paper-m)">📁 ${dept.name}</div>`:'';
-  const areasHtml=areas.length>0?`<div class="pc-areas">${areas.map(a=>`<span class="pc-area-badge" style="background:${a.color}22;color:${a.color}">${a.icon||''} ${a.name}</span>`).join('')}</div>`:'';
+  const deptHtml=dept?`<div style="font-size:.68rem;color:var(--paper-m);display:flex;align-items:center;gap:4px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg> ${dept.name}</div>`:'';
+  const areasHtml=areas.length>0?`<div class="pc-areas">${areas.map(a=>`<span class="pc-area-badge" style="background:${a.color}22;color:${a.color}">${areaIconSmall(a.id,a.color)} ${a.name}</span>`).join('')}</div>`:'';
 
   return`<div class="person-card">
     <div class="pc-stripe" style="background:${color}"></div>
@@ -604,7 +640,7 @@ function renderAreaCheckboxes(selectedIds=[]){
     const checked=selectedIds.includes(a.id);
     return`<label class="area-check-item${checked?' selected':''}">
       <input type="checkbox" value="${a.id}" ${checked?'checked':''} onchange="this.parentElement.classList.toggle('selected',this.checked)">
-      <span class="area-check-icon">${a.icon||'🏢'}</span>
+      ${areaIconSmall(a.id,a.color)}
       <span class="area-check-label" style="color:${a.color}">${a.name}</span>
     </label>`;
   }).join('');
@@ -622,11 +658,11 @@ function populateFormDropdowns(){
 
   const areaSelect=document.getElementById('person-managed-area');
   areaSelect.innerHTML='<option value="">-- Nessuna --</option>'+
-    AREAS.map(a=>`<option value="${a.id}">${a.icon||''} ${a.name}</option>`).join('');
+    AREAS.map(a=>`<option value="${a.id}">${a.name}</option>`).join('');
 
   const taskSelect=document.getElementById('add-capacity-select');
   taskSelect.innerHTML='<option value="">+ Aggiungi mansione...</option>'+
-    TASK_TYPES.map(t=>`<option value="${t.id}">${t.icon||''} ${t.name}</option>`).join('');
+    TASK_TYPES.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
 
   renderAreaCheckboxes();
 }
@@ -709,7 +745,7 @@ function renderCapacities(){
   }
   container.innerHTML=Object.entries(SELECTED_CAPACITIES).map(([taskId,cap])=>`
     <div class="capacity-input-group">
-      <span style="flex:1;font-size:.8rem;color:var(--paper-s)">${cap.task_type.icon||''} ${cap.task_type.name}</span>
+      <span style="flex:1;font-size:.8rem;color:var(--paper-s)">${cap.task_type.name}</span>
       <input type="number" class="capacity-input" value="${cap.capacity}" min="0" step="0.5"
         onchange="updateCapacity('${taskId}',this.value)">
       <span style="font-size:.72rem;color:var(--paper-m)">${cap.task_type.unit||'u/gg'}</span>
@@ -808,7 +844,7 @@ function renderRolesTable(){
           onchange="updatePersonRole('${person.id}','managed_area',this.value)"
           ${person.role!=='area_manager'?'disabled':''}>
           <option value="">-- Nessuna --</option>
-          ${AREAS.map(a=>`<option value="${a.id}" ${person.managed_area_id===a.id?'selected':''}>${a.icon||''} ${a.name}</option>`).join('')}
+          ${AREAS.map(a=>`<option value="${a.id}" ${person.managed_area_id===a.id?'selected':''}>${a.name}</option>`).join('')}
         </select>
       </td>
       <td><span class="badge" id="status-${person.id}">—</span></td>

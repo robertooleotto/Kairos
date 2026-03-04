@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Login — Planning Studio</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#0f0f17;--paper-h:#16161f;--paper-l:#24242d;
+  --paper-s:#cdd0de;--paper-m:#737889;--paper-t:#f9fafb;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:'Sora',sans-serif;
+  background:var(--paper);
+  color:var(--paper-t);
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+
+.login-container{
+  background:var(--paper-h);
+  border-radius:16px;
+  padding:40px;
+  width:100%;
+  max-width:420px;
+  border:1px solid var(--paper-l);
+}
+
+.logo{
+  text-align:center;
+  margin-bottom:32px;
+}
+
+.logo-icon{
+  font-size:3rem;
+  margin-bottom:12px;
+}
+
+.brand-name{
+  font-family:'Fraunces',serif;
+  font-size:1.8rem;
+  font-weight:700;
+  margin-bottom:4px;
+}
+
+.brand-sub{
+  font-size:.8rem;
+  color:var(--paper-m);
+}
+
+.tabs{
+  display:flex;
+  gap:8px;
+  margin-bottom:24px;
+  background:var(--paper);
+  border-radius:10px;
+  padding:4px;
+}
+
+.tab{
+  flex:1;
+  padding:10px;
+  border-radius:8px;
+  border:none;
+  background:transparent;
+  color:var(--paper-m);
+  font-family:'Sora',sans-serif;
+  font-size:.85rem;
+  font-weight:600;
+  cursor:pointer;
+  transition:all .2s;
+}
+
+.tab.active{
+  background:var(--paper-h);
+  color:var(--paper-t);
+}
+
+.form-group{
+  margin-bottom:16px;
+}
+
+label{
+  display:block;
+  font-size:.75rem;
+  color:var(--paper-m);
+  margin-bottom:8px;
+  font-weight:600;
+}
+
+input{
+  width:100%;
+  padding:12px;
+  border-radius:8px;
+  background:var(--paper);
+  border:1px solid var(--paper-l);
+  color:var(--paper-t);
+  font-family:'Sora',sans-serif;
+  font-size:.85rem;
+  transition:border .2s;
+}
+
+input:focus{
+  outline:none;
+  border-color:#6366f1;
+}
+
+.btn-primary{
+  width:100%;
+  padding:14px;
+  border-radius:8px;
+  background:#6366f1;
+  color:#fff;
+  border:none;
+  font-family:'Sora',sans-serif;
+  font-size:.85rem;
+  font-weight:600;
+  cursor:pointer;
+  transition:all .2s;
+  margin-top:8px;
+}
+
+.btn-primary:hover{
+  background:#5558e3;
+}
+
+.btn-primary:disabled{
+  opacity:.5;
+  cursor:not-allowed;
+}
+
+.error-message{
+  background:rgba(248,113,113,.15);
+  color:#f87171;
+  padding:12px;
+  border-radius:8px;
+  font-size:.75rem;
+  margin-bottom:16px;
+  display:none;
+}
+
+.error-message.show{
+  display:block;
+}
+
+.info-message{
+  background:rgba(147,197,253,.15);
+  color:#93c5fd;
+  padding:12px;
+  border-radius:8px;
+  font-size:.75rem;
+  text-align:center;
+  margin-top:16px;
+}
+
+.form-view{
+  display:none;
+}
+
+.form-view.active{
+  display:block;
+}
+
+.loading{
+  text-align:center;
+  padding:40px;
+  color:var(--paper-m);
+}
+</style>
+</head>
+<body>
+
+<div class="login-container">
+  <div class="logo">
+    <div class="logo-icon">📊</div>
+    <div class="brand-name">Planning Studio</div>
+    <div class="brand-sub">Sistema di gestione commesse</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('login')">Accedi</button>
+    <button class="tab" onclick="switchTab('signup')">Registrati</button>
+  </div>
+
+  <div id="error-message" class="error-message"></div>
+
+  <!-- Login Form -->
+  <div id="login-form" class="form-view active">
+    <form onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" name="email" required placeholder="tu@esempio.com">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" name="password" required placeholder="••••••••">
+      </div>
+      <button type="submit" class="btn-primary" id="login-btn">Accedi</button>
+    </form>
+  </div>
+
+  <!-- Signup Form -->
+  <div id="signup-form" class="form-view">
+    <form onsubmit="handleSignup(event)">
+      <div class="form-group">
+        <label>Nome completo</label>
+        <input type="text" name="name" required placeholder="Mario Rossi">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" name="email" required placeholder="tu@esempio.com">
+      </div>
+      <div class="form-group">
+        <label>Password (min 8 caratteri)</label>
+        <input type="password" name="password" required minlength="8" placeholder="••••••••">
+      </div>
+      <button type="submit" class="btn-primary" id="signup-btn">Crea Account</button>
+    </form>
+    <div class="info-message">
+      Dopo la registrazione, verrai automaticamente loggato
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="api-client-supabase.js"></script>
+<script>
+// Check if already logged in
+if(supabaseClient){
+  supabaseClient.auth.getSession().then(({data})=>{
+    if(data.session){
+      window.location.href='preview.html';
+    }
+  });
+}
+
+function switchTab(tab){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.form-view').forEach(f=>f.classList.remove('active'));
+  
+  if(tab==='login'){
+    document.querySelectorAll('.tab')[0].classList.add('active');
+    document.getElementById('login-form').classList.add('active');
+  }else{
+    document.querySelectorAll('.tab')[1].classList.add('active');
+    document.getElementById('signup-form').classList.add('active');
+  }
+  
+  hideError();
+}
+
+function showError(message){
+  const errorDiv=document.getElementById('error-message');
+  errorDiv.textContent=message;
+  errorDiv.classList.add('show');
+}
+
+function hideError(){
+  document.getElementById('error-message').classList.remove('show');
+}
+
+async function handleLogin(event){
+  event.preventDefault();
+  hideError();
+  
+  const btn=document.getElementById('login-btn');
+  btn.disabled=true;
+  btn.textContent='Accesso in corso...';
+  
+  const formData=new FormData(event.target);
+  const email=formData.get('email');
+  const password=formData.get('password');
+  
+  try{
+    const {data,error}=await supabaseClient.auth.signInWithPassword({
+      email:email,
+      password:password
+    });
+    
+    if(error){
+      showError('Email o password errati');
+      btn.disabled=false;
+      btn.textContent='Accedi';
+      return;
+    }
+    
+    // Success - redirect
+    window.location.href='preview.html';
+    
+  }catch(err){
+    showError('Errore di connessione');
+    btn.disabled=false;
+    btn.textContent='Accedi';
+  }
+}
+
+async function handleSignup(event){
+  event.preventDefault();
+  hideError();
+  
+  const btn=document.getElementById('signup-btn');
+  btn.disabled=true;
+  btn.textContent='Creazione account...';
+  
+  const formData=new FormData(event.target);
+  const email=formData.get('email');
+  const password=formData.get('password');
+  const name=formData.get('name');
+  
+  try{
+    const {data,error}=await supabaseClient.auth.signUp({
+      email:email,
+      password:password,
+      options:{
+        data:{
+          full_name:name
+        }
+      }
+    });
+    
+    if(error){
+      if(error.message.includes('already registered')){
+        showError('Email già registrata');
+      }else{
+        showError('Errore durante la registrazione');
+      }
+      btn.disabled=false;
+      btn.textContent='Crea Account';
+      return;
+    }
+    
+    // Success - redirect
+    window.location.href='preview.html';
+    
+  }catch(err){
+    showError('Errore di connessione');
+    btn.disabled=false;
+    btn.textContent='Crea Account';
+  }
+}
+</script>
+</body>
+</html>

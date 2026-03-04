@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Report — Planning Studio</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Sora:wght@400;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#0f0f17;--paper-h:#16161f;--paper-l:#24242d;
+  --paper-s:#cdd0de;--paper-m:#737889;--paper-t:#f9fafb;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);min-height:100vh}
+
+.header{
+  padding:14px 24px;border-bottom:1px solid var(--paper-l);
+  display:flex;align-items:center;gap:16px;position:sticky;top:0;
+  background:var(--paper);z-index:100;
+}
+.brand{flex-shrink:0}
+.brand-name{font-family:'Fraunces',serif;font-size:1rem;font-weight:700}
+.brand-sub{font-size:.62rem;color:var(--paper-m);margin-top:1px}
+
+.nav-pills{
+  display:flex;gap:2px;background:rgba(255,255,255,.05);
+  border-radius:10px;padding:3px;
+  position:absolute;left:50%;transform:translateX(-50%);
+}
+.nav-pill{
+  padding:5px 16px;border-radius:8px;font-size:.72rem;font-weight:600;
+  cursor:pointer;border:none;background:transparent;color:var(--paper-m);
+  font-family:'Sora',sans-serif;transition:all .15s;
+}
+.nav-pill.active{background:#1c1f30;color:var(--paper-t)}
+.nav-pill:hover:not(.active){color:var(--paper-s)}
+
+.container{padding:28px 24px;max-width:1400px;margin:0 auto}
+
+.page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:16px}
+.page-title{font-family:'Fraunces',serif;font-size:1.7rem;font-weight:700;margin-bottom:4px}
+.page-sub{font-size:.78rem;color:var(--paper-m)}
+
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 16px;border-radius:8px;font-size:.72rem;font-weight:600;
+  border:none;cursor:pointer;transition:all .15s;font-family:'Sora',sans-serif;
+}
+.btn-secondary{background:var(--paper-l);color:var(--paper-s)}
+.btn-secondary:hover{background:var(--paper-h);color:var(--paper-t)}
+.btn-primary{background:#6366f1;color:#fff}
+.btn-primary:hover{background:#5558e3}
+
+/* Summary Card */
+.summary-card{
+  background:var(--paper-h);border:1px solid var(--paper-l);
+  border-radius:14px;padding:24px;margin-bottom:28px;
+}
+.summary-title{
+  font-family:'Fraunces',serif;font-size:1rem;font-weight:600;
+  margin-bottom:20px;display:flex;align-items:center;gap:8px;
+}
+.summary-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px;
+}
+.summary-item{display:flex;flex-direction:column;gap:5px}
+.summary-label{font-size:.68rem;color:var(--paper-m);text-transform:uppercase;letter-spacing:.05em}
+.summary-value{
+  font-family:'JetBrains Mono',monospace;font-size:1.5rem;font-weight:700;
+}
+.summary-sub{font-size:.68rem;color:var(--paper-s)}
+.summary-divider{height:1px;background:var(--paper-l);margin:20px 0}
+
+/* Filters */
+.filter-bar{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;align-items:center}
+.filter-label{font-size:.72rem;color:var(--paper-m);font-weight:600}
+.filter-btn{
+  padding:5px 12px;border-radius:7px;background:var(--paper-h);
+  border:1px solid var(--paper-l);color:var(--paper-m);
+  font-size:.7rem;font-weight:600;cursor:pointer;transition:all .15s;
+  font-family:'Sora',sans-serif;
+}
+.filter-btn.active{background:rgba(99,102,241,.15);color:#a5b4fc;border-color:rgba(99,102,241,.3)}
+.filter-btn:hover:not(.active){border-color:var(--paper-m);color:var(--paper-s)}
+
+/* Job Reports */
+.job-reports{display:flex;flex-direction:column;gap:14px}
+.job-report-card{
+  background:var(--paper-h);border:1px solid var(--paper-l);
+  border-radius:12px;padding:20px;transition:all .2s;
+}
+.job-report-card:hover{border-color:rgba(99,102,241,.3);box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.job-report-header{
+  display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;
+}
+.job-report-meta{flex:1}
+.job-report-code{
+  font-family:'JetBrains Mono',monospace;font-size:.88rem;font-weight:600;margin-bottom:3px;
+}
+.job-report-client{font-size:.72rem;color:var(--paper-m)}
+.job-report-badges{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
+.badge{padding:3px 9px;border-radius:5px;font-size:.63rem;font-weight:600}
+.badge-completed{background:rgba(34,197,94,.12);color:#4ade80}
+.badge-ontime{background:rgba(59,130,246,.12);color:#93c5fd}
+.badge-overdue{background:rgba(239,68,68,.12);color:#f87171}
+.badge-active{background:rgba(99,102,241,.12);color:#a5b4fc}
+.badge-prio-URGENT{background:rgba(239,68,68,.15);color:#f87171}
+.badge-prio-HIGH{background:rgba(245,158,11,.15);color:#fbbf24}
+.badge-prio-MEDIUM{background:rgba(99,102,241,.15);color:#a5b4fc}
+.badge-prio-LOW{background:rgba(107,114,128,.15);color:#9ca3af}
+
+.job-report-metrics{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));
+  gap:12px;margin-bottom:0;
+}
+.metric-item{display:flex;flex-direction:column;gap:3px}
+.metric-label{font-size:.66rem;color:var(--paper-m)}
+.metric-value{font-family:'JetBrains Mono',monospace;font-size:.82rem;font-weight:600;color:var(--paper-t)}
+.metric-value.positive{color:#4ade80}
+.metric-value.negative{color:#f87171}
+.metric-value.neutral{color:var(--paper-s)}
+
+.progress-wrap{margin-top:14px}
+.progress-label{display:flex;justify-content:space-between;font-size:.68rem;color:var(--paper-m);margin-bottom:5px}
+.progress-track{background:var(--paper-l);border-radius:4px;height:5px}
+.progress-fill{background:#6366f1;border-radius:4px;height:5px;transition:width .5s}
+
+.section-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin:0 0 16px;
+}
+.section-title{
+  font-family:'Fraunces',serif;font-size:1rem;font-weight:600;
+  display:flex;align-items:center;gap:8px;
+}
+
+.empty-state{
+  text-align:center;padding:60px 20px;color:var(--paper-m);
+  background:var(--paper-h);border-radius:12px;
+  border:1px dashed var(--paper-l);
+}
+.empty-state-icon{font-size:2.5rem;margin-bottom:12px}
+.empty-state-title{font-size:1rem;font-weight:600;color:var(--paper-s);margin-bottom:6px}
+.empty-state-text{font-size:.8rem}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="brand">
+    <img src="nudesign-logo.png" alt="NuDesign" style="height:56px;object-fit:contain">
+  </div>
+  <div class="nav-pills">
+    <button class="nav-pill" onclick="location.href='preview.html'">Calendario</button>
+    <button class="nav-pill" onclick="location.href='status.html'">Stato</button>
+    <button class="nav-pill active">Report</button>
+    <button class="nav-pill" onclick="location.href='team.html'">Team</button>
+    <button class="nav-pill" onclick="location.href='commesse.html'">Commesse</button>
+    <button class="nav-pill" onclick="location.href='clienti.html'">Clienti</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Report Dettagliati</div>
+      <div class="page-sub">Analisi commesse per stato, priorità e scadenza</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary" onclick="window.print()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Stampa
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary-card" id="general-summary">
+    <div style="text-align:center;padding:20px;color:var(--paper-m);font-size:.8rem">Caricamento...</div>
+  </div>
+
+  <!-- Filters + Job list -->
+  <div class="section-header">
+    <div class="section-title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Dettaglio commesse
+    </div>
+    <div id="report-count" style="font-size:.72rem;color:var(--paper-m)"></div>
+  </div>
+
+  <div class="filter-bar">
+    <span class="filter-label">Stato:</span>
+    <button class="filter-btn active" onclick="setFilter('ALL')" id="f-ALL">Tutte</button>
+    <button class="filter-btn" onclick="setFilter('completata')" id="f-completata">Completate</button>
+    <button class="filter-btn" onclick="setFilter('nuova')" id="f-nuova">Nuove</button>
+    <button class="filter-btn" onclick="setFilter('in_produzione')" id="f-in_produzione">In produzione</button>
+    <button class="filter-btn" onclick="setFilter('in_attesa')" id="f-in_attesa">In attesa</button>
+    <button class="filter-btn" onclick="setFilter('annullata')" id="f-annullata">Annullate</button>
+  </div>
+
+  <div class="job-reports" id="job-reports">
+    <div class="empty-state">
+      <div class="empty-state-icon">📋</div>
+      <div class="empty-state-title">Caricamento report...</div>
+    </div>
+  </div>
+</div>
+
+<script src="api-client.js"></script>
+<script>
+const MONTH_IT=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+const TODAY=new Date();TODAY.setHours(0,0,0,0);
+
+function fmtDate(s){
+  if(!s)return'—';
+  const d=new Date(s);
+  return`${d.getDate()} ${MONTH_IT[d.getMonth()]} ${d.getFullYear()}`;
+}
+function daysUntil(s){
+  if(!s)return null;
+  const d=new Date(s);d.setHours(0,0,0,0);
+  return Math.round((d-TODAY)/(1000*60*60*24));
+}
+function wdBetween(s,e){
+  if(!s||!e)return null;
+  let d=new Date(s),end=new Date(e),n=0;
+  d.setHours(0,0,0,0);end.setHours(0,0,0,0);
+  while(d<=end){const day=d.getDay();if(day!==0&&day!==6)n++;d.setDate(d.getDate()+1)}
+  return n;
+}
+
+const STATUS_LABELS={
+  IN_PRODUZIONE:'In produzione',in_produzione:'In produzione',
+  IN_ATTESA:'In attesa',in_attesa:'In attesa',
+  COMPLETATA:'Completata',completata:'Completata',
+  ANNULLATA:'Annullata',annullata:'Annullata',
+  BOZZA:'Bozza',bozza:'Bozza',
+  DA_AVVIARE:'Da avviare',da_avviare:'Da avviare',
+  nuova:'Nuova',
+};
+
+let allJobs=[];
+let allClients={};
+let currentFilter='ALL';
+
+function setFilter(f){
+  currentFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('f-'+f).classList.add('active');
+  renderJobs();
+}
+
+function renderJobs(){
+  const jobs=currentFilter==='ALL'?allJobs:allJobs.filter(j=>j.status===currentFilter);
+  document.getElementById('report-count').textContent=`${jobs.length} commesse`;
+  const container=document.getElementById('job-reports');
+
+  if(jobs.length===0){
+    container.innerHTML=`<div class="empty-state">
+      <div class="empty-state-icon">📋</div>
+      <div class="empty-state-title">Nessuna commessa</div>
+      <div class="empty-state-text">Nessuna commessa trovata per questo filtro.</div>
+    </div>`;
+    return;
+  }
+
+  container.innerHTML=jobs.map(j=>{
+    const clientName=allClients[j.client_id]||'—';
+    const prio=j.priority||'MEDIUM';
+    const status=j.status||'BOZZA';
+    const du=daysUntil(j.due_date);
+    const wd=wdBetween(j.started_at,j.due_date);
+
+    let statusBadge='',statusClass='';
+    if(status==='COMPLETATA'||status==='completata'){statusBadge='Completata';statusClass='badge-completed'}
+    else if(status==='ANNULLATA'||status==='annullata'){statusBadge='Annullata';statusClass='badge-overdue'}
+    else if(du!==null&&du<0){statusBadge='Scaduta';statusClass='badge-overdue'}
+    else if(du!==null&&du<=3){statusBadge=`Scade in ${du}gg`;statusClass='badge-overdue'}
+    else{statusBadge=STATUS_LABELS[status]||status;statusClass='badge-active'}
+
+    return`<div class="job-report-card">
+      <div class="job-report-header">
+        <div class="job-report-meta">
+          <div class="job-report-code">${j.code||'—'}</div>
+          <div class="job-report-client">${clientName||j.client||''}${j.title?` · ${j.title}`:''}</div>
+        </div>
+        <div class="job-report-badges">
+          ${j.type?`<span class="badge" style="background:rgba(99,102,241,.12);color:#a5b4fc">${j.type}</span>`:''}
+          <span class="badge ${statusClass}">${statusBadge}</span>
+        </div>
+      </div>
+
+      <div class="job-report-metrics">
+        <div class="metric-item">
+          <div class="metric-label">Tipo</div>
+          <div class="metric-value neutral">${j.type||'—'}</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-label">Inizio</div>
+          <div class="metric-value neutral" style="font-size:.74rem">${fmtDate(j.started_at)}</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-label">Scadenza</div>
+          <div class="metric-value ${du!==null&&du<0?'negative':du!==null&&du<=3?'negative':'neutral'}" style="font-size:.74rem">${fmtDate(j.due_date)}</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-label">Giorni lav.</div>
+          <div class="metric-value">${wd!=null?wd+'gg':'—'}</div>
+        </div>
+        ${du!==null?`<div class="metric-item">
+          <div class="metric-label">${du<0?'Ritardo':'Rimanenti'}</div>
+          <div class="metric-value ${du<0?'negative':du<=3?'negative':'positive'}">${Math.abs(du)}gg${du<0?' di ritardo':''}</div>
+        </div>`:''}
+        ${j.category?`<div class="metric-item">
+          <div class="metric-label">Categoria</div>
+          <div class="metric-value neutral" style="font-size:.73rem">${j.category}</div>
+        </div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderSummary(jobs){
+  const DONE_S=['COMPLETATA','completata'];
+  const CANCEL_S=['ANNULLATA','annullata'];
+  const total=jobs.length;
+  const completed=jobs.filter(j=>DONE_S.includes(j.status)).length;
+  const active=jobs.filter(j=>!DONE_S.includes(j.status)&&!CANCEL_S.includes(j.status)).length;
+  const overdue=jobs.filter(j=>!DONE_S.includes(j.status)&&!CANCEL_S.includes(j.status)&&j.due_date&&daysUntil(j.due_date)<0).length;
+  const byType={};
+  jobs.forEach(j=>{const t=j.type||'—';byType[t]=(byType[t]||0)+1});
+  const typeStr=Object.entries(byType).map(([t,c])=>`${t}: ${c}`).join(' · ')||'—';
+
+  document.getElementById('general-summary').innerHTML=`
+    <div class="summary-title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+      Sommario Generale
+    </div>
+    <div class="summary-grid">
+      <div class="summary-item">
+        <div class="summary-label">Commesse totali</div>
+        <div class="summary-value">${total}</div>
+        <div class="summary-sub">${active} attive · ${completed} completate</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-label">In produzione</div>
+        <div class="summary-value">${active}</div>
+        <div class="summary-sub">${total>0?Math.round((active/total)*100):0}% del totale</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-label">Completate</div>
+        <div class="summary-value" style="color:#4ade80">${completed}</div>
+        <div class="summary-sub">${total>0?Math.round((completed/total)*100):0}% del totale</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-label">Scadute</div>
+        <div class="summary-value" style="color:${overdue>0?'#f87171':'#4ade80'}">${overdue}</div>
+        <div class="summary-sub">Per tipo: ${typeStr}</div>
+      </div>
+    </div>
+  `;
+}
+
+async function loadData(){
+  try{
+    const [jobs,clients]=await Promise.all([
+      api.jobs.list(),
+      api.clients.list()
+    ]);
+
+    clients.forEach(c=>{allClients[c.id]=c.name});
+    allJobs=jobs.sort((a,b)=>{
+      if(!a.due_date&&!b.due_date)return 0;
+      if(!a.due_date)return 1;
+      if(!b.due_date)return -1;
+      return new Date(a.due_date)-new Date(b.due_date);
+    });
+
+    renderSummary(allJobs);
+    renderJobs();
+  }catch(err){
+    console.error('Errore report:',err);
+    document.getElementById('general-summary').innerHTML='<div style="color:#f87171;padding:12px;font-size:.8rem">Errore nel caricamento dei dati</div>';
+    document.getElementById('job-reports').innerHTML='<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-title">Errore caricamento</div></div>';
+  }
+}
+
+loadData();
+</script>
+</body>
+</html>

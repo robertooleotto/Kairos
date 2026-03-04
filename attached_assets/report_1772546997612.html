@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Report — LOTR Planning</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Sora:wght@400;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#0f0f17;--paper-h:#16161f;--paper-l:#24242d;
+  --paper-s:#cdd0de;--paper-m:#737889;--paper-t:#f9fafb;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);min-height:100vh}
+
+.header{padding:16px 24px;border-bottom:1px solid var(--paper-l);display:flex;align-items:center;justify-content:space-between}
+.brand-name{font-family:'Fraunces',serif;font-size:1.2rem;font-weight:700}
+.brand-sub{font-size:.68rem;color:var(--paper-m);margin-top:2px}
+
+.container{padding:24px;max-width:1400px;margin:0 auto}
+
+/* Section Headers */
+.section-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin:40px 0 20px;
+}
+.section-title{
+  font-family:'Fraunces',serif;
+  font-size:1.1rem;font-weight:600;
+  display:flex;align-items:center;gap:10px;
+}
+
+/* Summary Card */
+.summary-card{
+  background:var(--paper-h);
+  border:1px solid var(--paper-l);
+  border-radius:14px;
+  padding:24px;
+  margin-bottom:32px;
+}
+.summary-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:20px;
+}
+.summary-item{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.summary-label{
+  font-size:.7rem;
+  color:var(--paper-m);
+  text-transform:uppercase;
+  letter-spacing:.05em;
+}
+.summary-value{
+  font-family:'JetBrains Mono',monospace;
+  font-size:1.4rem;
+  font-weight:700;
+  color:var(--paper-t);
+}
+.summary-sub{
+  font-size:.68rem;
+  color:var(--paper-s);
+}
+.summary-divider{
+  height:1px;
+  background:var(--paper-l);
+  margin:20px 0;
+}
+
+/* Job Reports List */
+.job-reports{
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
+.job-report-card{
+  background:var(--paper-h);
+  border:1px solid var(--paper-l);
+  border-radius:12px;
+  padding:20px;
+  transition:all .2s;
+}
+.job-report-card:hover{
+  border-color:rgba(99,102,241,.3);
+  box-shadow:0 4px 12px rgba(0,0,0,.15);
+}
+.job-report-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  margin-bottom:16px;
+}
+.job-report-title{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.9rem;
+  font-weight:600;
+  margin-bottom:4px;
+}
+.job-report-client{
+  font-size:.72rem;
+  color:var(--paper-m);
+}
+.job-report-badge{
+  padding:4px 10px;
+  border-radius:6px;
+  font-size:.65rem;
+  font-weight:600;
+}
+.badge-completed{background:rgba(34,197,94,.12);color:#4ade80}
+.badge-delayed{background:rgba(239,68,68,.12);color:#f87171}
+.badge-ontime{background:rgba(59,130,246,.12);color:#93c5fd}
+
+.job-report-metrics{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:12px;
+  margin-bottom:16px;
+}
+.metric-item{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+.metric-label{
+  font-size:.68rem;
+  color:var(--paper-m);
+}
+.metric-value{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.8rem;
+  font-weight:600;
+  color:var(--paper-t);
+}
+.metric-value.positive{color:#4ade80}
+.metric-value.negative{color:#f87171}
+
+.issues-list{
+  margin-top:12px;
+  padding-top:12px;
+  border-top:1px solid var(--paper-l);
+}
+.issues-title{
+  font-size:.7rem;
+  color:var(--paper-m);
+  margin-bottom:8px;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+}
+.issue-item{
+  display:flex;
+  align-items:flex-start;
+  gap:8px;
+  padding:6px 0;
+  font-size:.72rem;
+  line-height:1.5;
+}
+.issue-icon{
+  flex-shrink:0;
+  width:18px;
+  height:18px;
+  border-radius:4px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:.65rem;
+}
+.issue-client{background:rgba(245,158,11,.15);color:#fbbf24}
+.issue-technical{background:rgba(239,68,68,.15);color:#f87171}
+.issue-complexity{background:rgba(139,92,246,.15);color:#c4b5fd}
+.issue-external{background:rgba(107,114,128,.15);color:#9ca3af}
+.issue-text{flex:1;color:var(--paper-s)}
+.issue-time{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.65rem;
+  color:var(--paper-m);
+  white-space:nowrap;
+}
+
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 16px;border-radius:8px;font-size:.72rem;font-weight:600;
+  border:none;cursor:pointer;transition:all .15s;font-family:'Sora',sans-serif;
+}
+.btn-primary{background:#6366f1;color:#fff}
+.btn-primary:hover{background:#5558e3}
+.btn-secondary{background:var(--paper-l);color:var(--paper-s)}
+.btn-secondary:hover{background:var(--paper);color:var(--paper-t)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div><div class="brand-name">Report Dettagliati</div><div class="brand-sub">LOTR Production Studio</div></div>
+  <div style="display:flex;gap:12px">
+    <button style="padding:5px 14px;border-radius:8px;font-size:.74rem;font-weight:600;color:#626882;cursor:pointer;border:none;background:transparent" onclick="location.href='preview.html'">Calendario</button>
+    <button style="padding:5px 14px;border-radius:8px;font-size:.74rem;font-weight:600;color:#626882;cursor:pointer;border:none;background:transparent" onclick="location.href='team.html'">Team</button>
+    <button style="padding:5px 14px;border-radius:8px;font-size:.74rem;font-weight:600;color:#626882;cursor:pointer;border:none;background:transparent" onclick="location.href='clienti.html'">Clienti</button>
+    <button style="padding:5px 14px;border-radius:8px;font-size:.74rem;font-weight:600;color:#626882;cursor:pointer;border:none;background:transparent" onclick="location.href='commesse.html'">Commesse</button>
+    <button style="padding:5px 14px;border-radius:8px;font-size:.74rem;font-weight:600;color:#626882;cursor:pointer;border:none;background:transparent" onclick="location.href='status.html'">Status</button>
+    <button style="padding:5px 14px;border-radius:8px;font-size:.74rem;font-weight:600;color:#a5b4fc;cursor:pointer;border:none;background:rgba(99,102,241,.12)">Report</button>
+  </div>
+</div>
+
+<div class="container">
+  <!-- General Summary -->
+  <div class="section-header">
+    <div class="section-title">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+      Sommario Generale
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        Export PDF
+      </button>
+      <button class="btn btn-primary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        Export Excel
+      </button>
+    </div>
+  </div>
+
+  <div class="summary-card" id="general-summary">
+    <!-- Generated by JS -->
+  </div>
+
+  <!-- Job Reports -->
+  <div class="section-header">
+    <div class="section-title">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Report per Commessa
+    </div>
+  </div>
+
+  <div class="job-reports" id="job-reports">
+    <!-- Generated by JS -->
+  </div>
+</div>
+
+<script>
+// Mock data - In produzione da Google Sheets
+const CLIENTS={
+  c1:{name:'Contea di Hobbiton'},
+  c2:{name:'Gondor Editore'},
+  c3:{name:'Rohan Studio'},
+  c4:{name:'Mordor Industries'},
+  c5:{name:'Elrond & Associati'}
+};
+
+const COMPLETED_JOBS=[
+  {
+    id:'j1',
+    code:'26101-GON-CAT-I',
+    client:'c2',
+    images:240,
+    estimatedHours:240,
+    actualHours:268,
+    completed:true,
+    issues:[
+      {category:'client',description:'Review cicli multipli',hours:0.75},
+      {category:'technical',description:'File corrotto DaVinci',hours:1.2},
+      {category:'complexity',description:'Maschere manuali complesse',hours:0.5}
+    ]
+  },
+  {
+    id:'j4',
+    code:'26104-HOB-MAG-I',
+    client:'c1',
+    images:300,
+    estimatedHours:300,
+    actualHours:285,
+    completed:true,
+    issues:[
+      {category:'client',description:'Cambio colori ultimo minuto',hours:1.5}
+    ]
+  },
+  {
+    id:'j8',
+    code:'26108-HOB-CAL-F',
+    client:'c1',
+    images:156,
+    estimatedHours:156,
+    actualHours:156,
+    completed:true,
+    issues:[]
+  },
+  {
+    id:'j2',
+    code:'26102-MOR-PAC-F',
+    client:'c4',
+    images:120,
+    estimatedHours:120,
+    actualHours:132,
+    completed:true,
+    issues:[
+      {category:'technical',description:'Crash applicazione',hours:0.8},
+      {category:'external',description:'Attesa file da fornitore',hours:2.0}
+    ]
+  },
+  {
+    id:'j3',
+    code:'26103-ELR-LIB-A',
+    client:'c5',
+    images:180,
+    estimatedHours:180,
+    actualHours:195,
+    completed:true,
+    issues:[
+      {category:'complexity',description:'Audio multi-lingua complesso',hours:1.5},
+      {category:'technical',description:'Sincronizzazione labiale',hours:1.2}
+    ]
+  }
+];
+
+function calculateGeneralSummary(){
+  const totalJobs=COMPLETED_JOBS.length;
+  const totalEstimated=COMPLETED_JOBS.reduce((sum,j)=>sum+j.estimatedHours,0);
+  const totalActual=COMPLETED_JOBS.reduce((sum,j)=>sum+j.actualHours,0);
+  const variance=totalActual-totalEstimated;
+  const variancePct=Math.round((variance/totalEstimated)*100);
+  
+  // Issues breakdown
+  const issuesByCategory={client:0,technical:0,complexity:0,external:0};
+  const timeByCategory={client:0,technical:0,complexity:0,external:0};
+  
+  COMPLETED_JOBS.forEach(j=>{
+    j.issues.forEach(issue=>{
+      issuesByCategory[issue.category]++;
+      timeByCategory[issue.category]+=issue.hours;
+    });
+  });
+  
+  const totalIssues=Object.values(issuesByCategory).reduce((a,b)=>a+b,0);
+  const totalTimeLost=Object.values(timeByCategory).reduce((a,b)=>a+b,0);
+  
+  // Jobs ahead/delayed
+  const jobsAhead=COMPLETED_JOBS.filter(j=>j.actualHours<j.estimatedHours).length;
+  const timeGained=COMPLETED_JOBS.reduce((sum,j)=>{
+    const diff=j.estimatedHours-j.actualHours;
+    return sum+(diff>0?diff:0);
+  },0);
+  
+  // Efficiency
+  const avgEfficiency=Math.round((totalEstimated/totalActual)*100);
+  const efficiencyWithIssues=COMPLETED_JOBS.filter(j=>j.issues.length>0);
+  const efficiencyNoIssues=COMPLETED_JOBS.filter(j=>j.issues.length===0);
+  
+  const avgEffWithIssues=efficiencyWithIssues.length>0?
+    Math.round((efficiencyWithIssues.reduce((s,j)=>s+j.estimatedHours,0)/
+                efficiencyWithIssues.reduce((s,j)=>s+j.actualHours,0))*100):0;
+  const avgEffNoIssues=efficiencyNoIssues.length>0?
+    Math.round((efficiencyNoIssues.reduce((s,j)=>s+j.estimatedHours,0)/
+                efficiencyNoIssues.reduce((s,j)=>s+j.actualHours,0))*100):100;
+  
+  return{
+    totalJobs,
+    totalEstimated,
+    totalActual,
+    variance,
+    variancePct,
+    totalIssues,
+    issuesByCategory,
+    timeByCategory,
+    totalTimeLost,
+    jobsAhead,
+    timeGained,
+    avgEfficiency,
+    avgEffWithIssues,
+    avgEffNoIssues
+  };
+}
+
+function renderGeneralSummary(){
+  const s=calculateGeneralSummary();
+  
+  const html=`
+    <div class="summary-grid">
+      <div class="summary-item">
+        <div class="summary-label">Commesse analizzate</div>
+        <div class="summary-value">${s.totalJobs}</div>
+        <div class="summary-sub">Tutte completate</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-label">Tempo stimato</div>
+        <div class="summary-value">${s.totalEstimated}h</div>
+        <div class="summary-sub">Previsione iniziale</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-label">Tempo effettivo</div>
+        <div class="summary-value">${s.totalActual}h</div>
+        <div class="summary-sub" style="color:${s.variance>0?'#f87171':'#4ade80'}">${s.variance>0?'+':''}${s.variance}h (${s.variancePct>0?'+':''}${s.variancePct}%)</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-label">Efficienza media</div>
+        <div class="summary-value">${s.avgEfficiency}%</div>
+        <div class="summary-sub">Target: ≥95%</div>
+      </div>
+    </div>
+    
+    <div class="summary-divider"></div>
+    
+    <div class="summary-grid">
+      <div class="summary-item">
+        <div class="summary-label">⚠️ Problemi totali</div>
+        <div class="summary-value">${s.totalIssues}</div>
+        <div class="summary-sub">
+          Cliente: ${s.issuesByCategory.client} •
+          Tecnico: ${s.issuesByCategory.technical} •
+          Complessità: ${s.issuesByCategory.complexity} •
+          Esterno: ${s.issuesByCategory.external}
+        </div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-label">❌ Tempo perso</div>
+        <div class="summary-value" style="color:#f87171">${s.totalTimeLost.toFixed(1)}h</div>
+        <div class="summary-sub">
+          Cliente: ${s.timeByCategory.client.toFixed(1)}h •
+          Tecnico: ${s.timeByCategory.technical.toFixed(1)}h •
+          Complessità: ${s.timeByCategory.complexity.toFixed(1)}h •
+          Esterno: ${s.timeByCategory.external.toFixed(1)}h
+        </div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-label">✅ Commesse in anticipo</div>
+        <div class="summary-value">${s.jobsAhead}</div>
+        <div class="summary-sub" style="color:#4ade80">Tempo guadagnato: ${s.timeGained.toFixed(1)}h</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-label">📊 Efficienza</div>
+        <div class="summary-value">${s.avgEffWithIssues}% / ${s.avgEffNoIssues}%</div>
+        <div class="summary-sub">Con problemi / Senza problemi</div>
+      </div>
+    </div>
+  `;
+  
+  document.getElementById('general-summary').innerHTML=html;
+}
+
+function renderJobReports(){
+  const html=COMPLETED_JOBS.map(j=>{
+    const cli=CLIENTS[j.client];
+    const variance=j.actualHours-j.estimatedHours;
+    const variancePct=Math.round((variance/j.estimatedHours)*100);
+    const efficiency=Math.round((j.estimatedHours/j.actualHours)*100);
+    const timeLost=j.issues.reduce((sum,i)=>sum+i.hours,0);
+    const timeGained=variance<0?Math.abs(variance):0;
+    
+    let badgeClass,badgeText;
+    if(variance<0){
+      badgeClass='badge-completed';
+      badgeText='In anticipo';
+    }else if(variancePct<=5){
+      badgeClass='badge-ontime';
+      badgeText='Nei tempi';
+    }else{
+      badgeClass='badge-delayed';
+      badgeText='In ritardo';
+    }
+    
+    const issuesHtml=j.issues.length>0?`
+      <div class="issues-list">
+        <div class="issues-title">⚠️ Problemi registrati (${j.issues.length})</div>
+        ${j.issues.map(issue=>{
+          const iconClass=`issue-${issue.category}`;
+          const icon={
+            client:'💬',
+            technical:'⚙️',
+            complexity:'🎯',
+            external:'🔗'
+          }[issue.category];
+          return`<div class="issue-item">
+            <div class="issue-icon ${iconClass}">${icon}</div>
+            <div class="issue-text">${issue.description}</div>
+            <div class="issue-time">${issue.hours}h</div>
+          </div>`;
+        }).join('')}
+      </div>
+    `:'<div style="font-size:.7rem;color:var(--paper-m);margin-top:12px;padding-top:12px;border-top:1px solid var(--paper-l)">✅ Nessun problema registrato</div>';
+    
+    return`<div class="job-report-card">
+      <div class="job-report-header">
+        <div>
+          <div class="job-report-title">${j.code}</div>
+          <div class="job-report-client">${cli.name} · ${j.images} immagini</div>
+        </div>
+        <div class="job-report-badge ${badgeClass}">${badgeText}</div>
+      </div>
+      
+      <div class="job-report-metrics">
+        <div class="metric-item">
+          <div class="metric-label">Tempo stimato</div>
+          <div class="metric-value">${j.estimatedHours}h</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-label">Tempo effettivo</div>
+          <div class="metric-value">${j.actualHours}h</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-label">Varianza</div>
+          <div class="metric-value ${variance>0?'negative':'positive'}">${variance>0?'+':''}${variance}h (${variancePct>0?'+':''}${variancePct}%)</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-label">Efficienza</div>
+          <div class="metric-value">${efficiency}%</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-label">❌ Tempo perso</div>
+          <div class="metric-value negative">${timeLost.toFixed(1)}h</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-label">✅ Tempo guadagnato</div>
+          <div class="metric-value positive">${timeGained.toFixed(1)}h</div>
+        </div>
+      </div>
+      
+      ${issuesHtml}
+    </div>`;
+  }).join('');
+  
+  document.getElementById('job-reports').innerHTML=html;
+}
+
+// Init
+renderGeneralSummary();
+renderJobReports();
+</script>
+</body>
+</html>

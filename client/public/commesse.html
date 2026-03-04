@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Commesse — NuDesign Planning Studio</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Sora:wght@400;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#0f0f17;--paper-h:#16161f;--paper-l:#24242d;
+  --paper-s:#cdd0de;--paper-m:#737889;--paper-t:#f9fafb;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);min-height:100vh}
+
+/* Header */
+.header{padding:14px 24px;border-bottom:1px solid var(--paper-l);display:flex;align-items:center;gap:16px;position:sticky;top:0;background:var(--paper);z-index:100;}
+.brand{flex-shrink:0}
+.header-actions{display:flex;gap:8px;align-items:center;margin-left:auto}
+.nav-pills{display:flex;gap:2px;background:rgba(255,255,255,.05);border-radius:10px;padding:3px;position:absolute;left:50%;transform:translateX(-50%)}
+.nav-pill{padding:5px 16px;border-radius:8px;font-size:.72rem;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--paper-m);font-family:'Sora',sans-serif;transition:all .15s}
+.nav-pill.active{background:#1c1f30;color:var(--paper-t)}
+.nav-pill:hover:not(.active){color:var(--paper-s)}
+
+/* Container */
+.container{padding:24px;max-width:1400px;margin:0 auto}
+
+/* Buttons */
+.btn-primary{padding:8px 16px;border-radius:8px;font-size:.74rem;font-weight:600;background:#6366f1;color:#fff;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:'Sora',sans-serif;transition:all .15s}
+.btn-primary:hover{background:#5558e3}
+
+/* Bulk Actions Toolbar */
+.bulk-toolbar{
+  display:none;
+  background:rgba(99,102,241,.1);
+  border:1px solid rgba(99,102,241,.3);
+  border-radius:10px;
+  padding:12px 16px;
+  margin-bottom:20px;
+  align-items:center;
+  justify-content:space-between;
+  animation:slideDown .2s ease;
+}
+.bulk-toolbar.active{display:flex}
+@keyframes slideDown{
+  from{opacity:0;transform:translateY(-10px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.bulk-info{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:.75rem;
+  color:var(--paper-t);
+}
+.bulk-count{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:24px;
+  height:24px;
+  padding:0 8px;
+  border-radius:12px;
+  background:#6366f1;
+  color:#fff;
+  font-size:.7rem;
+  font-weight:700;
+}
+.bulk-actions{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+.bulk-select{
+  padding:6px 12px;
+  border-radius:8px;
+  background:var(--paper-h);
+  border:1px solid var(--paper-l);
+  color:var(--paper-t);
+  font-family:'Sora',sans-serif;
+  font-size:.72rem;
+  cursor:pointer;
+  outline:none;
+}
+.bulk-select:hover{border-color:var(--paper-m)}
+.bulk-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 12px;
+  border-radius:8px;
+  background:var(--paper-h);
+  border:1px solid var(--paper-l);
+  color:var(--paper-s);
+  font-size:.72rem;
+  font-weight:600;
+  cursor:pointer;
+  transition:all .15s;
+  font-family:'Sora',sans-serif;
+}
+.bulk-btn:hover{background:var(--paper-l);color:var(--paper-t)}
+
+/* Filters */
+.filters{display:flex;gap:12px;margin-bottom:24px;align-items:center;flex-wrap:wrap}
+.filter-label{font-size:.7rem;color:var(--paper-m);font-weight:600}
+.filter-select{
+  padding:8px 12px;border-radius:8px;
+  background:var(--paper-h);border:1px solid var(--paper-l);
+  color:var(--paper-t);font-family:'Sora',sans-serif;
+  font-size:.75rem;cursor:pointer;outline:none;
+}
+.filter-select:hover{border-color:var(--paper-m)}
+.search-box{
+  padding:8px 12px;border-radius:8px;
+  background:var(--paper-h);border:1px solid var(--paper-l);
+  color:var(--paper-t);font-family:'Sora',sans-serif;
+  font-size:.75rem;outline:none;width:240px;
+}
+.search-box:focus{border-color:#6366f1}
+
+/* Jobs table */
+.jobs-table{background:var(--paper-h);border:1px solid var(--paper-l);border-radius:12px;overflow:hidden}
+.job-row{
+  display:grid;
+  grid-template-columns:40px 120px 200px 140px 1fr 140px 100px;
+  gap:16px;padding:14px 18px;
+  border-bottom:1px solid var(--paper-l);
+  align-items:center;
+  cursor:pointer;
+  transition:background .15s;
+}
+.job-row:hover{background:rgba(99,102,241,.05)}
+.job-row:last-child{border-bottom:none}
+.job-header{
+  display:grid;
+  grid-template-columns:40px 120px 200px 140px 1fr 140px 100px;
+  gap:16px;padding:12px 18px;
+  background:rgba(255,255,255,.02);
+  font-size:.65rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.05em;
+  color:var(--paper-m);
+}
+
+/* Checkbox */
+.job-checkbox{
+  width:18px;
+  height:18px;
+  cursor:pointer;
+  accent-color:#6366f1;
+}
+
+/* Columns */
+.job-code{font-family:'JetBrains Mono',monospace;font-size:.72rem;font-weight:600;display:flex;align-items:center;gap:6px}
+.job-emoji{font-size:.85rem}
+.job-client{font-size:.75rem;color:var(--paper-s)}
+.job-type{
+  display:inline-flex;padding:3px 8px;border-radius:6px;
+  font-size:.62rem;font-weight:600;
+}
+.type-I{background:rgba(139,92,246,.15);color:#c4b5fd}
+.type-F{background:rgba(34,197,94,.15);color:#86efac}
+.type-A{background:rgba(59,130,246,.15);color:#93c5fd}
+.type-V{background:rgba(245,158,11,.15);color:#fcd34d}
+
+/* Progress */
+.job-progress{display:flex;flex-direction:column;gap:4px}
+.progress-bar{height:6px;background:var(--paper-l);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;background:#6366f1;border-radius:3px;transition:width .3s}
+.progress-text{font-size:.65rem;color:var(--paper-m);font-family:'JetBrains Mono',monospace}
+
+/* Team chips */
+.team-chips{display:flex;gap:4px;flex-wrap:wrap}
+.team-chip{
+  padding:3px 8px;border-radius:6px;
+  background:var(--paper-l);color:var(--paper-s);
+  font-size:.62rem;font-weight:600;
+}
+
+/* Deadline */
+.job-deadline{font-size:.7rem;color:var(--paper-s)}
+.days-left{font-size:.65rem;color:var(--paper-m);font-family:'JetBrains Mono',monospace}
+.deadline-warning{color:#f59e0b}
+.deadline-critical{color:#ef4444}
+
+/* Priority badge */
+.prio-badge{
+  display:inline-flex;padding:3px 8px;border-radius:6px;
+  font-size:.6rem;font-weight:600;
+}
+.prio-URGENT{background:rgba(239,68,68,.15);color:#fca5a5}
+.prio-HIGH{background:rgba(245,158,11,.15);color:#fcd34d}
+.prio-MEDIUM{background:rgba(59,130,246,.15);color:#93c5fd}
+.prio-LOW{background:rgba(107,114,128,.15);color:#9ca3af}
+
+/* Stats bar */
+.stats-bar{
+  display:flex;gap:24px;margin-bottom:20px;
+  padding:16px 20px;background:var(--paper-h);
+  border:1px solid var(--paper-l);border-radius:10px;
+}
+.stat-item{display:flex;flex-direction:column;gap:4px}
+.stat-value{font-family:'JetBrains Mono',monospace;font-size:1.3rem;font-weight:700;color:var(--paper-t)}
+.stat-label{font-size:.65rem;color:var(--paper-m);text-transform:uppercase;letter-spacing:.05em}
+
+/* Empty state */
+.empty-state{
+  text-align:center;padding:60px 20px;
+  color:var(--paper-m);font-size:.8rem;
+}
+
+/* View toggle */
+.view-toggle-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 14px;border-radius:8px;
+  background:var(--paper-h);border:1px solid var(--paper-l);
+  color:var(--paper-s);font-size:.72rem;font-weight:600;
+  cursor:pointer;transition:all .15s;font-family:'Sora',sans-serif;
+}
+.view-toggle-btn:hover{background:var(--paper-l)}
+.view-toggle-btn.active{background:rgba(99,102,241,.15);color:#a5b4fc;border-color:rgba(99,102,241,.3)}
+
+/* Kanban Board */
+.kanban-board{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:16px;
+  display:none;
+}
+.kanban-board.active{display:grid}
+
+.kanban-column{
+  background:var(--paper-h);
+  border:1px solid var(--paper-l);
+  border-radius:12px;
+  padding:16px;
+  min-height:400px;
+}
+.kanban-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:14px;padding-bottom:12px;
+  border-bottom:1px solid var(--paper-l);
+}
+.kanban-title{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--paper-t)}
+.kanban-count{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:22px;height:22px;padding:0 6px;border-radius:11px;
+  background:rgba(99,102,241,.15);color:#a5b4fc;
+  font-size:.65rem;font-weight:600;
+}
+.kanban-cards{display:flex;flex-direction:column;gap:10px}
+
+/* Kanban Card */
+.kanban-card{
+  background:var(--paper);
+  border:1px solid var(--paper-l);
+  border-radius:10px;
+  padding:12px;
+  cursor:grab;
+  transition:all .2s;
+}
+.kanban-card:active{cursor:grabbing}
+.kanban-card:hover{
+  border-color:rgba(99,102,241,.3);
+  box-shadow:0 4px 12px rgba(0,0,0,.15);
+  transform:translateY(-2px);
+}
+.kanban-card.dragging{opacity:.5;transform:rotate(2deg)}
+.card-emoji{font-size:.9rem;margin-bottom:6px}
+.card-code{font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:600;margin-bottom:4px}
+.card-client{font-size:.68rem;color:var(--paper-m);margin-bottom:8px}
+.card-team{display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap}
+.card-team-chip{
+  padding:2px 6px;border-radius:4px;
+  background:var(--paper-l);color:var(--paper-s);
+  font-size:.6rem;font-weight:600;
+}
+.card-progress{
+  display:flex;align-items:center;gap:6px;
+  margin-bottom:6px;
+}
+.card-progress-bar{flex:1;height:4px;background:var(--paper-l);border-radius:2px;overflow:hidden}
+.card-progress-fill{height:100%;background:#6366f1;border-radius:2px}
+.card-progress-text{font-size:.62rem;color:var(--paper-m);font-family:'JetBrains Mono',monospace}
+.card-deadline{font-size:.65rem;color:var(--paper-m);display:flex;align-items:center;gap:4px}
+.card-deadline.warning{color:#f59e0b}
+.card-deadline.critical{color:#ef4444}
+
+/* Detail Panel */
+.detail-panel{
+  position:fixed;top:0;right:-600px;
+  width:600px;height:100vh;
+  z-index:1000;
+  transition:right .3s ease;
+}
+.detail-panel.open{right:0}
+.detail-overlay{
+  position:fixed;top:0;left:0;right:0;bottom:0;
+  background:rgba(0,0,0,0);
+  pointer-events:none;
+  transition:background .3s;
+}
+.detail-panel.open .detail-overlay{
+  background:rgba(0,0,0,.4);
+  pointer-events:auto;
+}
+.detail-content{
+  position:absolute;top:0;right:0;
+  width:600px;height:100%;
+  background:var(--paper-h);
+  box-shadow:-4px 0 20px rgba(0,0,0,.3);
+  display:flex;flex-direction:column;
+}
+.detail-header{
+  padding:24px;
+  border-bottom:1px solid var(--paper-l);
+  display:flex;align-items:flex-start;justify-content:space-between;
+}
+.detail-code{
+  font-family:'JetBrains Mono',monospace;
+  font-size:1.1rem;font-weight:600;
+  margin-bottom:4px;
+}
+.detail-client{
+  font-size:.8rem;color:var(--paper-m);
+}
+.detail-close{
+  background:none;border:none;
+  color:var(--paper-s);
+  cursor:pointer;padding:6px;
+  border-radius:6px;
+  transition:all .15s;
+}
+.detail-close:hover{
+  background:var(--paper-l);
+  color:var(--paper-t);
+}
+.detail-body{
+  flex:1;overflow-y:auto;
+  padding:24px;
+}
+.detail-section{
+  margin-bottom:24px;
+  padding-bottom:24px;
+  border-bottom:1px solid rgba(255,255,255,.05);
+}
+.detail-section:last-child{border-bottom:none}
+.detail-section-title{
+  font-size:.75rem;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  color:var(--paper-m);
+  margin-bottom:12px;
+}
+.detail-info-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+.detail-info-item{
+  display:flex;flex-direction:column;gap:4px;
+}
+.detail-info-label{
+  font-size:.68rem;
+  color:var(--paper-m);
+}
+.detail-info-value{
+  font-size:.8rem;
+  font-weight:600;
+  color:var(--paper-t);
+}
+.detail-team-list{
+  display:flex;gap:6px;flex-wrap:wrap;
+}
+.detail-team-chip{
+  padding:6px 12px;border-radius:8px;
+  background:var(--paper-l);
+  color:var(--paper-s);
+  font-size:.72rem;font-weight:600;
+}
+.detail-actions{
+  display:flex;gap:8px;
+  padding:20px 24px;
+  border-top:1px solid var(--paper-l);
+}
+.detail-btn{
+  flex:1;
+  padding:10px 16px;
+  border-radius:8px;
+  border:none;
+  font-size:.75rem;
+  font-weight:600;
+  cursor:pointer;
+  transition:all .15s;
+  font-family:'Sora',sans-serif;
+}
+.detail-btn-primary{
+  background:#6366f1;
+  color:#fff;
+}
+.detail-btn-primary:hover{background:#5558e3}
+.detail-btn-secondary{
+  background:var(--paper-l);
+  color:var(--paper-s);
+}
+.detail-btn-secondary:hover{background:var(--paper);color:var(--paper-t)}
+.detail-btn-danger{
+  background:rgba(239,68,68,.15);
+  color:#fca5a5;
+}
+.detail-btn-danger:hover{background:rgba(239,68,68,.25)}
+
+/* Progress widget styles */
+.progress-widget{
+  background:var(--paper);
+  border:1px solid var(--paper-l);
+  border-radius:10px;
+  padding:16px;
+  margin-bottom:24px;
+}
+.progress-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:14px;
+}
+.progress-title{
+  font-size:.75rem;
+  font-weight:600;
+  color:var(--paper-s);
+}
+.progress-status{
+  padding:4px 10px;
+  border-radius:6px;
+  font-size:.68rem;
+  font-weight:600;
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+}
+.progress-status.ahead{background:rgba(34,197,94,.12);color:#4ade80}
+.progress-status.ontime{background:rgba(59,130,246,.12);color:#93c5fd}
+.progress-status.behind{background:rgba(239,68,68,.12);color:#f87171}
+.progress-bars{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  margin-bottom:12px;
+}
+.progress-bar-row{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.progress-bar-label{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:.68rem;
+}
+.progress-bar-label span:first-child{color:var(--paper-m)}
+.progress-bar-label span:last-child{color:var(--paper-s);font-family:'JetBrains Mono',monospace}
+.progress-bar-track{
+  height:8px;
+  background:var(--paper-l);
+  border-radius:4px;
+  overflow:hidden;
+}
+.progress-bar-fill{
+  height:100%;
+  border-radius:4px;
+  transition:width .3s;
+}
+.progress-bar-fill.work{background:#6366f1}
+.progress-bar-fill.time{background:rgba(107,114,128,.4)}
+.progress-message{
+  padding:10px 12px;
+  border-radius:8px;
+  border-left:3px solid;
+  font-size:.72rem;
+  line-height:1.5;
+}
+.progress-message.ahead{background:rgba(34,197,94,.08);border-color:#4ade80;color:#86efac}
+.progress-message.ontime{background:rgba(59,130,246,.08);border-color:#93c5fd;color:#bfdbfe}
+.progress-message.behind{background:rgba(239,68,68,.08);border-color:#f87171;color:#fca5a5}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="brand">
+    <img src="nudesign-logo.png" alt="NuDesign" style="height:56px;object-fit:contain">
+  </div>
+  <div class="nav-pills">
+    <button class="nav-pill" onclick="location.href='preview.html'">Calendario</button>
+    <button class="nav-pill" onclick="location.href='status.html'">Stato</button>
+    <button class="nav-pill" onclick="location.href='report.html'">Report</button>
+    <button class="nav-pill" onclick="location.href='team.html'">Team</button>
+    <button class="nav-pill active">Commesse</button>
+    <button class="nav-pill" onclick="location.href='clienti.html'">Clienti</button>
+  </div>
+  <div class="header-actions">
+    <button class="btn-primary" onclick="alert('Nuova commessa')">+ Nuova Commessa</button>
+  </div>
+</div>
+
+<div class="container">
+  <!-- Bulk Actions Toolbar -->
+  <div class="bulk-toolbar" id="bulk-toolbar">
+    <div class="bulk-info">
+      <span class="bulk-count" id="bulk-count">0</span> commesse selezionate
+    </div>
+    <div class="bulk-actions">
+      <select class="bulk-select" id="bulk-assign-team" onchange="bulkAssignTeam()">
+        <option value="">Assegna team...</option>
+        <option value="Roberto">Roberto</option>
+        <option value="Luigi">Luigi</option>
+        <option value="Alessandro">Alessandro</option>
+        <option value="Raul">Raul</option>
+      </select>
+      <select class="bulk-select" id="bulk-change-prio" onchange="bulkChangePrio()">
+        <option value="">Cambia priorità...</option>
+        <option value="URGENT">🔴 Urgente</option>
+        <option value="HIGH">🟠 Alta</option>
+        <option value="MEDIUM">🟡 Media</option>
+        <option value="LOW">🟢 Bassa</option>
+      </select>
+      <button class="bulk-btn" onclick="deselectAll()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        Deseleziona
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="stat-value" id="stat-total">0</div>
+      <div class="stat-label">Totali</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value" id="stat-active">0</div>
+      <div class="stat-label">Attive</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value" id="stat-urgent">0</div>
+      <div class="stat-label">Urgenti</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-value" id="stat-images">0</div>
+      <div class="stat-label">Scadono 7gg</div>
+    </div>
+  </div>
+
+  <!-- View Toggle -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+    <div style="display:flex;gap:8px">
+      <button class="view-toggle-btn active" id="view-list" onclick="switchView('list')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        Lista
+      </button>
+      <button class="view-toggle-btn" id="view-kanban" onclick="switchView('kanban')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Kanban
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <span class="filter-label">Filtra:</span>
+    <select class="filter-select" id="filter-client" onchange="applyFilters()">
+      <option value="">Tutti i clienti</option>
+    </select>
+    <select class="filter-select" id="filter-type" onchange="applyFilters()">
+      <option value="">Tutti i tipi</option>
+      <option value="I">Post Produzione (I)</option>
+      <option value="F">Fotolito (F)</option>
+      <option value="A">Audio/Video (A)</option>
+      <option value="V">Video (V)</option>
+    </select>
+    <select class="filter-select" id="filter-prio" onchange="applyFilters()">
+      <option value="">Tutte le priorità</option>
+      <option value="URGENT">Urgenti</option>
+      <option value="HIGH">Alta</option>
+      <option value="MEDIUM">Media</option>
+      <option value="LOW">Bassa</option>
+    </select>
+    <input type="text" class="search-box" id="search-box" placeholder="Cerca codice o cliente..." oninput="applyFilters()">
+  </div>
+
+  <!-- Table -->
+  <div class="jobs-table" id="list-view">
+    <div class="job-header">
+      <div></div>
+      <div>Codice</div>
+      <div>Cliente</div>
+      <div>Tipo</div>
+      <div>Progress</div>
+      <div>Team</div>
+      <div>Scadenza</div>
+    </div>
+    <div id="jobs-list"></div>
+  </div>
+
+  <!-- Kanban Board -->
+  <div class="kanban-board" id="kanban-view">
+    <div class="kanban-column" ondrop="drop(event,'TODO')" ondragover="allowDrop(event)">
+      <div class="kanban-header">
+        <div class="kanban-title">📋 Da fare</div>
+        <div class="kanban-count" id="count-TODO">0</div>
+      </div>
+      <div class="kanban-cards" id="cards-TODO"></div>
+    </div>
+
+    <div class="kanban-column" ondrop="drop(event,'IN_PROGRESS')" ondragover="allowDrop(event)">
+      <div class="kanban-header">
+        <div class="kanban-title">🔥 In lavorazione</div>
+        <div class="kanban-count" id="count-IN_PROGRESS">0</div>
+      </div>
+      <div class="kanban-cards" id="cards-IN_PROGRESS"></div>
+    </div>
+
+    <div class="kanban-column" ondrop="drop(event,'WAITING')" ondragover="allowDrop(event)">
+      <div class="kanban-header">
+        <div class="kanban-title">⏸️ In attesa</div>
+        <div class="kanban-count" id="count-WAITING">0</div>
+      </div>
+      <div class="kanban-cards" id="cards-WAITING"></div>
+    </div>
+
+    <div class="kanban-column" ondrop="drop(event,'DONE')" ondragover="allowDrop(event)">
+      <div class="kanban-header">
+        <div class="kanban-title">✓ Completate</div>
+        <div class="kanban-count" id="count-DONE">0</div>
+      </div>
+      <div class="kanban-cards" id="cards-DONE"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Panel -->
+<div class="detail-panel" id="job-detail-panel">
+  <div class="detail-overlay" onclick="closeJobDetail()"></div>
+  <div class="detail-content">
+    <div class="detail-header">
+      <div>
+        <div class="detail-code" id="detail-code"></div>
+        <div class="detail-client" id="detail-client"></div>
+      </div>
+      <button class="detail-close" onclick="closeJobDetail()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="detail-body" id="detail-body"></div>
+  </div>
+</div>
+
+<script>
+let JOBS=[];
+let filteredJobs=[];
+let currentView='list';
+
+const STATUS_MAP={nuova:'TODO',in_produzione:'IN_PROGRESS',in_attesa:'WAITING',completata:'DONE',annullata:'DONE'};
+const STATUS_REVERSE={TODO:'nuova',IN_PROGRESS:'in_produzione',WAITING:'in_attesa',DONE:'completata'};
+
+function normalizeJob(j){
+  const d=j.due_date?j.due_date.slice(0,10):null;
+  const dL=d?getDaysLeft(d):999;
+  const prio=dL<3?'URGENT':dL<7?'HIGH':dL<14?'MEDIUM':'LOW';
+  const team=[j.pm_name,j.rp_name,j.art_dir_name,j.photography_name].filter(Boolean);
+  return{
+    id:j.id,code:j.code||j.title,title:j.title,
+    type:j.type||'—',client:j.client||'—',
+    prio,dueDate:d,startedAt:j.started_at?j.started_at.slice(0,10):null,
+    team,status:STATUS_MAP[j.status]||'TODO',apiStatus:j.status,
+    category:j.category||''
+  };
+}
+
+async function loadData(){
+  try{
+    const [rawJobs]=await Promise.all([fetch('/api/jobs').then(r=>r.json())]);
+    JOBS=(rawJobs||[]).map(normalizeJob);
+  }catch(e){console.error('Errore caricamento commesse:',e);JOBS=[];}
+  filteredJobs=[...JOBS];
+}
+
+function switchView(view){
+  currentView=view;
+  document.getElementById('view-list').classList.toggle('active',view==='list');
+  document.getElementById('view-kanban').classList.toggle('active',view==='kanban');
+  document.getElementById('list-view').style.display=view==='list'?'block':'none';
+  document.getElementById('kanban-view').classList.toggle('active',view==='kanban');
+  if(view==='kanban') renderKanban();
+}
+
+function renderKanban(){
+  const columns=['TODO','IN_PROGRESS','WAITING','DONE'];
+  columns.forEach(col=>{
+    const jobs=filteredJobs.filter(j=>j.status===col);
+    document.getElementById('count-'+col).textContent=jobs.length;
+    const container=document.getElementById('cards-'+col);
+    container.innerHTML=jobs.map(j=>{
+      const emoji=getProgressEmoji(j);
+      const daysLeft=j.dueDate?getDaysLeft(j.dueDate):null;
+      const daysClass=daysLeft!==null&&daysLeft<3?'critical':daysLeft!==null&&daysLeft<7?'warning':'';
+      const teamChips=(j.team||[]).map(p=>`<span class="card-team-chip">${p}</span>`).join('');
+      const dueTxt=j.dueDate?`📅 ${new Date(j.dueDate).toLocaleDateString('it-IT',{day:'numeric',month:'short'})}${daysLeft>0?' · '+daysLeft+'gg':daysLeft===0?' · Oggi':' · Scaduta'}`:'';
+      return`<div class="kanban-card" draggable="true" ondragstart="drag(event,'${j.id}')" onclick="openJobDetail('${j.id}')">
+        <div class="card-emoji">${emoji}</div>
+        <div class="card-code">${j.code}</div>
+        <div class="card-client">${j.client}${j.category?' · '+j.category:''}</div>
+        <div class="card-team">${teamChips||''}</div>
+        ${dueTxt?`<div class="card-deadline ${daysClass}">${dueTxt}</div>`:''}
+      </div>`;
+    }).join('');
+    if(jobs.length===0) container.innerHTML='<div style="font-size:.68rem;color:var(--paper-m);text-align:center;padding:16px 0">Nessuna commessa</div>';
+  });
+}
+
+let draggedJobId=null;
+function drag(event,jobId){
+  draggedJobId=jobId;
+  event.target.classList.add('dragging');
+}
+function allowDrop(event){ event.preventDefault(); }
+async function drop(event,newStatus){
+  event.preventDefault();
+  if(!draggedJobId)return;
+  const job=JOBS.find(j=>j.id===draggedJobId);
+  if(job){
+    job.status=newStatus;
+    try{
+      await fetch(`/api/jobs/${job.id}`,{method:'PUT',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({...job,status:STATUS_REVERSE[newStatus]||'nuova',
+          type:job.type,areas_csv:'',client:job.client,started_at:job.startedAt,due_date:job.dueDate})});
+    }catch(e){console.error('Errore aggiornamento stato:',e);}
+    renderKanban();
+  }
+  draggedJobId=null;
+  document.querySelectorAll('.kanban-card').forEach(c=>c.classList.remove('dragging'));
+}
+
+function getProgressEmoji(job){
+  if(job.status==='DONE')return'✓';
+  if(job.status==='WAITING')return'⏸';
+  if(!job.dueDate)return'→';
+  const dL=getDaysLeft(job.dueDate);
+  if(dL<0)return'↓';
+  if(dL<3)return'↓';
+  return'→';
+}
+
+function getDaysLeft(dueDate){
+  const today=new Date();
+  today.setHours(0,0,0,0);
+  const due=new Date(dueDate);
+  return Math.ceil((due-today)/(1000*60*60*24));
+}
+
+function renderJobs(){
+  const list=document.getElementById('jobs-list');
+  if(filteredJobs.length===0){
+    list.innerHTML='<div class="empty-state">Nessuna commessa trovata</div>';
+    return;
+  }
+  list.innerHTML=filteredJobs.map(j=>{
+    const emoji=getProgressEmoji(j);
+    const daysLeft=j.dueDate?getDaysLeft(j.dueDate):null;
+    const daysClass=daysLeft!==null&&daysLeft<3?'deadline-critical':daysLeft!==null&&daysLeft<7?'deadline-warning':'';
+    const teamChips=(j.team||[]).map(p=>`<span class="team-chip">${p}</span>`).join('');
+    const dueTxt=j.dueDate?new Date(j.dueDate).toLocaleDateString('it-IT',{day:'numeric',month:'short'}):'—';
+    const dueLeft=daysLeft!==null?(daysLeft>0?daysLeft+'gg':daysLeft===0?'Oggi':'Scaduta'):'';
+    return`<div class="job-row">
+      <div onclick="event.stopPropagation()">
+        <input type="checkbox" class="job-checkbox" data-job-id="${j.id}" onchange="toggleJobSelection('${j.id}')">
+      </div>
+      <div class="job-code" onclick="openJobDetail('${j.id}')">
+        <span class="job-emoji">${emoji}</span>${j.code}
+      </div>
+      <div class="job-client" onclick="openJobDetail('${j.id}')">${j.client}</div>
+      <div onclick="openJobDetail('${j.id}')">
+        <span class="job-type type-${j.type}">${j.type}</span>
+        <span class="prio-badge prio-${j.prio}">${j.prio}</span>
+      </div>
+      <div class="job-progress" onclick="openJobDetail('${j.id}')">
+        <div style="font-size:.68rem;color:var(--paper-m)">${j.category||'—'}</div>
+      </div>
+      <div class="team-chips" onclick="openJobDetail('${j.id}')">${teamChips||'<span style="color:var(--paper-m);font-size:.68rem">—</span>'}</div>
+      <div class="job-deadline" onclick="openJobDetail('${j.id}')">
+        <div class="${daysClass}">${dueTxt}</div>
+        <div class="days-left ${daysClass}">${dueLeft}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function applyFilters(){
+  const clientFilter=document.getElementById('filter-client').value;
+  const typeFilter=document.getElementById('filter-type').value;
+  const prioFilter=document.getElementById('filter-prio').value;
+  const search=document.getElementById('search-box').value.toLowerCase();
+  filteredJobs=JOBS.filter(j=>{
+    if(clientFilter&&j.client!==clientFilter)return false;
+    if(typeFilter&&j.type!==typeFilter)return false;
+    if(prioFilter&&j.prio!==prioFilter)return false;
+    if(search){
+      if(!j.code.toLowerCase().includes(search)&&!(j.client||'').toLowerCase().includes(search)&&!(j.title||'').toLowerCase().includes(search))return false;
+    }
+    return true;
+  });
+  updateStats();
+  renderJobs();
+  if(currentView==='kanban') renderKanban();
+}
+
+function updateStats(){
+  document.getElementById('stat-total').textContent=filteredJobs.length;
+  document.getElementById('stat-active').textContent=filteredJobs.filter(j=>j.status==='IN_PROGRESS').length;
+  document.getElementById('stat-urgent').textContent=filteredJobs.filter(j=>j.prio==='URGENT').length;
+  const dueThisWeek=filteredJobs.filter(j=>j.dueDate&&getDaysLeft(j.dueDate)<=7&&getDaysLeft(j.dueDate)>=0).length;
+  document.getElementById('stat-images').textContent=dueThisWeek;
+}
+
+function openJobDetail(jobId){
+  const job=JOBS.find(j=>j.id===jobId);
+  if(!job)return;
+  document.getElementById('detail-code').textContent=job.code;
+  document.getElementById('detail-client').textContent=job.client;
+  const teamChips=(job.team||[]).map(p=>`<span class="detail-team-chip">${p}</span>`).join('');
+  const statusLabels={TODO:'📋 Da fare',IN_PROGRESS:'🔥 In lavorazione',WAITING:'⏸️ In attesa',DONE:'✓ Completata'};
+  const prioLabels={URGENT:'🔴 Urgente',HIGH:'🟠 Alta',MEDIUM:'🟡 Media',LOW:'🟢 Bassa'};
+  const daysLeft=job.dueDate?getDaysLeft(job.dueDate):null;
+  const deadlineText=daysLeft===null?'—':daysLeft>0?daysLeft+' giorni rimanenti':daysLeft===0?'Scade oggi':'Scaduta';
+  const html=`
+    <div class="detail-section">
+      <div class="detail-section-title">Informazioni base</div>
+      <div class="detail-info-grid">
+        <div class="detail-info-item"><div class="detail-info-label">Tipo</div><div class="detail-info-value">${job.type}</div></div>
+        <div class="detail-info-item"><div class="detail-info-label">Categoria</div><div class="detail-info-value">${job.category||'—'}</div></div>
+        <div class="detail-info-item"><div class="detail-info-label">Priorità</div><div class="detail-info-value">${prioLabels[job.prio]||job.prio}</div></div>
+        <div class="detail-info-item"><div class="detail-info-label">Status</div><div class="detail-info-value">${statusLabels[job.status]||job.status}</div></div>
+        <div class="detail-info-item"><div class="detail-info-label">Data inizio</div><div class="detail-info-value">${job.startedAt?new Date(job.startedAt).toLocaleDateString('it-IT'):'Non iniziata'}</div></div>
+        <div class="detail-info-item"><div class="detail-info-label">Scadenza</div><div class="detail-info-value">${job.dueDate?new Date(job.dueDate).toLocaleDateString('it-IT'):'—'}<br><span style="font-size:.68rem;color:var(--paper-m)">${deadlineText}</span></div></div>
+      </div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-title">Team assegnato</div>
+      <div class="detail-team-list">${teamChips||'<span style="color:var(--paper-m);font-size:.72rem">Nessuno assegnato</span>'}</div>
+    </div>
+    <div class="detail-actions">
+      <button class="detail-btn detail-btn-secondary" onclick="changeJobStatus('${job.id}')">Cambia stato</button>
+    </div>
+  `;
+  document.getElementById('detail-body').innerHTML=html;
+  document.getElementById('job-detail-panel').classList.add('open');
+}
+
+function closeJobDetail(){
+  document.getElementById('job-detail-panel').classList.remove('open');
+}
+
+async function changeJobStatus(jobId){
+  const job=JOBS.find(j=>j.id===jobId);
+  if(!job)return;
+  const statuses=['TODO','IN_PROGRESS','WAITING','DONE'];
+  const labels=['📋 Da fare','🔥 In lavorazione','⏸️ In attesa','✓ Completata'];
+  const choice=prompt('Cambia stato a:\n1. '+labels[0]+'\n2. '+labels[1]+'\n3. '+labels[2]+'\n4. '+labels[3]);
+  if(choice>=1&&choice<=4){
+    job.status=statuses[choice-1];
+    try{
+      await fetch(`/api/jobs/${job.id}`,{method:'PUT',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({code:job.code,title:job.title,type:job.type,areas_csv:'',
+          status:STATUS_REVERSE[job.status]||'nuova',client:job.client,
+          started_at:job.startedAt,due_date:job.dueDate})});
+    }catch(e){console.error('Errore aggiornamento stato:',e);}
+    closeJobDetail();
+    if(currentView==='kanban') renderKanban(); else renderJobs();
+  }
+}
+
+function renderProgressWidget(job){
+  if(!job.startedAt||!job.dueDate){
+    return`<div class="progress-widget">
+      <div class="progress-header">
+        <span class="progress-title">Avanzamento temporale</span>
+        <span class="progress-status ontime">⏸ Date non definite</span>
+      </div>
+      <div style="font-size:.68rem;color:var(--paper-m);font-style:italic">Nessuna data di inizio o scadenza</div>
+    </div>`;
+  }
+  const today=new Date();today.setHours(0,0,0,0);
+  const start=new Date(job.startedAt);
+  const due=new Date(job.dueDate);
+  const totalDays=Math.max(1,Math.ceil((due-start)/(1000*60*60*24)));
+  const elapsedDays=Math.max(0,Math.ceil((today-start)/(1000*60*60*24)));
+  const timePct=Math.round((elapsedDays/totalDays)*100);
+  const dL=getDaysLeft(job.dueDate);
+  let status,emoji,message;
+  if(job.status==='DONE'){status='ahead';emoji='✓';message='Completata';}
+  else if(dL<0){status='behind';emoji='↓';message=`Scaduta da ${-dL} giorni`;}
+  else if(dL<3){status='behind';emoji='↓';message=`Urgente — scade in ${dL}gg`;}
+  else if(timePct<80){status='ontime';emoji='→';message='Nei tempi previsti';}
+  else{status='ontime';emoji='→';message=`${dL} giorni rimanenti`;}
+  return`<div class="progress-widget">
+    <div class="progress-header">
+      <span class="progress-title">Avanzamento temporale</span>
+      <span class="progress-status ${status}">${emoji} ${status==='ahead'?'Completata':status==='ontime'?'Nei tempi':'In ritardo'}</span>
+    </div>
+    <div class="progress-bars">
+      <div class="progress-bar-row">
+        <div class="progress-bar-label"><span>Tempo trascorso</span><span><strong>${elapsedDays}</strong> / ${totalDays} gg (${Math.min(timePct,100)}%)</span></div>
+        <div class="progress-bar-track"><div class="progress-bar-fill time" style="width:${Math.min(timePct,100)}%"></div></div>
+      </div>
+    </div>
+    <div class="progress-message ${status}">${emoji} ${message}</div>
+  </div>`;
+}
+
+let selectedJobs=[];
+function toggleJobSelection(jobId){
+  const idx=selectedJobs.indexOf(jobId);
+  if(idx>=0)selectedJobs.splice(idx,1); else selectedJobs.push(jobId);
+  updateBulkToolbar();
+}
+function updateBulkToolbar(){
+  const toolbar=document.getElementById('bulk-toolbar');
+  document.getElementById('bulk-count').textContent=selectedJobs.length;
+  toolbar.classList.toggle('active',selectedJobs.length>0);
+}
+function deselectAll(){
+  selectedJobs=[];
+  document.querySelectorAll('.job-checkbox').forEach(cb=>cb.checked=false);
+  updateBulkToolbar();
+}
+function bulkAssignTeam(){
+  const select=document.getElementById('bulk-assign-team');
+  const person=select.value;
+  if(!person||selectedJobs.length===0)return;
+  selectedJobs.forEach(jobId=>{
+    const job=JOBS.find(j=>j.id===jobId);
+    if(job&&!job.team.includes(person))job.team.push(person);
+  });
+  alert(`${person} assegnato a ${selectedJobs.length} commesse`);
+  select.value='';deselectAll();renderJobs();
+}
+function bulkChangePrio(){
+  const select=document.getElementById('bulk-change-prio');
+  const prio=select.value;
+  if(!prio||selectedJobs.length===0)return;
+  selectedJobs.forEach(jobId=>{
+    const job=JOBS.find(j=>j.id===jobId);
+    if(job)job.prio=prio;
+  });
+  alert(`Priorità cambiata a ${prio} per ${selectedJobs.length} commesse`);
+  select.value='';deselectAll();renderJobs();
+}
+
+async function init(){
+  document.getElementById('jobs-list').innerHTML='<div class="empty-state">Caricamento commesse...</div>';
+  await loadData();
+  filteredJobs=[...JOBS];
+  const clientFilter=document.getElementById('filter-client');
+  clientFilter.innerHTML='<option value="">Tutti i clienti</option>';
+  const uniqueClients=[...new Set(JOBS.map(j=>j.client).filter(c=>c&&c!=='—'))].sort();
+  uniqueClients.forEach(name=>{
+    const opt=document.createElement('option');
+    opt.value=name;opt.textContent=name;
+    clientFilter.appendChild(opt);
+  });
+  updateStats();
+  renderJobs();
+}
+
+init();
+</script>
+</body>
+</html>

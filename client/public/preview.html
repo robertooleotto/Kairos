@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Planning Studio — Calendario Gantt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Sora:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0c0e18;--ink-s:#141622;--ink-r:#1c1f30;--ink-b:#272b40;--ink-f:#3a3f58;
+  --ink-t:#dde1f0;--ink-m:#626882;
+  --paper:#fff;--paper-wknd:#f7f6fe;--paper-out:#fafafa;--paper-l:#e6e6f0;
+  --paper-t:#171727;--paper-s:#5a5a80;--paper-m:#a8a8cc;--paper-h:#efeffa;
+  --today:#1a6fe8;--today-t:#fff;
+  --ok:#22c55e;--warn:#f59e0b;--bad:#ef4444;
+  --cc1:#2e1065;--cc2:#3b0764;--cc3:#4c1d95;--cc4:#5b21b6;--cc5:#6d28d9;
+  --cc6:#7c3aed;--cc7:#8b5cf6;--cc8:#a78bfa;
+  --co1:#0c2a5c;--co2:#1e3a8a;--co3:#1e40af;--co4:#1d4ed8;--co5:#2563eb;
+  --co6:#3b82f6;--co7:#60a5fa;
+  --ft1:#052e16;--ft2:#14532d;--ft3:#15803d;--ft4:#166534;--ft5:#16a34a;
+  --ft6:#22c55e;--ft7:#4ade80;
+  --panel-w:390px;
+  --ease:cubic-bezier(.16,1,.3,1);
+  --sh-lg:0 4px 6px rgba(0,0,0,.05),0 20px 48px rgba(0,0,0,.18);
+  --bar-h:30px;--bar-r:5px;--hdr-h:44px;
+}
+
+/* Palette 20 colori commessa */
+.jc-0{--jc:#4f46e5}.jc-1{--jc:#0891b2}.jc-2{--jc:#059669}.jc-3{--jc:#d97706}.jc-4{--jc:#dc2626}
+.jc-5{--jc:#7c3aed}.jc-6{--jc:#0284c7}.jc-7{--jc:#16a34a}.jc-8{--jc:#b45309}.jc-9{--jc:#be123c}
+.jc-10{--jc:#6d28d9}.jc-11{--jc:#0e7490}.jc-12{--jc:#047857}.jc-13{--jc:#92400e}.jc-14{--jc:#9f1239}
+.jc-15{--jc:#5b21b6}.jc-16{--jc:#0369a1}.jc-17{--jc:#065f46}.jc-18{--jc:#78350f}.jc-19{--jc:#881337}
+
+html,body{font-family:'Sora',system-ui,sans-serif;background:var(--ink);color:var(--ink-t);font-size:14px;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--ink-b);border-radius:3px}
+
+/* TOOLBAR */
+#toolbar{display:flex;align-items:center;gap:10px;padding:0 28px;height:58px;background:var(--ink-s);border-bottom:1px solid var(--ink-b);position:sticky;top:0;z-index:600;backdrop-filter:blur(12px)}
+.brand{display:flex;align-items:center;gap:11px}
+.brand-mark{width:32px;height:32px;border-radius:8px;background:linear-gradient(140deg,#818cf8,#6366f1 60%,#4f46e5);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(99,102,241,.4)}
+.brand-name{font-family:'Fraunces',serif;font-size:1rem;font-weight:700;letter-spacing:-.01em;line-height:1.2}
+.brand-sub{font-size:.62rem;color:var(--ink-m);margin-top:1px}
+.nav-buttons{display:flex;gap:2px;position:absolute;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.05);border-radius:10px;padding:3px}
+.nav-btn{padding:5px 16px;border-radius:8px;font-size:.74rem;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--ink-m);font-family:'Sora',sans-serif;transition:all .15s}
+.nav-btn.active{background:#1c1f30;color:var(--ink-t)}
+.nav-btn:hover:not(.active){color:var(--ink-t);background:rgba(255,255,255,.04)}
+
+/* LAYOUT */
+#layout{display:flex;min-height:calc(100vh - 58px);transition:padding-right .3s var(--ease)}
+#layout.panel-open{padding-right:var(--panel-w)}
+#main{flex:1;padding:22px 28px 48px;min-width:0;transition:all .3s var(--ease)}
+
+/* METRICS ROW */
+.metrics-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.m-card{flex:1;min-width:110px;background:var(--ink-s);border:1px solid var(--ink-b);border-radius:12px;padding:13px 16px;display:flex;flex-direction:column;gap:3px}
+.m-label{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--ink-m)}
+.m-val{font-family:'JetBrains Mono',monospace;font-size:1.35rem;font-weight:600;line-height:1}
+.m-val.ok{color:var(--ok)}.m-val.warn{color:var(--warn)}.m-val.bad{color:var(--bad)}
+.m-sub{font-size:.64rem;color:var(--ink-m)}
+
+/* FILTER BAR — pill style */
+.filter-bar{display:flex;align-items:center;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.filter-group{display:flex;gap:4px;flex-wrap:wrap}
+.filter-sep{width:1px;height:22px;background:var(--ink-b);margin:0 4px;align-self:center}
+.filter-label-pill{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-m);align-self:center;margin-right:2px}
+.f-btn{padding:5px 12px;border:1px solid var(--ink-b);border-radius:20px;background:transparent;color:var(--ink-m);font-family:'Sora',sans-serif;font-size:.72rem;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap}
+.f-btn:hover{color:var(--ink-t);border-color:var(--ink-f);background:rgba(255,255,255,.05)}
+.f-btn.active{color:#fff;border-color:transparent;background:#6366f1}
+.f-btn.f-reset{color:#f87171;border-color:rgba(248,113,113,.25)}
+.f-btn.f-reset:hover{background:rgba(248,113,113,.1)}
+#job-count{font-size:.7rem;color:var(--ink-m);margin-left:auto;align-self:center}
+
+/* CALENDAR CARD */
+.cal-card{background:var(--paper);border-radius:18px;box-shadow:var(--sh-lg);border:1px solid var(--paper-l);overflow:hidden}
+.cal-head{display:flex;align-items:center;gap:10px;padding:15px 22px 13px;border-bottom:1px solid var(--paper-l);flex-wrap:wrap}
+.cal-nav{display:flex;align-items:center;gap:4px}
+.cal-nav-btn{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:transparent;border:1px solid var(--paper-l);color:var(--paper-s);cursor:pointer;transition:all .15s}
+.cal-nav-btn:hover{background:var(--paper-h);color:var(--paper-t);border-color:var(--paper-m)}
+.cal-nav-btn:active{transform:scale(.95)}
+.cal-title-wrap{flex:1;display:flex;justify-content:center}
+.cal-title{font-family:'Fraunces',serif;font-size:1.3rem;font-weight:600;color:var(--paper-t);letter-spacing:-.015em}
+
+/* DOW HEADER */
+.cal-dow{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:2px solid var(--paper-l)}
+.cal-dow-cell{padding:8px 10px;text-align:center;font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--paper-m)}
+.cal-dow-cell.wknd{color:#c0a8e0}
+
+/* WEEK */
+.cal-week{border-bottom:1px solid var(--paper-l)}
+.cal-week:last-child{border-bottom:none}
+.cal-cells-row{display:grid;grid-template-columns:repeat(7,1fr);height:var(--hdr-h)}
+.cal-cell{border-right:1px solid var(--paper-l);display:flex;align-items:flex-start;transition:background .1s}
+.cal-cell:nth-child(7n){border-right:none}
+.cal-cell:hover{background:var(--paper-h)}.cal-cell.out{background:var(--paper-out)}.cal-cell.wknd{background:var(--paper-wknd)}
+.day-num{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;margin:7px 8px 0;font-size:.8rem;font-weight:600;font-family:'JetBrains Mono',monospace;color:var(--paper-t)}
+.day-num.out{color:var(--paper-m)}.day-num.wknd{color:#b0a0cc}
+.day-num.today{background:var(--today);color:var(--today-t);box-shadow:0 2px 10px rgba(26,115,232,.4)}
+
+/* EVENT ROWS */
+.week-events{display:flex;flex-direction:column;gap:3px;padding:0 0 6px}
+.week-events:empty{display:none}
+.ev-row{display:grid;grid-template-columns:repeat(7,1fr);height:var(--bar-h)}
+
+/* SEGMENT */
+.seg{height:var(--bar-h);position:relative;cursor:pointer}
+.seg-inner{
+  position:absolute;top:2px;bottom:2px;left:0;right:0;
+  background:var(--jc,#4f46e5);
+  transition:filter .12s,transform .1s;
+}
+.seg:hover .seg-inner{filter:brightness(.82);transform:scaleY(1.06)}
+.seg.start  .seg-inner{left:4px;border-radius:var(--bar-r) 0 0 var(--bar-r)}
+.seg.end    .seg-inner{right:4px;border-radius:0 var(--bar-r) var(--bar-r) 0}
+.seg.solo   .seg-inner{left:4px;right:4px;border-radius:var(--bar-r)}
+.seg.mid    .seg-inner{left:0;right:0;border-radius:0}
+.seg.active-sel .seg-inner{
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.7),0 0 0 2px rgba(255,255,255,.2),0 4px 12px rgba(0,0,0,.15);
+  transform:translateY(-1px);
+}
+
+.seg-body{display:flex;align-items:center;gap:6px;padding:0 8px;height:100%;overflow:hidden}
+.seg-client{font-size:.64rem;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seg-sep{color:#fff;opacity:.4;font-size:.62rem;flex-shrink:0}
+.seg-code{font-family:'JetBrains Mono',monospace;font-size:.56rem;color:rgba(255,255,255,.7);white-space:nowrap;flex-shrink:0}
+
+/* MORE badge */
+.ev-more{font-size:.6rem;font-weight:700;color:var(--paper-m);padding:0 6px;cursor:pointer;line-height:var(--bar-h)}
+.ev-more:hover{color:var(--paper-t)}
+
+/* DETAIL PANEL */
+#detail-panel{
+  position:fixed;top:58px;right:0;bottom:0;width:var(--panel-w);
+  background:var(--ink-s);border-left:1px solid var(--ink-b);
+  z-index:500;display:flex;flex-direction:column;
+  transform:translateX(100%);transition:transform .3s var(--ease);overflow:hidden;
+}
+#detail-panel.open{transform:translateX(0)}
+.dp-close{position:absolute;top:16px;right:16px;width:28px;height:56px;border-radius:8px;background:rgba(255,255,255,.06);border:none;color:var(--ink-m);cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.dp-close:hover{background:rgba(255,255,255,.12);color:var(--ink-t)}
+.dp-head{padding:20px 48px 16px 20px;border-bottom:1px solid var(--ink-b);flex-shrink:0;display:flex;flex-direction:column;gap:8px}
+.dp-type-row{display:flex;align-items:center;gap:8px}
+.dp-type-badge{padding:3px 10px;border-radius:20px;font-size:.65rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:rgba(99,102,241,.15);color:#a5b4fc}
+.dp-status-badge{padding:3px 10px;border-radius:20px;font-size:.64rem;font-weight:700}
+.dp-title{font-family:'Fraunces',serif;font-size:1.05rem;font-weight:600;color:var(--ink-t);line-height:1.3}
+.dp-code{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--ink-m)}
+.dp-body{flex:1;overflow-y:auto;padding:20px}
+.dp-section{margin-bottom:22px}
+.dp-section-title{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--ink-m);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--ink-b)}
+.dp-kv{display:flex;flex-direction:column;gap:8px}
+.dp-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.dp-key{font-size:.72rem;color:var(--ink-m);font-weight:500;flex-shrink:0}
+.dp-val{font-size:.78rem;color:var(--ink-t);font-weight:600;font-family:'JetBrains Mono',monospace;text-align:right}
+.dp-val.text{font-family:'Sora',sans-serif;font-size:.76rem}
+.dp-actions{display:flex;gap:8px;margin-top:12px}
+.btn-action{flex:1;padding:9px;border-radius:8px;border:1px solid var(--ink-b);background:var(--ink-r);color:var(--ink-t);font-size:.74rem;font-weight:600;cursor:pointer;font-family:'Sora',sans-serif;transition:all .15s}
+.btn-action:hover{background:var(--ink-b)}
+.btn-go{background:rgba(99,102,241,.15);color:#a5b4fc;border-color:rgba(99,102,241,.3)}
+.btn-go:hover{background:rgba(99,102,241,.25)}
+.person-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid var(--ink-b);margin-bottom:6px}
+.person-avatar{width:30px;height:30px;border-radius:50%;background:#6366f1;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;color:#fff;flex-shrink:0}
+.p-name{font-size:.78rem;font-weight:600;color:var(--ink-t)}
+.p-role{font-size:.62rem;color:var(--ink-m);margin-top:1px}
+.job-color-dot{width:10px;height:10px;border-radius:50%;display:inline-block;vertical-align:middle;margin-right:4px;flex-shrink:0}
+
+/* Detail progress */
+.dp-progress-wrap{margin-top:14px}
+.dp-progress-label{display:flex;justify-content:space-between;margin-bottom:5px}
+.dp-progress-label span{font-size:.65rem;color:var(--ink-m)}
+.dp-progress-track{height:4px;background:var(--ink-b);border-radius:2px;overflow:hidden}
+.dp-progress-fill{height:100%;border-radius:2px;background:#6366f1;transition:width .5s var(--ease)}
+
+/* Status badge colors */
+.s-nuova{background:rgba(99,102,241,.12);color:#a5b4fc}
+.s-in_produzione,.s-in_corso{background:rgba(245,158,11,.12);color:#fcd34d}
+.s-in_attesa,.s-sospesa{background:rgba(148,163,184,.12);color:#94a3b8}
+.s-completata{background:rgba(34,197,94,.12);color:#4ade80}
+.s-annullata{background:rgba(239,68,68,.12);color:#f87171}
+
+/* TOOLBAR BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border:none;border-radius:8px;font-family:'Sora',sans-serif;font-size:.76rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s}
+.btn-primary{background:#6366f1;color:#fff;box-shadow:0 2px 8px rgba(99,102,241,.3)}
+.btn-primary:hover{background:#5558e3}
+.btn-success{background:#16a34a;color:#fff}
+.btn-success:hover{background:#15803d}
+.btn-ghost{background:transparent;color:var(--ink-t);border:1px solid var(--ink-b)}
+.btn-ghost:hover{background:rgba(255,255,255,.06)}
+.status-ok{font-size:.72rem;font-weight:600;padding:4px 12px;border-radius:20px;background:rgba(34,197,94,.12);color:#4ade80;border:1px solid rgba(34,197,94,.2)}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
+/* ALERT PANEL */
+.alert-panel{background:var(--paper);border-radius:14px;border:1px solid var(--paper-l);margin-bottom:18px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.12);max-height:0;opacity:0;transition:all .3s cubic-bezier(.16,1,.3,1);pointer-events:none}
+.alert-panel.open{max-height:800px;opacity:1;pointer-events:auto}
+.alert-header{padding:14px 18px;border-bottom:1px solid var(--paper-l);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,rgba(245,158,11,.08),rgba(239,68,68,.08))}
+.alert-title{font-family:'Fraunces',serif;font-size:.95rem;font-weight:600;color:var(--paper-t);display:flex;align-items:center;gap:8px}
+.alert-close-btn{width:24px;height:24px;border-radius:6px;background:rgba(0,0,0,.06);border:none;color:var(--paper-s);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.alert-close-btn:hover{background:rgba(0,0,0,.12);color:var(--paper-t)}
+.alert-body{padding:16px 18px;max-height:500px;overflow-y:auto}
+.alert-list{display:flex;flex-direction:column;gap:10px}
+.alert-item{background:var(--paper-h);border:1px solid var(--paper-l);border-radius:10px;padding:12px 14px;transition:all .15s}
+.alert-item.critical{border-left:3px solid #ef4444;background:rgba(239,68,68,.04)}
+.alert-item.warning{border-left:3px solid #f59e0b;background:rgba(245,158,11,.04)}
+.alert-item.info{border-left:3px solid #6366f1;background:rgba(99,102,241,.04)}
+.alert-item-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}
+.alert-item-title{font-size:.78rem;font-weight:600;color:var(--paper-t);line-height:1.3}
+.alert-item-badge{padding:2px 8px;border-radius:20px;font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;flex-shrink:0}
+.badge-critical{background:rgba(239,68,68,.15);color:#dc2626}
+.badge-warning{background:rgba(245,158,11,.15);color:#d97706}
+.badge-info{background:rgba(99,102,241,.15);color:#4f46e5}
+.alert-item-msg{font-size:.72rem;color:var(--paper-s);line-height:1.5;margin-bottom:10px}
+.alert-options{display:flex;flex-direction:column;gap:6px}
+.alert-option{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;border:1px solid var(--paper-l);background:var(--paper);cursor:pointer;transition:all .15s}
+.alert-option:hover{border-color:var(--paper-m);background:var(--paper-h)}
+.alert-option-icon{width:28px;height:28px;border-radius:6px;background:rgba(99,102,241,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.alert-option-text{flex:1;font-size:.72rem;color:var(--paper-t);font-weight:500}
+.alert-option-arrow{color:var(--paper-m);flex-shrink:0}
+
+/* PLAN MODAL */
+.plan-modal{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:900;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .25s}
+.plan-modal.open{opacity:1;pointer-events:auto}
+.plan-modal-inner{background:var(--paper);border-radius:18px;border:1px solid var(--paper-l);width:min(900px,100%);max-height:90vh;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.4);transform:translateY(20px) scale(.96);transition:transform .3s cubic-bezier(.16,1,.3,1)}
+.plan-modal.open .plan-modal-inner{transform:translateY(0) scale(1)}
+.plan-modal-header{padding:18px 20px;border-bottom:1px solid var(--paper-l);display:flex;align-items:center;justify-content:space-between}
+.plan-modal-title{font-family:'Fraunces',serif;font-size:1.1rem;font-weight:600;color:var(--paper-t)}
+.plan-modal-body{padding:20px;max-height:calc(90vh - 140px);overflow-y:auto}
+.plan-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px}
+.plan-summary-card{background:var(--paper-h);border:1px solid var(--paper-l);border-radius:10px;padding:12px 14px;text-align:center}
+.plan-summary-val{font-family:'JetBrains Mono',monospace;font-size:1.3rem;font-weight:600;color:var(--paper-t)}
+.plan-summary-lbl{font-size:.62rem;color:var(--paper-m);margin-top:3px;text-transform:uppercase;letter-spacing:.06em}
+.daily-plan{display:flex;flex-direction:column;gap:12px}
+.daily-plan-day{background:var(--paper);border:1px solid var(--paper-l);border-radius:10px;padding:12px 14px}
+.daily-plan-date{font-family:'Fraunces',serif;font-size:.85rem;font-weight:600;color:var(--paper-t);margin-bottom:8px}
+.daily-plan-persons{display:flex;flex-direction:column;gap:6px}
+.daily-plan-person{display:flex;align-items:baseline;gap:8px}
+.daily-plan-name{font-size:.72rem;font-weight:600;color:var(--paper-s);min-width:90px}
+.daily-plan-jobs{font-size:.68rem;color:var(--paper-m);font-family:'JetBrains Mono',monospace}
+.plan-modal-footer{padding:16px 20px;border-top:1px solid var(--paper-l);display:flex;justify-content:flex-end;gap:10px}
+
+/* EOD WIDGET */
+.eod-widget{position:fixed;bottom:20px;right:20px;background:var(--paper);border:1px solid var(--paper-l);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.25);width:380px;max-height:70vh;overflow-y:auto;z-index:850;transform:translateY(120%);opacity:0;transition:all .4s cubic-bezier(.16,1,.3,1);pointer-events:none}
+.eod-widget.open{transform:translateY(0);opacity:1;pointer-events:auto}
+.eod-header{padding:16px 18px;border-bottom:1px solid var(--paper-l);display:flex;align-items:center;justify-content:space-between}
+.eod-title{font-family:'Fraunces',serif;font-size:.95rem;font-weight:600;color:var(--paper-t)}
+.eod-body{padding:16px 18px}
+.eod-job-row{display:flex;flex-direction:column;gap:6px;padding:10px 12px;background:var(--paper-h);border:1px solid var(--paper-l);border-radius:10px;margin-bottom:10px}
+.eod-job-title{font-size:.75rem;font-weight:600;color:var(--paper-t)}
+.eod-job-subtitle{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--paper-m)}
+.eod-job-inputs{display:grid;grid-template-columns:80px 1fr;gap:8px;margin-top:6px}
+.eod-footer{padding:14px 18px;border-top:1px solid var(--paper-l);display:flex;justify-content:space-between;align-items:center}
+.eod-total{font-size:.75rem;color:var(--paper-s)}
+.eod-total strong{font-family:'JetBrains Mono',monospace;color:var(--paper-t);font-weight:600}
+.eod-input{background:var(--paper);border:1px solid var(--paper-l);border-radius:6px;padding:7px 10px;color:var(--paper-t);font-family:'Sora',sans-serif;font-size:.75rem;outline:none;width:100%}
+.eod-input:focus{border-color:#6366f1}
+</style>
+</head>
+<body>
+
+<div id="toolbar">
+  <div class="brand">
+    <img src="nudesign-logo.png" alt="NuDesign" style="height:56px;object-fit:contain">
+    <div class="brand-sub" style="display:none">Planning Studio</div>
+  </div>
+  <div class="nav-buttons">
+    <button class="nav-btn active" onclick="location.href='preview.html'">Calendario</button>
+    <button class="nav-btn" onclick="location.href='status.html'">Stato</button>
+    <button class="nav-btn" onclick="location.href='report.html'">Report</button>
+    <button class="nav-btn" onclick="location.href='team.html'">Team</button>
+    <button class="nav-btn" onclick="location.href='commesse.html'">Commesse</button>
+    <button class="nav-btn" onclick="location.href='clienti.html'">Clienti</button>
+  </div>
+  <button class="btn btn-success" id="btn-autoassign" onclick="runAutoAssign()" style="margin-left:auto">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+    Auto-assegna
+  </button>
+  <button class="btn btn-ghost" onclick="openEOD()" title="Registra ore giornata">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+    Fine giornata
+  </button>
+  <span class="status-ok" id="status-badge" style="display:none">Piano applicato ✔</span>
+</div>
+
+<div id="layout">
+  <div id="main">
+
+    <!-- METRICS ROW -->
+    <div class="metrics-row" id="metrics-row">
+      <div class="m-card"><div class="m-label">Commesse attive</div><div class="m-val" id="m-active">—</div><div class="m-sub" id="m-active-sub">caricamento...</div></div>
+      <div class="m-card"><div class="m-label">In scadenza</div><div class="m-val warn" id="m-soon">—</div><div class="m-sub">entro 7 giorni</div></div>
+      <div class="m-card"><div class="m-label">Scadute</div><div class="m-val bad" id="m-overdue">—</div><div class="m-sub" id="m-overdue-sub">commesse</div></div>
+      <div class="m-card"><div class="m-label">Completate</div><div class="m-val ok" id="m-done">—</div><div class="m-sub" id="m-done-sub">totale</div></div>
+      <div class="m-card"><div class="m-label">Visibili nel mese</div><div class="m-val" id="m-visible">—</div><div class="m-sub" id="m-visible-sub">nel calendario</div></div>
+    </div>
+
+    <!-- FILTER BAR — pill buttons -->
+    <div class="filter-bar">
+      <span class="filter-label-pill">Stato</span>
+      <div class="filter-group">
+        <button class="f-btn active" data-s="" onclick="setStatusFilter(this,'')">Tutti</button>
+        <button class="f-btn" data-s="nuova" onclick="setStatusFilter(this,'nuova')">Nuova</button>
+        <button class="f-btn" data-s="in_produzione" onclick="setStatusFilter(this,'in_produzione')">In produzione</button>
+        <button class="f-btn" data-s="in_attesa" onclick="setStatusFilter(this,'in_attesa')">In attesa</button>
+        <button class="f-btn" data-s="completata" onclick="setStatusFilter(this,'completata')">Completata</button>
+      </div>
+      <div class="filter-sep"></div>
+      <span class="filter-label-pill">Cliente</span>
+      <select id="filter-client" style="padding:5px 10px;border:1px solid var(--ink-b);border-radius:20px;background:var(--ink-r);color:var(--ink-t);font-family:'Sora',sans-serif;font-size:.72rem;cursor:pointer;outline:none" onchange="applyFilters()">
+        <option value="">Tutti</option>
+      </select>
+      <button class="f-btn f-reset" onclick="resetFilters()">✕ Reset</button>
+      <span id="job-count"></span>
+    </div>
+
+    <!-- CALENDAR -->
+    <div class="cal-card">
+      <div class="cal-head">
+        <div class="cal-nav">
+          <button class="cal-nav-btn" onclick="changeMonth(-1)">‹</button>
+        </div>
+        <div class="cal-title-wrap">
+          <div class="cal-title" id="cal-title">...</div>
+        </div>
+        <div class="cal-nav">
+          <button class="cal-nav-btn" onclick="changeMonth(0)" title="Oggi">•</button>
+          <button class="cal-nav-btn" onclick="changeMonth(1)">›</button>
+        </div>
+      </div>
+      <div class="cal-dow">
+        <div class="cal-dow-cell">Lun</div><div class="cal-dow-cell">Mar</div><div class="cal-dow-cell">Mer</div>
+        <div class="cal-dow-cell">Gio</div><div class="cal-dow-cell">Ven</div>
+        <div class="cal-dow-cell wknd">Sab</div><div class="cal-dow-cell wknd">Dom</div>
+      </div>
+      <div id="cal-weeks"></div>
+    </div>
+
+  </div>
+
+  <div id="detail-panel">
+    <button class="dp-close" onclick="closePanel()">×</button>
+    <div id="dp-head" class="dp-head"></div>
+    <div id="dp-body" class="dp-body"></div>
+  </div>
+</div>
+
+<script src="api-client.js"></script>
+<script>
+let JOBS=[], TEAM=[];
+let CURRENT_YEAR=new Date().getFullYear(), CURRENT_MONTH=new Date().getMonth();
+let FILTERS={client:'', status:''};
+let SELECTED_JOB_ID=null;
+
+const JOB_COLOR_MAP={};
+let COLOR_IDX=0;
+const N_COLORS=20;
+function jobColor(id){
+  if(JOB_COLOR_MAP[id]===undefined){JOB_COLOR_MAP[id]=COLOR_IDX%N_COLORS;COLOR_IDX++;}
+  return JOB_COLOR_MAP[id];
+}
+const COLOR_HEX=[
+  '#4f46e5','#0891b2','#059669','#d97706','#dc2626',
+  '#7c3aed','#0284c7','#16a34a','#b45309','#be123c',
+  '#6d28d9','#0e7490','#047857','#92400e','#9f1239',
+  '#5b21b6','#0369a1','#065f46','#78350f','#881337'
+];
+
+const STATUS_LABELS={
+  nuova:'Nuova',in_produzione:'In produzione',in_corso:'In corso',
+  in_attesa:'In attesa',sospesa:'Sospesa',completata:'Completata',annullata:'Annullata'
+};
+
+async function init(){
+  try{
+    [JOBS, TEAM]=await Promise.all([api.jobs.list(), api.collaborators.list()]);
+    JOBS=(JOBS||[]).filter(j=>j.started_at&&j.due_date);
+    TEAM=TEAM||[];
+    JOBS.forEach(j=>jobColor(j.id));
+
+    const clients=[...new Set(JOBS.map(j=>j.client))].filter(Boolean).sort();
+    document.getElementById('filter-client').innerHTML=
+      '<option value="">Tutti</option>'+
+      clients.map(c=>`<option value="${c}">${c}</option>`).join('');
+
+    updateMetrics();
+    render();
+  }catch(e){
+    console.error('Errore init:',e);
+  }
+}
+
+function updateMetrics(){
+  const today=new Date();today.setHours(0,0,0,0);
+  const in7=new Date(today);in7.setDate(in7.getDate()+7);
+  const DONE=['completata','COMPLETATA'];
+  const CANCEL=['annullata','ANNULLATA'];
+  const active=JOBS.filter(j=>!DONE.includes(j.status)&&!CANCEL.includes(j.status));
+  const done=JOBS.filter(j=>DONE.includes(j.status));
+  const overdue=active.filter(j=>j.due_date&&new Date(j.due_date)<today);
+  const soon=active.filter(j=>{
+    if(!j.due_date)return false;
+    const d=new Date(j.due_date);d.setHours(0,0,0,0);
+    return d>=today&&d<=in7;
+  });
+  const monthStart=new Date(CURRENT_YEAR,CURRENT_MONTH,1);
+  const monthEnd=new Date(CURRENT_YEAR,CURRENT_MONTH+1,0);
+  const visible=JOBS.filter(j=>new Date(j.started_at)<=monthEnd&&new Date(j.due_date)>=monthStart);
+
+  document.getElementById('m-active').textContent=active.length;
+  document.getElementById('m-active-sub').textContent=`${JOBS.length} totali`;
+  document.getElementById('m-soon').textContent=soon.length;
+  document.getElementById('m-overdue').textContent=overdue.length;
+  document.getElementById('m-overdue-sub').textContent=overdue.length===0?'tutto ok':'ritardo';
+  document.getElementById('m-done').textContent=done.length;
+  document.getElementById('m-done-sub').textContent=JOBS.length>0?`${Math.round((done.length/JOBS.length)*100)}% del totale`:'';
+  document.getElementById('m-visible').textContent=visible.length;
+  document.getElementById('m-visible-sub').textContent=monthName(CURRENT_MONTH);
+}
+
+function monthName(m){
+  return ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'][m];
+}
+
+function setStatusFilter(btn, val){
+  document.querySelectorAll('.f-btn[data-s]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  FILTERS.status=val;
+  render();
+}
+
+function applyFilters(){
+  FILTERS.client=document.getElementById('filter-client').value;
+  render();
+}
+
+function resetFilters(){
+  FILTERS={client:'',status:''};
+  document.getElementById('filter-client').value='';
+  document.querySelectorAll('.f-btn[data-s]').forEach(b=>b.classList.remove('active'));
+  document.querySelector('.f-btn[data-s=""]').classList.add('active');
+  render();
+}
+
+function filteredJobs(){
+  return JOBS.filter(j=>{
+    if(FILTERS.client&&j.client!==FILTERS.client)return false;
+    if(FILTERS.status&&j.status!==FILTERS.status)return false;
+    return true;
+  });
+}
+
+function changeMonth(dir){
+  if(dir===0){CURRENT_YEAR=new Date().getFullYear();CURRENT_MONTH=new Date().getMonth();}
+  else{
+    CURRENT_MONTH+=dir;
+    if(CURRENT_MONTH<0){CURRENT_MONTH=11;CURRENT_YEAR--;}
+    else if(CURRENT_MONTH>11){CURRENT_MONTH=0;CURRENT_YEAR++;}
+  }
+  updateMetrics();
+  render();
+}
+
+function render(){
+  const MONTHS=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+  document.getElementById('cal-title').textContent=MONTHS[CURRENT_MONTH]+' '+CURRENT_YEAR;
+
+  const jobs=filteredJobs();
+  document.getElementById('job-count').textContent=jobs.length+' commess'+(jobs.length===1?'a':'e');
+
+  const first=new Date(CURRENT_YEAR,CURRENT_MONTH,1);
+  const startDay=first.getDay()===0?6:first.getDay()-1;
+  const d=new Date(first);
+  d.setDate(d.getDate()-startDay);
+
+  let html='';
+  const today=new Date();today.setHours(0,0,0,0);
+
+  for(let w=0;w<6;w++){
+    const weekDays=[];
+    let cells='';
+    for(let i=0;i<7;i++){
+      const isOut=d.getMonth()!==CURRENT_MONTH;
+      const isWknd=d.getDay()===0||d.getDay()===6;
+      const isToday=d.toDateString()===today.toDateString();
+      cells+=`<div class="cal-cell ${isOut?'out':''} ${isWknd?'wknd':''}">
+        <div class="day-num${isToday?' today':''}${isOut?' out':''}${isWknd&&!isToday?' wknd':''}">${d.getDate()}</div>
+      </div>`;
+      weekDays.push(new Date(d));
+      d.setDate(d.getDate()+1);
+    }
+    html+=`<div class="cal-week">
+      <div class="cal-cells-row">${cells}</div>
+      ${renderWeekEvents(weekDays,jobs)}
+    </div>`;
+    if(d.getMonth()!==CURRENT_MONTH&&w>=4)break;
+  }
+  document.getElementById('cal-weeks').innerHTML=html;
+}
+
+const MAX_ROWS=8;
+
+function renderWeekEvents(days,jobs){
+  const wStart=days[0],wEnd=days[6];
+  const weekJobs=jobs.filter(j=>{
+    const s=parseDate(j.started_at),e=parseDate(j.due_date);
+    return s<=wEnd&&e>=wStart;
+  });
+  if(weekJobs.length===0)return '<div class="week-events"></div>';
+
+  const lanes=[];
+  const jobLane={};
+  weekJobs.forEach(j=>{
+    const s=parseDate(j.started_at),e=parseDate(j.due_date);
+    let lane=lanes.findIndex(l=>!l.some(ex=>{
+      const es=parseDate(ex.started_at),ee=parseDate(ex.due_date);
+      return s<=ee&&e>=es;
+    }));
+    if(lane===-1){lane=lanes.length;lanes.push([]);}
+    lanes[lane].push(j);
+    jobLane[j.id]=lane;
+  });
+
+  const totalRows=lanes.length;
+  const visibleRows=Math.min(totalRows,MAX_ROWS);
+  const hiddenCount=totalRows-visibleRows;
+
+  let evHTML='';
+  for(let li=0;li<visibleRows;li++){
+    const rowJobs=lanes[li];
+    let rowHTML='';
+    for(let di=0;di<7;di++){
+      const day=days[di];
+      const j=rowJobs.find(job=>{
+        const s=parseDate(job.started_at),e=parseDate(job.due_date);
+        return day>=s&&day<=e;
+      });
+      if(!j){rowHTML+='<div class="seg empty"></div>';continue;}
+
+      const s=parseDate(j.started_at),e=parseDate(j.due_date);
+      const realStart=day.toDateString()===s.toDateString();
+      const realEnd=day.toDateString()===e.toDateString();
+      const isWeekStart=di===0;
+      const isWeekEnd=di===6;
+
+      let type='mid';
+      if(realStart&&realEnd)type='solo';
+      else if(realStart||isWeekStart)type=realStart?'start':'start';
+      else if(realEnd||isWeekEnd)type=realEnd?'end':'end';
+
+      const ci=jobColor(j.id);
+      const showLabel=realStart||isWeekStart;
+      const isSelected=j.id===SELECTED_JOB_ID;
+      const jStr=JSON.stringify(j).replace(/'/g,'&apos;');
+
+      rowHTML+=`<div class="seg ${type} jc-${ci}${isSelected?' active-sel':''}" onclick='showDetail(${jStr})'>
+        <div class="seg-inner">
+          ${showLabel?`<div class="seg-body">
+            <span class="seg-client">${j.client||''}</span>
+            ${j.client&&j.code?'<span class="seg-sep">·</span>':''}
+            <span class="seg-code">${j.code||''}</span>
+          </div>`:''}
+        </div>
+      </div>`;
+    }
+    evHTML+=`<div class="ev-row">${rowHTML}</div>`;
+  }
+
+  if(hiddenCount>0){
+    evHTML+=`<div class="ev-row"><div style="grid-column:1/-1;padding:0 8px;font-size:.62rem;color:var(--paper-m);line-height:var(--bar-h)">+${hiddenCount} altr${hiddenCount>1?'e':'a'}</div></div>`;
+  }
+
+  return`<div class="week-events">${evHTML}</div>`;
+}
+
+function parseDate(str){
+  const d=new Date(str);d.setHours(0,0,0,0);return d;
+}
+
+function daysUntil(str){
+  if(!str)return null;
+  const today=new Date();today.setHours(0,0,0,0);
+  return Math.round((parseDate(str)-today)/(1000*60*60*24));
+}
+
+function fmt(s){return s?new Date(s).toLocaleDateString('it-IT'):'—'}
+
+function showDetail(j){
+  SELECTED_JOB_ID=j.id;
+  const pm=TEAM.find(t=>t.id===j.pm_id);
+  const rp=TEAM.find(t=>t.id===j.rp_id);
+  const ci=jobColor(j.id);
+  const hex=COLOR_HEX[ci];
+  const status=j.status||'';
+  const statusLabel=STATUS_LABELS[status]||status||'—';
+  const du=daysUntil(j.due_date);
+
+  let duStr='—';
+  if(du!==null){
+    if(du<0)duStr=`${Math.abs(du)}gg di ritardo`;
+    else if(du===0)duStr='Oggi';
+    else duStr=`${du}gg`;
+  }
+  const duColor=du!==null&&du<0?'#f87171':du!==null&&du<=3?'#fcd34d':'var(--ink-t)';
+
+  document.getElementById('dp-head').innerHTML=`
+    <div class="dp-type-row">
+      <span class="job-color-dot" style="background:${hex}"></span>
+      <span class="dp-type-badge">${j.type||j.category||'COMMESSA'}</span>
+      <span class="dp-status-badge s-${status}">${statusLabel}</span>
+    </div>
+    <div class="dp-title">${j.title||j.code||'—'}</div>
+    <div class="dp-code">${j.code||''}${j.client?' · '+j.client:''}</div>
+    <div class="dp-actions">
+      <button class="btn-action" onclick="closePanel()">Chiudi</button>
+      <button class="btn-action btn-go" onclick="location.href='commesse.html'">Apri →</button>
+    </div>`;
+
+  const teamRows=[
+    pm?`<div class="person-row">
+      <div class="person-avatar" style="background:${hex}">${initials(pm.name)}</div>
+      <div><div class="p-name">${pm.name}</div><div class="p-role">Project Manager</div></div>
+    </div>`:'',
+    rp?`<div class="person-row">
+      <div class="person-avatar" style="background:#059669">${initials(rp.name)}</div>
+      <div><div class="p-name">${rp.name}</div><div class="p-role">Responsabile</div></div>
+    </div>`:'',
+  ].filter(Boolean).join('')||'<div style="font-size:.72rem;color:var(--ink-m);padding:4px 0">Nessun team assegnato</div>';
+
+  document.getElementById('dp-body').innerHTML=`
+    <div class="dp-section">
+      <div class="dp-section-title">Dettagli</div>
+      <div class="dp-kv">
+        <div class="dp-row"><span class="dp-key">Inizio</span><span class="dp-val">${fmt(j.started_at)}</span></div>
+        <div class="dp-row"><span class="dp-key">Scadenza</span><span class="dp-val" style="color:${duColor}">${fmt(j.due_date)}</span></div>
+        ${du!==null?`<div class="dp-row"><span class="dp-key">${du<0?'Ritardo':'Rimanenti'}</span><span class="dp-val" style="color:${duColor}">${duStr}</span></div>`:''}
+        ${j.client?`<div class="dp-row"><span class="dp-key">Cliente</span><span class="dp-val text">${j.client}</span></div>`:''}
+        ${j.type?`<div class="dp-row"><span class="dp-key">Tipo</span><span class="dp-val text">${j.type}</span></div>`:''}
+        ${j.category?`<div class="dp-row"><span class="dp-key">Categoria</span><span class="dp-val text">${j.category}</span></div>`:''}
+      </div>
+    </div>
+    <div class="dp-section">
+      <div class="dp-section-title">Team assegnato</div>
+      ${teamRows}
+    </div>
+    ${j.notes?`<div class="dp-section">
+      <div class="dp-section-title">Note</div>
+      <div style="font-size:.74rem;color:var(--ink-m);line-height:1.6;background:rgba(255,255,255,.03);border:1px solid var(--ink-b);border-radius:10px;padding:12px;font-style:italic">${j.notes}</div>
+    </div>`:''}`;
+
+  document.getElementById('detail-panel').classList.add('open');
+  document.getElementById('layout').classList.add('panel-open');
+
+  render();
+}
+
+function initials(name){
+  return(name||'').split(' ').map(n=>n[0]||'').join('').toUpperCase().substring(0,2);
+}
+
+function closePanel(){
+  SELECTED_JOB_ID=null;
+  document.getElementById('detail-panel').classList.remove('open');
+  document.getElementById('layout').classList.remove('panel-open');
+  render();
+}
+
+setTimeout(init,200);
+
+/* ════════════════════════════════════════════════
+   AUTO-ASSIGN
+════════════════════════════════════════════════ */
+let currentPlanId = null;
+
+async function runAutoAssign() {
+  const btn = document.getElementById('btn-autoassign');
+  const origHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="animation:spin 1s linear infinite"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg> Calcolo...';
+
+  setTimeout(() => {
+    const result = generateMockSolverResult();
+    btn.disabled = false;
+    btn.innerHTML = origHtml;
+    if (result.alerts.length > 0) showAlerts(result.alerts);
+    showPlanPreview(result);
+    currentPlanId = result.planId;
+  }, 1500);
+}
+
+function generateMockSolverResult() {
+  const today = new Date();
+  const d1 = new Date(today); d1.setDate(today.getDate() + 2);
+  const d2 = new Date(today); d2.setDate(today.getDate() + 5);
+  const fmt = d => d.toISOString().slice(0,10);
+  return {
+    ok: true,
+    planId: 'plan_' + Date.now(),
+    stats: { totalAllocated: 42, alertCount: 2, overtimeCount: 3 },
+    alerts: [
+      { type: 'OVERLOAD', severity: 'warning', jobCode: 'OVERLOAD', message: '2 commesse non coprono la scadenza con il carico attuale', options: [
+        { type: 'OVERTIME', label: 'Proponi straordinari alle risorse coinvolte' },
+        { type: 'POSTPONE', label: 'Posticipa scadenza — contatta cliente' }
+      ]},
+      { type: 'SAME_DEADLINE', severity: 'info', message: `Scadenza condivisa il ${fmt(d2)}: 2 commesse in concorrenza`, options: [
+        { type: 'OVERTIME', label: 'Pianifica straordinari' },
+        { type: 'ADD_PERSON', label: 'Aggiungi risorsa' }
+      ]}
+    ],
+    overtimeProposals: [
+      { collaboratorName: 'Roberto', date: fmt(d1), imgEq: 3, jobCode: 'CC-001', type: 'sera' },
+      { collaboratorName: 'Alessandro', date: fmt(d2), imgEq: 5, jobCode: 'FT-002', type: 'mattina e sera' }
+    ],
+    dailySummary: [
+      { date: fmt(today), persons: [
+        { collaboratorName: 'Roberto', totalImgEq: 8, items: [{ jobCode: 'CC-001', macro: 'CC', imgEq: 8 }] },
+        { collaboratorName: 'Luigi', totalImgEq: 7.5, items: [{ jobCode: 'FT-003', macro: 'FT', imgEq: 7.5 }] }
+      ]},
+      { date: fmt(d1), persons: [
+        { collaboratorName: 'Roberto', totalImgEq: 8, items: [{ jobCode: 'CC-001', macro: 'CC', imgEq: 6 }, { jobCode: 'CC-004', macro: 'CC', imgEq: 2 }] },
+        { collaboratorName: 'Alessandro', totalImgEq: 10, items: [{ jobCode: 'FT-002', macro: 'FT', imgEq: 10 }] }
+      ]}
+    ]
+  };
+}
+
+function showAlerts(alerts) {
+  const panel = document.getElementById('alert-panel');
+  const list = document.getElementById('alert-list');
+  document.getElementById('alert-count').textContent = alerts.length === 1 ? '1 problema rilevato' : `${alerts.length} problemi rilevati`;
+  list.innerHTML = alerts.map(alert => {
+    const badgeCls = alert.severity === 'critical' ? 'badge-critical' : alert.severity === 'warning' ? 'badge-warning' : 'badge-info';
+    const optHtml = (alert.options || []).map(opt => `
+      <div class="alert-option" onclick="handleAlertOption('${alert.type}','${opt.type}')">
+        <div class="alert-option-icon">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2">
+            ${opt.type==='OVERTIME'?'<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>':opt.type==='POSTPONE'?'<path d="M12 2v4M12 18v4"/>':'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>'}
+          </svg>
+        </div>
+        <span class="alert-option-text">${opt.label}</span>
+        <svg class="alert-option-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </div>`).join('');
+    return `<div class="alert-item ${alert.severity}">
+      <div class="alert-item-header">
+        <span class="alert-item-title">${alert.jobCode || alert.message}</span>
+        <span class="alert-item-badge ${badgeCls}">${alert.severity}</span>
+      </div>
+      <div class="alert-item-msg">${alert.message}</div>
+      ${optHtml ? `<div class="alert-options">${optHtml}</div>` : ''}
+    </div>`;
+  }).join('');
+  panel.classList.add('open');
+}
+
+function closeAlerts() {
+  document.getElementById('alert-panel').classList.remove('open');
+}
+
+function handleAlertOption(alertType, optType) {
+  alert(`Funzione in arrivo: ${optType} per ${alertType}`);
+}
+
+function showPlanPreview(result) {
+  document.getElementById('plan-total-allocs').textContent = result.stats.totalAllocated;
+  document.getElementById('plan-alert-count').textContent = result.stats.alertCount;
+  document.getElementById('plan-overtime-count').textContent = result.stats.overtimeCount;
+  const DAYS_IT = ['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
+  const MONTHS_IT = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
+  function fmtIt(s) { const d=new Date(s+'T00:00:00'); return `${DAYS_IT[d.getDay()]} ${d.getDate()} ${MONTHS_IT[d.getMonth()]}`; }
+  document.getElementById('daily-plan').innerHTML = result.dailySummary.map(day => `
+    <div class="daily-plan-day">
+      <div class="daily-plan-date">${fmtIt(day.date)}</div>
+      <div class="daily-plan-persons">${day.persons.map(p => `
+        <div class="daily-plan-person">
+          <span class="daily-plan-name">${p.collaboratorName}</span>
+          <span class="daily-plan-jobs">${p.items.map(i=>`${i.jobCode} (${i.imgEq} img)`).join(' + ')}</span>
+        </div>`).join('')}
+      </div>
+    </div>`).join('');
+  const otSection = document.getElementById('overtime-section');
+  if (result.overtimeProposals && result.overtimeProposals.length > 0) {
+    otSection.style.display = 'block';
+    document.getElementById('overtime-list').innerHTML = result.overtimeProposals.map(ot => `
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        <span style="flex:1;font-size:.72rem;color:var(--paper-t)"><strong>${ot.collaboratorName}</strong> · ${fmtIt(ot.date)} · ${ot.type}</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--paper-m)">${ot.jobCode}</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:600;color:#f59e0b">+${ot.imgEq} img</span>
+      </div>`).join('');
+  } else { otSection.style.display = 'none'; }
+  document.getElementById('plan-modal').classList.add('open');
+}
+
+function closePlanModal() {
+  document.getElementById('plan-modal').classList.remove('open');
+}
+
+function approvePlan() {
+  closePlanModal();
+  closeAlerts();
+  const badge = document.getElementById('status-badge');
+  badge.style.display = 'inline-flex';
+  badge.textContent = 'Piano applicato ✔';
+  setTimeout(() => { badge.style.display = 'none'; }, 5000);
+}
+
+/* ════════════════════════════════════════════════
+   FINE GIORNATA (EOD)
+════════════════════════════════════════════════ */
+let EOD_ENTRIES = [];
+
+function openEOD() {
+  fetch('/api/jobs').then(r=>r.json()).then(jobs=>{
+    const active = (jobs||[]).filter(j=>j.status==='in_produzione'||j.status==='nuova').slice(0,6);
+    const html = active.map(j => `
+      <div class="eod-job-row">
+        <div class="eod-job-title">${j.code||j.title}</div>
+        <div class="eod-job-subtitle">${j.client||''}</div>
+        <div class="eod-job-inputs">
+          <input type="number" class="eod-input eod-hours-input" id="eod-hours-${j.id}" placeholder="0.0" min="0" step="0.5" value="0" oninput="updateEODTotal()">
+          <input type="text" class="eod-input" id="eod-notes-${j.id}" placeholder="Note opzionali">
+        </div>
+      </div>`).join('');
+    document.getElementById('eod-jobs-list').innerHTML = html || '<div style="font-size:.72rem;color:var(--paper-m)">Nessuna commessa attiva trovata</div>';
+    document.getElementById('eod-widget').classList.add('open');
+  }).catch(()=>{
+    document.getElementById('eod-jobs-list').innerHTML = '<div style="font-size:.72rem;color:var(--paper-m)">Caricamento non disponibile</div>';
+    document.getElementById('eod-widget').classList.add('open');
+  });
+}
+
+function closeEOD() {
+  document.getElementById('eod-widget').classList.remove('open');
+}
+
+function updateEODTotal() {
+  let total = 0;
+  document.querySelectorAll('.eod-hours-input').forEach(i => { total += parseFloat(i.value)||0; });
+  document.getElementById('eod-total-hours').textContent = total.toFixed(1);
+}
+
+function saveEOD() {
+  const entries = [];
+  document.querySelectorAll('.eod-job-row').forEach(row => {
+    const inp = row.querySelector('.eod-hours-input');
+    if (!inp) return;
+    const jobId = inp.id.replace('eod-hours-','');
+    const hours = parseFloat(inp.value)||0;
+    const notes = document.getElementById('eod-notes-'+jobId)?.value||'';
+    if (hours > 0) entries.push({ jobId, hours, notes, date: new Date().toISOString().slice(0,10) });
+  });
+  if (entries.length === 0) { alert("Inserisci almeno un'ora di lavoro"); return; }
+  EOD_ENTRIES = EOD_ENTRIES.concat(entries);
+  closeEOD();
+  const badge = document.getElementById('status-badge');
+  badge.style.display = 'inline-flex';
+  badge.textContent = `Registrate ${entries.length} attività ✔`;
+  setTimeout(() => { badge.style.display = 'none'; }, 3000);
+}
+</script>
+
+<!-- ALERT PANEL (inside #main, rendered by JS) -->
+<script>
+document.getElementById('main').insertAdjacentHTML('afterbegin', `
+  <div class="alert-panel" id="alert-panel">
+    <div class="alert-header">
+      <div class="alert-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+        <span id="alert-count">0 problemi rilevati</span>
+      </div>
+      <button class="alert-close-btn" onclick="closeAlerts()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="alert-body"><div class="alert-list" id="alert-list"></div></div>
+  </div>
+`);
+</script>
+
+<!-- PLAN MODAL -->
+<div class="plan-modal" id="plan-modal" onclick="if(event.target.id==='plan-modal')closePlanModal()">
+  <div class="plan-modal-inner">
+    <div class="plan-modal-header">
+      <span class="plan-modal-title">Anteprima piano auto-assegnazione</span>
+      <button class="alert-close-btn" onclick="closePlanModal()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="plan-modal-body">
+      <div class="plan-summary">
+        <div class="plan-summary-card"><div class="plan-summary-val" id="plan-total-allocs">0</div><div class="plan-summary-lbl">Assegnazioni</div></div>
+        <div class="plan-summary-card"><div class="plan-summary-val" id="plan-alert-count">0</div><div class="plan-summary-lbl">Alert</div></div>
+        <div class="plan-summary-card"><div class="plan-summary-val" id="plan-overtime-count">0</div><div class="plan-summary-lbl">Straordinari</div></div>
+      </div>
+      <div style="margin-bottom:12px">
+        <div style="font-family:'Fraunces',serif;font-size:.9rem;font-weight:600;color:var(--paper-t);margin-bottom:8px">Piano giornaliero</div>
+        <div class="daily-plan" id="daily-plan"></div>
+      </div>
+      <div id="overtime-section" style="display:none">
+        <div style="font-family:'Fraunces',serif;font-size:.9rem;font-weight:600;color:var(--paper-t);margin-bottom:8px;display:flex;align-items:center;gap:6px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          Straordinari proposti
+        </div>
+        <div id="overtime-list" style="display:flex;flex-direction:column;gap:6px"></div>
+      </div>
+    </div>
+    <div class="plan-modal-footer">
+      <button class="btn btn-ghost" onclick="closePlanModal()">Annulla</button>
+      <button class="btn btn-success" onclick="approvePlan()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg>
+        Approva e applica
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- EOD WIDGET -->
+<div class="eod-widget" id="eod-widget">
+  <div class="eod-header">
+    <span class="eod-title">📝 Recap giornata</span>
+    <button class="alert-close-btn" onclick="closeEOD()">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="eod-body">
+    <div style="font-size:.72rem;color:var(--paper-m);margin-bottom:12px">Su cosa hai lavorato oggi?</div>
+    <div id="eod-jobs-list"></div>
+  </div>
+  <div class="eod-footer">
+    <div class="eod-total">Totale: <strong id="eod-total-hours">0.0</strong>h / 7.5h previste</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost" style="font-size:.72rem;padding:6px 14px" onclick="closeEOD()">Annulla</button>
+      <button class="btn btn-success" style="font-size:.72rem;padding:6px 14px" onclick="saveEOD()">Conferma</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

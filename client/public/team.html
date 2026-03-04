@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Team — Planning Studio</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Sora:wght@400;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#0f0f17;--paper-h:#16161f;--paper-l:#24242d;
+  --paper-s:#cdd0de;--paper-m:#737889;--paper-t:#f9fafb;
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);min-height:100vh}
+
+.header{
+  padding:14px 24px;border-bottom:1px solid var(--paper-l);
+  display:flex;align-items:center;gap:14px;position:sticky;top:0;
+  background:var(--paper);z-index:100;
+}
+.brand{flex-shrink:0}
+.brand-name{font-family:'Fraunces',serif;font-size:1rem;font-weight:700}
+.brand-sub{font-size:.62rem;color:var(--paper-m);margin-top:1px}
+
+.header-actions{display:flex;gap:8px;align-items:center}
+.btn-primary{
+  padding:7px 15px;border-radius:8px;font-size:.73rem;font-weight:600;
+  background:#6366f1;color:#fff;border:none;cursor:pointer;
+  display:inline-flex;align-items:center;gap:6px;font-family:'Sora',sans-serif;
+  transition:all .15s;
+}
+.btn-primary:hover{background:#5558e3}
+.btn-secondary{
+  padding:7px 15px;border-radius:8px;font-size:.73rem;font-weight:600;
+  background:var(--paper-l);color:var(--paper-t);border:none;cursor:pointer;
+  display:inline-flex;align-items:center;gap:6px;font-family:'Sora',sans-serif;
+  transition:all .15s;
+}
+.btn-secondary:hover{background:var(--paper-m)}
+
+.nav-pills{
+  display:flex;gap:2px;background:rgba(255,255,255,.05);
+  border-radius:10px;padding:3px;
+  position:absolute;left:50%;transform:translateX(-50%);
+}
+.nav-pill{
+  padding:5px 16px;border-radius:8px;font-size:.72rem;font-weight:600;
+  cursor:pointer;border:none;background:transparent;color:var(--paper-m);
+  font-family:'Sora',sans-serif;transition:all .15s;
+}
+.nav-pill.active{background:#1c1f30;color:var(--paper-t)}
+.nav-pill:hover:not(.active){color:var(--paper-s)}
+
+.container{padding:28px 24px;max-width:1400px;margin:0 auto}
+
+.page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:16px}
+.page-title{font-family:'Fraunces',serif;font-size:1.7rem;font-weight:700;margin-bottom:4px}
+.page-sub{font-size:.78rem;color:var(--paper-m)}
+
+/* Section Headers */
+.section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.section-title{
+  font-family:'Fraunces',serif;font-size:1rem;font-weight:600;
+  display:flex;align-items:center;gap:8px;
+}
+.section-count{
+  font-family:'JetBrains Mono',monospace;font-size:.63rem;font-weight:600;
+  padding:2px 8px;border-radius:20px;background:var(--paper-l);color:var(--paper-m);
+}
+
+/* Area Section */
+.area-section{margin-bottom:40px}
+.area-header{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 16px;background:var(--paper-h);
+  border-radius:10px;margin-bottom:16px;border:1px solid var(--paper-l);
+}
+.area-icon{font-size:1.4rem}
+.area-name{font-family:'Fraunces',serif;font-size:1.1rem;font-weight:700}
+.area-count{
+  margin-left:auto;padding:3px 10px;border-radius:6px;
+  background:rgba(99,102,241,.15);color:#a5b4fc;font-size:.72rem;font-weight:600;
+}
+
+.dept-section{margin-bottom:20px}
+.dept-header{
+  font-size:.78rem;font-weight:700;color:var(--paper-m);
+  margin-bottom:12px;padding-bottom:8px;
+  border-bottom:1px solid var(--paper-l);text-transform:uppercase;letter-spacing:.04em;
+}
+
+/* Team Grid */
+.team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+
+/* Person Card — reference style */
+.person-card{
+  background:var(--paper-h);border:1px solid var(--paper-l);border-radius:16px;
+  overflow:hidden;transition:all .2s var(--ease);cursor:pointer;
+}
+.person-card:hover{border-color:var(--paper-m);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.2)}
+
+.pc-stripe{height:4px;width:100%}
+.pc-head{padding:16px 18px 13px;display:flex;align-items:center;gap:13px;border-bottom:1px solid var(--paper-l)}
+.pc-avatar{
+  width:46px;height:46px;border-radius:13px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;font-weight:700;color:#fff;flex-shrink:0;
+  letter-spacing:-.02em;
+}
+.pc-info{flex:1;min-width:0}
+.pc-name{font-family:'Fraunces',serif;font-size:.98rem;font-weight:600;color:var(--paper-t);line-height:1.2}
+.pc-sub{font-size:.68rem;color:var(--paper-m);margin-top:2px}
+.pc-role-badge{
+  display:inline-block;margin-top:4px;padding:2px 8px;border-radius:5px;
+  font-size:.6rem;font-weight:700;letter-spacing:.03em;
+}
+.role-operation{background:rgba(245,158,11,.15);color:#fbbf24}
+.role-area{background:rgba(99,102,241,.15);color:#a5b4fc}
+.role-project{background:rgba(139,92,246,.15);color:#a78bfa}
+.role-operator{background:rgba(107,114,128,.15);color:#9ca3af}
+
+.pc-body{padding:14px 18px 16px;display:flex;flex-direction:column;gap:12px}
+
+/* Capacities */
+.pc-caps-label{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--paper-m);margin-bottom:5px}
+.pc-cap-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);
+}
+.pc-cap-item:last-child{border-bottom:none}
+.pc-cap-name{font-size:.72rem;color:var(--paper-s)}
+.pc-cap-val{font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:600;color:var(--paper-t)}
+
+/* Stats row */
+.pc-stats{display:flex;gap:8px;margin-top:2px}
+.pc-stat{
+  flex:1;background:rgba(255,255,255,.03);border:1px solid var(--paper-l);
+  border-radius:8px;padding:7px 8px;text-align:center;
+}
+.pc-stat-val{font-family:'JetBrains Mono',monospace;font-size:.82rem;font-weight:600;color:var(--paper-t)}
+.pc-stat-lbl{font-size:.55rem;color:var(--paper-m);margin-top:2px;text-transform:uppercase;letter-spacing:.06em}
+
+/* Actions */
+.pc-actions{display:flex;gap:6px;padding:0 18px 16px}
+.pc-btn{
+  flex:1;padding:7px 10px;border-radius:7px;border:none;
+  font-size:.68rem;font-weight:600;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  font-family:'Sora',sans-serif;transition:all .15s;
+}
+.pc-btn-edit{background:rgba(99,102,241,.15);color:#a5b4fc}
+.pc-btn-edit:hover{background:rgba(99,102,241,.25)}
+.pc-btn-del{background:rgba(239,68,68,.12);color:#f87171}
+.pc-btn-del:hover{background:rgba(239,68,68,.22)}
+
+/* Area badges on cards */
+.pc-areas{display:flex;flex-wrap:wrap;gap:4px;padding:0 18px 14px}
+.pc-area-badge{
+  display:inline-flex;align-items:center;gap:3px;
+  padding:2px 8px;border-radius:5px;font-size:.58rem;font-weight:700;letter-spacing:.03em;
+}
+
+/* Area checkboxes in form */
+.area-checks-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px;
+}
+.area-check-item{
+  display:flex;align-items:center;gap:8px;padding:8px 10px;
+  border-radius:8px;border:1px solid var(--paper-l);cursor:pointer;transition:all .15s;
+}
+.area-check-item:hover{border-color:var(--paper-m)}
+.area-check-item.selected{border-color:#6366f1;background:rgba(99,102,241,.08)}
+.area-check-item input[type=checkbox]{accent-color:#6366f1;width:14px;height:14px;cursor:pointer}
+.area-check-icon{font-size:1rem}
+.area-check-label{font-size:.76rem;font-weight:600;color:var(--paper-s)}
+
+/* Area section add-subdivision button */
+.area-add-sub{
+  font-size:.68rem;color:var(--paper-m);background:none;border:1px dashed var(--paper-l);
+  border-radius:6px;padding:5px 12px;cursor:pointer;font-family:'Sora',sans-serif;
+  margin-top:8px;transition:all .15s;
+}
+.area-add-sub:hover{border-color:#6366f1;color:#a5b4fc}
+
+.empty-state{
+  text-align:center;padding:80px 20px;color:var(--paper-m);
+  background:var(--paper-h);border-radius:14px;border:1px dashed var(--paper-l);
+}
+.empty-state-icon{font-size:2.5rem;margin-bottom:12px}
+
+/* Modal */
+.modal{
+  display:none;position:fixed;top:0;left:0;right:0;bottom:0;
+  background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:10000;
+  align-items:center;justify-content:center;overflow-y:auto;padding:20px;
+}
+.modal-content{
+  background:var(--paper-h);border:1px solid var(--paper-l);border-radius:16px;
+  width:100%;max-width:680px;max-height:90vh;overflow-y:auto;padding:28px;
+}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+.modal-title{font-family:'Fraunces',serif;font-size:1.4rem;font-weight:700}
+.modal-close{
+  background:rgba(255,255,255,.06);border:none;color:var(--paper-s);cursor:pointer;
+  font-size:1.2rem;padding:0;width:34px;height:34px;
+  display:flex;align-items:center;justify-content:center;border-radius:8px;
+}
+.modal-close:hover{background:var(--paper-l);color:var(--paper-t)}
+
+.form-group{margin-bottom:18px}
+.form-label{
+  display:block;font-size:.7rem;color:var(--paper-m);margin-bottom:6px;
+  font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+}
+.form-input,.form-select{
+  width:100%;padding:10px 12px;border-radius:8px;
+  background:var(--paper);border:1px solid var(--paper-l);
+  color:var(--paper-t);font-family:'Sora',sans-serif;font-size:.82rem;
+  outline:none;transition:border-color .15s;
+}
+.form-input:focus,.form-select:focus{border-color:#6366f1}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+.capacity-input-group{
+  display:flex;align-items:center;gap:8px;
+  padding:8px;background:var(--paper);border-radius:6px;
+  border:1px solid var(--paper-l);margin-bottom:6px;
+}
+.capacity-input{
+  width:80px;padding:5px 8px;border-radius:5px;
+  background:var(--paper-h);border:1px solid var(--paper-l);
+  color:var(--paper-t);font-size:.8rem;font-family:'JetBrains Mono',monospace;
+  outline:none;text-align:center;
+}
+.capacity-input:focus{border-color:#6366f1}
+
+.form-actions{
+  display:flex;gap:10px;margin-top:22px;
+  padding-top:18px;border-top:1px solid var(--paper-l);
+}
+.btn-save{
+  flex:1;padding:12px;border-radius:8px;
+  background:#6366f1;color:#fff;border:none;
+  font-weight:600;cursor:pointer;font-family:'Sora',sans-serif;font-size:.85rem;
+  transition:all .15s;
+}
+.btn-save:hover{background:#5558e3}
+.btn-cancel{
+  padding:12px 20px;border-radius:8px;
+  background:var(--paper-l);color:var(--paper-s);border:none;
+  font-weight:600;cursor:pointer;font-family:'Sora',sans-serif;font-size:.85rem;
+  transition:all .15s;
+}
+.btn-cancel:hover{background:var(--paper-m);color:var(--paper-t)}
+
+.info-note{
+  font-size:.72rem;color:var(--paper-m);
+  padding:10px 12px;background:rgba(99,102,241,.08);
+  border-radius:8px;margin-bottom:14px;border:1px solid rgba(99,102,241,.15);
+}
+
+/* Admin roles modal */
+.person-table{width:100%;border-collapse:collapse;background:var(--paper);border-radius:10px;overflow:hidden}
+.person-table th{
+  background:var(--paper-l);padding:11px 14px;text-align:left;
+  font-size:.72rem;font-weight:700;text-transform:uppercase;color:var(--paper-m);
+}
+.person-table td{padding:14px;border-top:1px solid var(--paper-l);font-size:.82rem}
+.person-table select{
+  padding:7px 10px;border-radius:6px;
+  background:var(--paper-h);border:1px solid var(--paper-l);
+  color:var(--paper-t);font-family:'Sora',sans-serif;font-size:.78rem;
+  cursor:pointer;min-width:160px;outline:none;
+}
+.badge{display:inline-block;padding:3px 8px;border-radius:5px;font-size:.68rem;font-weight:600}
+.badge-saved{background:rgba(34,197,94,.15);color:#4ade80}
+.badge-pending{background:rgba(245,158,11,.15);color:#fbbf24}
+.info-box{
+  background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.25);
+  border-radius:8px;padding:14px;margin-bottom:20px;font-size:.8rem;line-height:1.6;
+}
+.status-msg{padding:10px 14px;border-radius:8px;margin-bottom:14px;font-size:.82rem}
+.status-success{background:rgba(34,197,94,.12);color:#4ade80}
+.status-error{background:rgba(239,68,68,.12);color:#f87171}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="brand">
+    <img src="nudesign-logo.png" alt="NuDesign" style="height:56px;object-fit:contain">
+  </div>
+
+  <div class="header-actions">
+    <button class="btn-primary" onclick="openPersonForm()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+      Nuova Persona
+    </button>
+    <button id="btn-manage-roles" class="btn-secondary" onclick="openRolesManagement()" style="display:none">
+      ⚙️ Gestisci Ruoli
+    </button>
+  </div>
+
+  <div class="nav-pills">
+    <button class="nav-pill" onclick="location.href='preview.html'">Calendario</button>
+    <button class="nav-pill" onclick="location.href='status.html'">Stato</button>
+    <button class="nav-pill" onclick="location.href='report.html'">Report</button>
+    <button class="nav-pill active">Team</button>
+    <button class="nav-pill" onclick="location.href='commesse.html'">Commesse</button>
+    <button class="nav-pill" onclick="location.href='clienti.html'">Clienti</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Team</div>
+      <div class="page-sub">Gestisci collaboratori, reparti e mansioni</div>
+    </div>
+  </div>
+
+  <div id="team-container">
+    <div class="empty-state">
+      <div class="empty-state-icon">👥</div>
+      <div style="font-size:1rem;font-weight:600;color:var(--paper-s);margin-bottom:6px">Caricamento team...</div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Form Persona -->
+<div id="person-modal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="modal-title" id="person-modal-title">Nuova Persona</div>
+      <button class="modal-close" onclick="closePersonForm()">✕</button>
+    </div>
+
+    <form id="person-form" onsubmit="savePerson(event)">
+      <input type="hidden" id="person-id" name="person_id">
+
+      <div class="form-group">
+        <label class="form-label">Nome Completo *</label>
+        <input type="text" class="form-input" id="person-name" name="name" required placeholder="es: Mario Rossi">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="person-email" name="email" placeholder="mario@nudesign.it">
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Reparto Principale *</label>
+          <select class="form-select" id="person-department" name="department" required>
+            <option value="">-- Seleziona --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Livello Permesso *</label>
+          <select class="form-select" id="person-role" name="role" required onchange="toggleAreaManaged()">
+            <option value="operator">Operatore</option>
+            <option value="project_manager">Project Manager</option>
+            <option value="area_manager">Area Manager</option>
+            <option value="operation_manager">Operation Manager</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Aree di competenza</label>
+        <div class="area-checks-grid" id="area-checks-container"></div>
+      </div>
+
+      <div class="form-group" id="area-managed-group" style="display:none">
+        <label class="form-label">Area Gestita (solo Area Manager)</label>
+        <select class="form-select" id="person-managed-area" name="managed_area">
+          <option value="">-- Nessuna --</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Mansioni e Capacità</label>
+        <div class="info-note">Seleziona le mansioni e indica la capacità giornaliera per ciascuna.</div>
+        <div id="capacities-container"></div>
+        <select class="form-select" id="add-capacity-select" onchange="addCapacity(this.value)" style="margin-top:8px">
+          <option value="">+ Aggiungi mansione...</option>
+        </select>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-save">💾 Salva Persona</button>
+        <button type="button" class="btn-cancel" onclick="closePersonForm()">Annulla</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Gestisci Ruoli (Admin) -->
+<div id="roles-modal" class="modal">
+  <div class="modal-content" style="max-width:1100px">
+    <div class="modal-header">
+      <div class="modal-title">⚙️ Gestisci Ruoli e Reparti</div>
+      <button class="modal-close" onclick="closeRolesManagement()">✕</button>
+    </div>
+
+    <div class="info-box">
+      <strong>Come funziona:</strong><br>
+      1. Seleziona il <strong>Ruolo</strong> per ogni persona<br>
+      2. Seleziona il <strong>Reparto principale</strong><br>
+      3. (Solo Area Manager) Seleziona quale <strong>Area gestisce</strong><br>
+      4. Click <strong>"💾 Salva Tutte le Modifiche"</strong>
+    </div>
+
+    <div id="roles-status-container"></div>
+    <div id="roles-table-container">
+      <div style="text-align:center;padding:40px;color:var(--paper-m)">Caricamento...</div>
+    </div>
+
+    <div id="roles-save-container" style="margin-top:20px;text-align:right;display:none">
+      <button class="btn-primary" onclick="saveAllRoles()">💾 Salva Tutte le Modifiche</button>
+    </div>
+  </div>
+</div>
+
+<script src="api-client.js"></script>
+<script>
+let TEAM=[];
+let AREAS=[];
+let DEPARTMENTS=[];
+let TASK_TYPES=[];
+let CURRENT_USER=null;
+let ROLE_CHANGES={};
+let EDITING_PERSON=null;
+let SELECTED_CAPACITIES={};
+
+/* Stable color map per initial letter */
+const AVATAR_COLORS=[
+  '#5b21b6','#6d28d9','#1d4ed8','#166534','#0f766e','#b45309','#7f1d1d',
+  '#1e3a8a','#14532d','#831843','#7c2d12','#4338ca','#0369a1','#065f46'
+];
+function avatarColor(name){
+  if(!name)return AVATAR_COLORS[0];
+  let h=0;for(let i=0;i<name.length;i++)h=(h<<5)-h+name.charCodeAt(i);
+  return AVATAR_COLORS[Math.abs(h)%AVATAR_COLORS.length];
+}
+function initials(name){
+  if(!name)return'??';
+  return name.split(' ').map(n=>n[0]).join('').toUpperCase().substring(0,2);
+}
+
+const ROLE_LABELS={
+  'operation_manager':'Operation Manager',
+  'area_manager':'Area Manager',
+  'project_manager':'Project Manager',
+  'operator':'Operatore'
+};
+const ROLE_CLASSES={
+  'operation_manager':'role-operation',
+  'area_manager':'role-area',
+  'project_manager':'role-project',
+  'operator':'role-operator'
+};
+
+async function loadCurrentUser(){
+  CURRENT_USER=null;
+  document.getElementById('btn-manage-roles').style.display='none';
+  return null;
+}
+
+async function loadAllData(){
+  try{
+    [AREAS,DEPARTMENTS,TASK_TYPES,TEAM]=await Promise.all([
+      api.areas.list(),
+      api.departments.list(),
+      api.taskTypes.list(),
+      api.collaborators.list()
+    ]);
+    DEPARTMENTS=DEPARTMENTS.map(d=>({...d,area:AREAS.find(a=>a.id===d.area_id)||null}));
+    TEAM=TEAM.map(t=>({
+      ...t,
+      capacities:(t.capacities||[]).map(c=>({
+        ...c,
+        task_type:{id:c.task_type_id,name:c.task_name,icon:c.task_icon,unit:c.task_unit}
+      }))
+    }));
+  }catch(e){
+    console.error('loadAllData error:',e);
+  }
+}
+
+async function init(){
+  await loadCurrentUser();
+  await loadAllData();
+  renderTeam();
+  populateFormDropdowns();
+}
+
+function renderTeam(){
+  const container=document.getElementById('team-container');
+
+  let html='';
+  AREAS.forEach(area=>{
+    const people=TEAM.filter(p=>(p.areas||[]).some(a=>a.id===area.id));
+    const depts=DEPARTMENTS.filter(d=>d.area_id===area.id);
+    const accentBg=area.color+'22';
+    html+=`<div class="area-section">
+      <div class="area-header" style="border-left:3px solid ${area.color}">
+        <div class="area-icon">${area.icon||'🏢'}</div>
+        <div>
+          <div class="area-name">${area.name}</div>
+          ${depts.length>0
+            ? `<div style="font-size:.62rem;color:var(--paper-m);margin-top:1px">${depts.map(d=>d.name).join(' · ')}</div>`
+            : `<div style="font-size:.62rem;color:var(--paper-m);margin-top:1px;font-style:italic">Nessuna suddivisione — <span style="color:#6366f1;cursor:pointer" onclick="addSubdivision(${area.id}, this)" data-name="${area.name}">+ Aggiungi</span></div>`
+          }
+        </div>
+        <div class="area-count" style="background:${accentBg};color:${area.color}">${people.length} ${people.length===1?'persona':'persone'}</div>
+      </div>
+      ${people.length>0
+        ? `<div class="team-grid">${people.map(p=>renderPersonCard(p)).join('')}</div>`
+        : `<div style="font-size:.72rem;color:var(--paper-m);padding:12px 16px;font-style:italic">Nessun collaboratore in questa area</div>`
+      }
+    </div>`;
+  });
+
+  if(TEAM.length===0 && AREAS.length===0){
+    container.innerHTML=`<div class="empty-state">
+      <div class="empty-state-icon">👥</div>
+      <div style="font-size:1rem;font-weight:600;color:var(--paper-s);margin-bottom:6px">Nessuna persona nel team</div>
+      <div style="font-size:.8rem">Click "+ Nuova Persona" per iniziare</div>
+    </div>`;
+    return;
+  }
+
+  const unassigned=TEAM.filter(p=>!(p.areas||[]).length);
+  if(unassigned.length>0){
+    html+=`<div class="area-section">
+      <div class="area-header" style="border-left:3px solid #6b7280">
+        <div class="area-icon">👤</div>
+        <div class="area-name" style="color:var(--paper-m)">Senza area</div>
+        <div class="area-count">${unassigned.length}</div>
+      </div>
+      <div class="team-grid">${unassigned.map(p=>renderPersonCard(p)).join('')}</div>
+    </div>`;
+  }
+
+  container.innerHTML=html||'<div class="empty-state"><div class="empty-state-icon">🏢</div><div style="font-size:.9rem;color:var(--paper-m)">Aree caricate. Aggiungi persone con "+ Nuova Persona"</div></div>';
+}
+
+function renderPersonCard(person){
+  const color=avatarColor(person.name);
+  const ini=initials(person.name);
+  const roleLabel=ROLE_LABELS[person.role]||'Operatore';
+  const roleClass=ROLE_CLASSES[person.role]||'role-operator';
+  const dept=DEPARTMENTS.find(d=>d.id===person.primary_department_id);
+  const caps=(person.capacities||[]);
+  const areas=(person.areas||[]);
+
+  const capsHtml=caps.length>0?`
+    <div>
+      <div class="pc-caps-label">Mansioni</div>
+      ${caps.map(c=>`<div class="pc-cap-item">
+        <span class="pc-cap-name">${c.task_type.icon||''} ${c.task_type.name}</span>
+        <span class="pc-cap-val">${c.capacity_per_day} <span style="font-weight:400;color:var(--paper-m)">${c.task_type.unit||'u/gg'}</span></span>
+      </div>`).join('')}
+    </div>`:'';
+
+  const deptHtml=dept?`<div style="font-size:.68rem;color:var(--paper-m)">📁 ${dept.name}</div>`:'';
+  const areasHtml=areas.length>0?`<div class="pc-areas">${areas.map(a=>`<span class="pc-area-badge" style="background:${a.color}22;color:${a.color}">${a.icon||''} ${a.name}</span>`).join('')}</div>`:'';
+
+  return`<div class="person-card">
+    <div class="pc-stripe" style="background:${color}"></div>
+    <div class="pc-head">
+      <div class="pc-avatar" style="background:${color}">${ini}</div>
+      <div class="pc-info">
+        <div class="pc-name">${person.name}</div>
+        ${person.email?`<div class="pc-sub">${person.email}</div>`:''}
+        ${deptHtml}
+        <span class="pc-role-badge ${roleClass}">${roleLabel}</span>
+      </div>
+    </div>
+    ${areasHtml}
+    <div class="pc-body">
+      ${capsHtml}
+      ${caps.length===0?'<div style="font-size:.72rem;color:var(--paper-m);text-align:center;padding:8px 0">Nessuna mansione configurata</div>':''}
+    </div>
+    <div class="pc-actions">
+      <button class="pc-btn pc-btn-edit" onclick='editPerson(${JSON.stringify(person).replace(/'/g,"&#39;")})'>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Modifica
+      </button>
+      <button class="pc-btn pc-btn-del" onclick="deletePerson('${person.id}','${person.name.replace(/'/g,"\\'")}')">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        Elimina
+      </button>
+    </div>
+  </div>`;
+}
+
+function renderAreaCheckboxes(selectedIds=[]){
+  const container=document.getElementById('area-checks-container');
+  if(!container)return;
+  container.innerHTML=AREAS.map(a=>{
+    const checked=selectedIds.includes(a.id);
+    return`<label class="area-check-item${checked?' selected':''}">
+      <input type="checkbox" value="${a.id}" ${checked?'checked':''} onchange="this.parentElement.classList.toggle('selected',this.checked)">
+      <span class="area-check-icon">${a.icon||'🏢'}</span>
+      <span class="area-check-label" style="color:${a.color}">${a.name}</span>
+    </label>`;
+  }).join('');
+}
+
+function getSelectedAreaIds(){
+  const checks=document.querySelectorAll('#area-checks-container input[type=checkbox]');
+  return Array.from(checks).filter(c=>c.checked).map(c=>parseInt(c.value));
+}
+
+function populateFormDropdowns(){
+  const deptSelect=document.getElementById('person-department');
+  deptSelect.innerHTML='<option value="">-- Seleziona --</option>'+
+    DEPARTMENTS.map(d=>`<option value="${d.id}">${d.name}${d.area?` (${d.area.name})`:''}</option>`).join('');
+
+  const areaSelect=document.getElementById('person-managed-area');
+  areaSelect.innerHTML='<option value="">-- Nessuna --</option>'+
+    AREAS.map(a=>`<option value="${a.id}">${a.icon||''} ${a.name}</option>`).join('');
+
+  const taskSelect=document.getElementById('add-capacity-select');
+  taskSelect.innerHTML='<option value="">+ Aggiungi mansione...</option>'+
+    TASK_TYPES.map(t=>`<option value="${t.id}">${t.icon||''} ${t.name}</option>`).join('');
+
+  renderAreaCheckboxes();
+}
+
+async function addSubdivision(areaId,el){
+  const areaName=el&&el.dataset?el.dataset.name:'area';
+  const name=prompt(`Nuova suddivisione per "${areaName}":`);
+  if(!name||!name.trim())return;
+  try{
+    await fetch('/api/departments',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name.trim(),area_id:areaId})});
+    await loadAllData();
+    renderTeam();
+    populateFormDropdowns();
+  }catch(e){alert('Errore: '+e.message)}
+}
+
+function openPersonForm(person=null){
+  EDITING_PERSON=person;
+  SELECTED_CAPACITIES={};
+  document.getElementById('person-modal-title').textContent=person?'Modifica Persona':'Nuova Persona';
+  if(person){
+    document.getElementById('person-id').value=person.id;
+    document.getElementById('person-name').value=person.name;
+    document.getElementById('person-email').value=person.email||'';
+    document.getElementById('person-department').value=person.primary_department_id||'';
+    document.getElementById('person-role').value=person.role||'operator';
+    document.getElementById('person-managed-area').value=person.managed_area_id||'';
+    if(person.capacities){
+      person.capacities.forEach(cap=>{
+        SELECTED_CAPACITIES[cap.task_type_id]={task_type:cap.task_type,capacity:cap.capacity_per_day};
+      });
+    }
+    const selectedAreaIds=(person.areas||[]).map(a=>a.id);
+    renderAreaCheckboxes(selectedAreaIds);
+  }else{
+    document.getElementById('person-form').reset();
+    document.getElementById('person-id').value='';
+    renderAreaCheckboxes([]);
+  }
+  toggleAreaManaged();
+  renderCapacities();
+  document.getElementById('person-modal').style.display='flex';
+}
+
+function closePersonForm(){
+  document.getElementById('person-modal').style.display='none';
+  EDITING_PERSON=null;SELECTED_CAPACITIES={};
+}
+
+function editPerson(person){openPersonForm(person)}
+
+function toggleAreaManaged(){
+  const role=document.getElementById('person-role').value;
+  document.getElementById('area-managed-group').style.display=role==='area_manager'?'block':'none';
+}
+
+function addCapacity(taskTypeId){
+  if(!taskTypeId)return;
+  const task=TASK_TYPES.find(t=>t.id===taskTypeId);
+  if(!task||SELECTED_CAPACITIES[taskTypeId])return;
+  SELECTED_CAPACITIES[taskTypeId]={task_type:task,capacity:8};
+  document.getElementById('add-capacity-select').value='';
+  renderCapacities();
+}
+
+function removeCapacity(taskTypeId){
+  delete SELECTED_CAPACITIES[taskTypeId];
+  renderCapacities();
+}
+
+function updateCapacity(taskTypeId,value){
+  if(SELECTED_CAPACITIES[taskTypeId])SELECTED_CAPACITIES[taskTypeId].capacity=parseFloat(value)||0;
+}
+
+function renderCapacities(){
+  const container=document.getElementById('capacities-container');
+  if(Object.keys(SELECTED_CAPACITIES).length===0){
+    container.innerHTML='<div style="padding:10px;text-align:center;color:var(--paper-m);font-size:.78rem">Nessuna mansione selezionata</div>';
+    return;
+  }
+  container.innerHTML=Object.entries(SELECTED_CAPACITIES).map(([taskId,cap])=>`
+    <div class="capacity-input-group">
+      <span style="flex:1;font-size:.8rem;color:var(--paper-s)">${cap.task_type.icon||''} ${cap.task_type.name}</span>
+      <input type="number" class="capacity-input" value="${cap.capacity}" min="0" step="0.5"
+        onchange="updateCapacity('${taskId}',this.value)">
+      <span style="font-size:.72rem;color:var(--paper-m)">${cap.task_type.unit||'u/gg'}</span>
+      <button type="button" onclick="removeCapacity('${taskId}')"
+        style="background:none;border:none;color:#f87171;cursor:pointer;font-size:1rem;padding:0 4px">×</button>
+    </div>
+  `).join('');
+}
+
+async function savePerson(event){
+  event.preventDefault();
+  const formData=new FormData(event.target);
+  const personId=formData.get('person_id');
+  const personData={
+    name:formData.get('name'),
+    email:formData.get('email')||null,
+    primary_department_id:formData.get('department')||null,
+    role:formData.get('role'),
+    managed_area_id:formData.get('role')==='area_manager'?formData.get('managed_area'):null,
+    active:true
+  };
+  const selectedAreaIds=getSelectedAreaIds();
+  try{
+    let savedPerson;
+    if(personId){savedPerson=await api.collaborators.update(personId,personData)}
+    else{savedPerson=await api.collaborators.create(personData)}
+    await fetch(`/api/collaborators/${savedPerson.id}/areas`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({area_ids:selectedAreaIds})
+    });
+    for(const[taskId,cap]of Object.entries(SELECTED_CAPACITIES)){
+      await api.collaborators.addCapacity(savedPerson.id,{task_type_id:parseInt(taskId),capacity_per_day:cap.capacity});
+    }
+    closePersonForm();
+    await loadAllData();
+    renderTeam();
+  }catch(err){
+    console.error('Error saving person:',err);
+    alert('Errore salvataggio: '+err.message);
+  }
+}
+
+async function deletePerson(personId,personName){
+  if(!confirm(`Vuoi eliminare ${personName}?`))return;
+  try{
+    await api.collaborators.delete(personId);
+    await loadAllData();
+    renderTeam();
+  }catch(err){
+    console.error('Error deleting person:',err);
+    alert('Errore eliminazione: '+err.message);
+  }
+}
+
+async function openRolesManagement(){
+  document.getElementById('roles-modal').style.display='flex';
+  renderRolesTable();
+}
+
+function closeRolesManagement(){
+  document.getElementById('roles-modal').style.display='none';
+  ROLE_CHANGES={};
+}
+
+function renderRolesTable(){
+  const container=document.getElementById('roles-table-container');
+  if(TEAM.length===0){
+    container.innerHTML='<div style="text-align:center;padding:40px;color:var(--paper-m)">Nessuna persona.</div>';
+    return;
+  }
+  container.innerHTML=`<table class="person-table">
+    <thead><tr>
+      <th>Persona</th><th>Ruolo</th><th>Reparto Principale</th><th>Area Gestita</th><th>Status</th>
+    </tr></thead>
+    <tbody>${TEAM.map(person=>`<tr>
+      <td>
+        <div style="font-weight:700">${person.name}</div>
+        ${person.email?`<div style="color:var(--paper-m);font-size:.72rem;margin-top:2px">${person.email}</div>`:''}
+      </td>
+      <td>
+        <select onchange="updatePersonRole('${person.id}','role',this.value)">
+          <option value="operator" ${person.role==='operator'?'selected':''}>Operatore</option>
+          <option value="project_manager" ${person.role==='project_manager'?'selected':''}>Project Manager</option>
+          <option value="area_manager" ${person.role==='area_manager'?'selected':''}>Area Manager</option>
+          <option value="operation_manager" ${person.role==='operation_manager'?'selected':''}>Operation Manager</option>
+        </select>
+      </td>
+      <td>
+        <select onchange="updatePersonRole('${person.id}','department',this.value)">
+          <option value="">-- Nessuno --</option>
+          ${DEPARTMENTS.map(d=>`<option value="${d.id}" ${person.primary_department_id===d.id?'selected':''}>${d.name}${d.area?` (${d.area.name})`:''}</option>`).join('')}
+        </select>
+      </td>
+      <td>
+        <select id="area-select-${person.id}"
+          onchange="updatePersonRole('${person.id}','managed_area',this.value)"
+          ${person.role!=='area_manager'?'disabled':''}>
+          <option value="">-- Nessuna --</option>
+          ${AREAS.map(a=>`<option value="${a.id}" ${person.managed_area_id===a.id?'selected':''}>${a.icon||''} ${a.name}</option>`).join('')}
+        </select>
+      </td>
+      <td><span class="badge" id="status-${person.id}">—</span></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+  document.getElementById('roles-save-container').style.display='block';
+}
+
+function updatePersonRole(personId,field,value){
+  if(!ROLE_CHANGES[personId])ROLE_CHANGES[personId]={};
+  if(field==='role'){
+    ROLE_CHANGES[personId].role=value;
+    const areaSelect=document.getElementById('area-select-'+personId);
+    if(areaSelect){areaSelect.disabled=value!=='area_manager';if(value!=='area_manager')areaSelect.value=''}
+  }else if(field==='department'){
+    ROLE_CHANGES[personId].primary_department_id=value||null;
+  }else if(field==='managed_area'){
+    ROLE_CHANGES[personId].managed_area_id=value||null;
+  }
+  const sb=document.getElementById('status-'+personId);
+  if(sb){sb.className='badge badge-pending';sb.textContent='Da salvare'}
+}
+
+async function saveAllRoles(){
+  const sc=document.getElementById('roles-status-container');
+  if(Object.keys(ROLE_CHANGES).length===0){
+    sc.innerHTML='<div class="status-error">Nessuna modifica!</div>';
+    setTimeout(()=>sc.innerHTML='',3000);return;
+  }
+  let saved=0;
+  for(const[pid,updates]of Object.entries(ROLE_CHANGES)){
+    try{
+      await api.collaborators.update(pid,updates);saved++;
+      const sb=document.getElementById('status-'+pid);
+      if(sb){sb.className='badge badge-saved';sb.textContent='✓ Salvato'}
+    }catch(err){console.error('Error saving',pid,err)}
+  }
+  ROLE_CHANGES={};
+  sc.innerHTML=`<div class="status-success">✓ Salvate ${saved} persone!</div>`;
+  setTimeout(()=>sc.innerHTML='',5000);
+  await loadAllData();renderTeam();
+}
+
+setTimeout(init,200);
+</script>
+</body>
+</html>

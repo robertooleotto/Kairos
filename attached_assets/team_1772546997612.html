@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Team – Planning Commesse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0c0e18;--ink-s:#141622;--ink-r:#1c1f30;--ink-b:#272b40;--ink-f:#3a3f58;
+  --ink-t:#dde1f0;--ink-m:#626882;--ink-d:#8890b0;
+  --paper:#fff;--paper-l:#e6e6f0;--paper-m:#a8a8cc;--paper-s:#5a5a80;
+  --paper-t:#171727;--paper-h:#f4f4fb;
+  --ok:#22c55e;--warn:#f59e0b;--bad:#ef4444;--info:#6366f1;
+  /* Person accent colors */
+  --ro-c:#5b21b6;--ro-l:#ede9fe;
+  --lu-c:#6d28d9;--lu-l:#f5f3ff;
+  --al-c:#1d4ed8;--al-l:#dbeafe;
+  --ra-c:#166534;--ra-l:#dcfce7;
+  --ease:cubic-bezier(.16,1,.3,1);
+  --sh:0 2px 8px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.12);
+  --sh-lg:0 4px 6px rgba(0,0,0,.04),0 20px 48px rgba(0,0,0,.16);
+}
+html,body{font-family:'Sora',system-ui,sans-serif;background:var(--ink);color:var(--ink-t);font-size:14px;-webkit-font-smoothing:antialiased;min-height:100vh}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--ink-b);border-radius:3px}
+
+/* ═══ TOOLBAR ═══════════════════════════════════════ */
+#toolbar{display:flex;align-items:center;gap:10px;padding:0 28px;height:58px;background:var(--ink-s);border-bottom:1px solid var(--ink-b);position:sticky;top:0;z-index:600;backdrop-filter:blur(12px)}
+.brand{display:flex;align-items:center;gap:11px;margin-right:auto}
+.brand-mark{width:32px;height:32px;border-radius:8px;background:linear-gradient(140deg,#818cf8,#6366f1 60%,#4f46e5);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(99,102,241,.4)}
+.brand-name{font-family:'Fraunces',serif;font-size:.95rem;font-weight:600;letter-spacing:-.01em;line-height:1.2}
+.brand-sub{font-size:.65rem;color:var(--ink-m);margin-top:1px}
+.nav-tabs{display:flex;gap:2px;background:rgba(255,255,255,.05);border-radius:10px;padding:3px}
+.nav-tab{padding:5px 14px;border-radius:8px;font-size:.74rem;font-weight:600;color:var(--ink-m);cursor:pointer;transition:all .15s;border:none;background:transparent;font-family:'Sora',sans-serif}
+.nav-tab:hover{color:var(--ink-t);background:rgba(255,255,255,.06)}
+.nav-tab.active{background:var(--ink-r);color:var(--ink-t)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border:none;border-radius:8px;font-family:'Sora',sans-serif;font-size:.76rem;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn-ghost{background:transparent;color:var(--ink-t);border:1px solid var(--ink-b)}
+.btn-ghost:hover{border-color:var(--ink-f);background:rgba(255,255,255,.05)}
+.btn-primary{background:#6366f1;color:#fff}
+.btn-success{background:#16a34a;color:#fff}
+
+/* ═══ MAIN ═══════════════════════════════════════════ */
+#main{padding:28px 28px 60px;max-width:1400px;margin:0 auto}
+
+.page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:16px}
+.page-title{font-family:'Fraunces',serif;font-size:1.8rem;font-weight:600;letter-spacing:-.02em;color:var(--ink-t);line-height:1}
+.page-title span{color:var(--ink-m);font-weight:400}
+.page-sub{font-size:.78rem;color:var(--ink-m);margin-top:4px}
+
+/* ═══ AI LOGIC BANNER ════════════════════════════════ */
+.ai-banner{
+  background:linear-gradient(135deg,rgba(99,102,241,.12) 0%,rgba(139,92,246,.08) 100%);
+  border:1px solid rgba(99,102,241,.25);
+  border-radius:14px;padding:16px 20px;
+  display:flex;align-items:center;gap:16px;
+  margin-bottom:28px;
+  cursor:pointer;
+  transition:all .2s;
+}
+.ai-banner:hover{border-color:rgba(99,102,241,.45);background:linear-gradient(135deg,rgba(99,102,241,.18) 0%,rgba(139,92,246,.12) 100%)}
+.ai-banner-icon{width:38px;height:38px;border-radius:10px;background:rgba(99,102,241,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ai-banner-text{flex:1}
+.ai-banner-title{font-size:.85rem;font-weight:700;color:var(--info);line-height:1.3}
+.ai-banner-sub{font-size:.72rem;color:var(--ink-m);margin-top:2px;line-height:1.4}
+.ai-banner-arrow{color:var(--ink-f);transition:transform .2s}
+.ai-banner:hover .ai-banner-arrow{transform:translateX(3px)}
+
+/* AI Logic panel (expandable) */
+.ai-logic-panel{
+  background:var(--ink-s);border:1px solid var(--ink-b);border-radius:14px;
+  margin-bottom:28px;overflow:hidden;
+  max-height:0;transition:max-height .4s var(--ease),opacity .3s;
+  opacity:0;pointer-events:none;
+}
+.ai-logic-panel.open{max-height:800px;opacity:1;pointer-events:auto}
+.ai-logic-inner{padding:20px 24px 24px}
+.ai-logic-title{font-family:'Fraunces',serif;font-size:1rem;font-weight:600;color:var(--ink-t);margin-bottom:16px}
+.ai-rules-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.ai-rule{background:rgba(255,255,255,.03);border:1px solid var(--ink-b);border-radius:10px;padding:12px 14px}
+.ai-rule-num{font-family:'JetBrains Mono',monospace;font-size:.6rem;font-weight:700;color:var(--info);margin-bottom:5px;letter-spacing:.06em}
+.ai-rule-title{font-size:.75rem;font-weight:700;color:var(--ink-t);margin-bottom:3px}
+.ai-rule-desc{font-size:.68rem;color:var(--ink-m);line-height:1.5}
+.ai-rule-code{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:#a78bfa;margin-top:4px;opacity:.8}
+
+/* ═══ SECTION HEADERS ════════════════════════════════ */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.section-title{font-family:'Fraunces',serif;font-size:1.05rem;font-weight:600;color:var(--ink-t);display:flex;align-items:center;gap:8px}
+.section-count{font-family:'JetBrains Mono',monospace;font-size:.65rem;font-weight:600;padding:2px 8px;border-radius:20px;background:var(--ink-b);color:var(--ink-m)}
+
+/* ═══ TEAM GRID ══════════════════════════════════════ */
+.team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-bottom:40px}
+
+.person-card{
+  background:var(--ink-s);border:1px solid var(--ink-b);border-radius:16px;
+  overflow:hidden;transition:all .2s var(--ease);cursor:pointer;
+}
+.person-card:hover{border-color:var(--ink-f);transform:translateY(-2px);box-shadow:var(--sh-lg)}
+.person-card.selected{border-color:rgba(99,102,241,.5);box-shadow:0 0 0 3px rgba(99,102,241,.12)}
+
+.pc-stripe{height:4px;width:100%}
+.pc-head{padding:18px 18px 14px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--ink-b)}
+.pc-avatar{
+  width:48px;height:48px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;font-weight:700;color:#fff;flex-shrink:0;
+  letter-spacing:-.02em;
+}
+.pc-info{flex:1;min-width:0}
+.pc-name{font-family:'Fraunces',serif;font-size:1rem;font-weight:600;color:var(--ink-t);line-height:1.2}
+.pc-role{font-size:.69rem;color:var(--ink-m);margin-top:2px}
+.pc-status{display:flex;align-items:center;gap:5px;margin-top:4px}
+.status-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.status-dot.ok{background:var(--ok)}
+.status-dot.away{background:var(--warn)}
+.status-dot.off{background:var(--bad)}
+.status-label{font-size:.64rem;font-weight:600}
+.status-label.ok{color:var(--ok)}.status-label.away{color:var(--warn)}.status-label.off{color:var(--bad)}
+.pc-gcal-btn{
+  display:flex;align-items:center;gap:5px;padding:5px 10px;
+  border-radius:8px;border:1px solid var(--ink-b);background:transparent;
+  color:var(--ink-m);font-size:.65rem;font-weight:600;cursor:pointer;
+  transition:all .15s;white-space:nowrap;font-family:'Sora',sans-serif;
+}
+.pc-gcal-btn:hover{color:var(--ink-t);border-color:var(--ink-f);background:rgba(255,255,255,.04)}
+.pc-gcal-btn.connected{color:#4ade80;border-color:rgba(74,222,128,.3);background:rgba(74,222,128,.06)}
+
+.pc-body{padding:14px 18px 16px;display:flex;flex-direction:column;gap:14px}
+
+/* Capacity bar */
+.pc-capacity{display:flex;flex-direction:column;gap:5px}
+.pc-cap-row{display:flex;justify-content:space-between;align-items:baseline}
+.pc-cap-label{font-size:.63rem;font-weight:600;color:var(--ink-m);text-transform:uppercase;letter-spacing:.07em}
+.pc-cap-val{font-family:'JetBrains Mono',monospace;font-size:.75rem;font-weight:600;color:var(--ink-t)}
+.pc-cap-track{height:5px;background:var(--ink-b);border-radius:3px;overflow:hidden}
+.pc-cap-fill{height:100%;border-radius:3px;transition:width .6s var(--ease)}
+
+/* Section preferences */
+.pc-prefs{display:flex;flex-direction:column;gap:4px}
+.pc-prefs-label{font-size:.63rem;font-weight:600;color:var(--ink-m);text-transform:uppercase;letter-spacing:.07em;margin-bottom:2px}
+.pc-pref-row{display:flex;align-items:center;gap:8px}
+.pc-pref-rank{font-family:'JetBrains Mono',monospace;font-size:.6rem;font-weight:700;color:var(--ink-f);width:14px;flex-shrink:0}
+.pc-pref-bar{flex:1;height:6px;border-radius:3px;background:var(--ink-b);overflow:hidden;position:relative}
+.pc-pref-fill{height:100%;border-radius:3px;position:absolute;left:0;top:0;transition:width .5s var(--ease)}
+.pc-pref-name{font-size:.67rem;font-weight:500;color:var(--ink-d);min-width:110px;flex-shrink:0}
+.pc-pref-speed{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--ink-m);flex-shrink:0}
+
+/* Clients affiliated */
+.pc-clients{display:flex;flex-direction:column;gap:5px}
+.pc-clients-label{font-size:.63rem;font-weight:600;color:var(--ink-m);text-transform:uppercase;letter-spacing:.07em;margin-bottom:2px}
+.pc-client-chips{display:flex;flex-wrap:wrap;gap:5px}
+.pc-client-chip{
+  display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;
+  font-size:.66rem;font-weight:600;border:1px solid;cursor:pointer;transition:all .15s;
+}
+.pc-client-chip:hover{filter:brightness(.9)}
+.chip-primary{/* set inline */}
+.chip-known {background:transparent !important;}
+.chip-tag{font-size:.52rem;font-weight:700;padding:1px 4px;border-radius:4px;opacity:.8}
+
+/* Stats row */
+.pc-stats{display:flex;gap:10px}
+.pc-stat{flex:1;background:rgba(255,255,255,.03);border:1px solid var(--ink-b);border-radius:8px;padding:8px 10px;text-align:center}
+.pc-stat-val{font-family:'JetBrains Mono',monospace;font-size:.9rem;font-weight:600;color:var(--ink-t)}
+.pc-stat-lbl{font-size:.57rem;color:var(--ink-m);margin-top:2px;text-transform:uppercase;letter-spacing:.06em}
+
+/* ═══ CLIENTS GRID ═══════════════════════════════════ */
+.clients-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+
+.client-card{
+  background:var(--ink-s);border:1px solid var(--ink-b);border-radius:14px;
+  overflow:hidden;transition:all .2s var(--ease);cursor:pointer;
+}
+.client-card:hover{border-color:var(--ink-f);transform:translateY(-1px);box-shadow:var(--sh)}
+
+.cc-head{padding:16px 16px 13px;display:flex;align-items:flex-start;gap:12px;border-bottom:1px solid var(--ink-b)}
+.cc-logo{
+  width:42px;height:42px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Fraunces',serif;font-size:1rem;font-weight:700;
+  flex-shrink:0;
+}
+.cc-info{flex:1;min-width:0}
+.cc-name{font-family:'Fraunces',serif;font-size:.9rem;font-weight:600;color:var(--ink-t);line-height:1.2}
+.cc-code{font-family:'JetBrains Mono',monospace;font-size:.63rem;color:var(--ink-m);margin-top:2px}
+.cc-active-badge{
+  display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;
+  font-size:.6rem;font-weight:700;background:rgba(34,197,94,.12);color:#4ade80;border:1px solid rgba(34,197,94,.2);
+  white-space:nowrap;
+}
+.cc-active-badge.none{background:rgba(100,100,120,.1);color:var(--ink-m);border-color:var(--ink-b)}
+
+.cc-body{padding:12px 16px 14px;display:flex;flex-direction:column;gap:12px}
+
+.cc-team-label{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-m);margin-bottom:4px}
+.cc-team-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.cc-team-chip{
+  display:flex;align-items:center;gap:5px;padding:3px 9px;
+  border-radius:20px;font-size:.65rem;font-weight:600;border:1px solid;
+  transition:all .15s;cursor:pointer;
+}
+.cc-team-chip:hover{filter:brightness(.88)}
+.cc-team-chip .role-tag{font-size:.5rem;font-weight:700;padding:1px 4px;border-radius:3px;opacity:.7;text-transform:uppercase}
+
+.cc-notes-area{
+  background:rgba(255,255,255,.03);border:1px solid var(--ink-b);
+  border-radius:8px;padding:8px 10px;
+  font-size:.71rem;color:var(--ink-m);line-height:1.5;
+  font-style:italic;min-height:32px;cursor:text;
+  transition:border-color .15s;
+}
+.cc-notes-area:hover{border-color:var(--ink-f)}
+.cc-notes-area[contenteditable="true"]:focus{outline:none;border-color:#6366f1;background:rgba(99,102,241,.04);color:var(--ink-t);font-style:normal}
+.cc-notes-placeholder{color:var(--ink-f);font-style:italic}
+
+.cc-stats-row{display:flex;gap:8px}
+.cc-stat{flex:1;text-align:center;padding:6px 0}
+.cc-stat-val{font-family:'JetBrains Mono',monospace;font-size:.82rem;font-weight:600;color:var(--ink-t)}
+.cc-stat-lbl{font-size:.55rem;color:var(--ink-m);text-transform:uppercase;letter-spacing:.06em;margin-top:1px}
+
+/* Complexity chips for jobs */
+.cc-complexity{display:flex;gap:6px;flex-wrap:wrap}
+.cx-chip{padding:2px 8px;border-radius:6px;font-size:.62rem;font-weight:600;background:var(--ink-b);color:var(--ink-d)}
+.cx-chip.hi  {background:rgba(239,68,68,.12);color:#f87171}
+.cx-chip.med {background:rgba(245,158,11,.12);color:#fbbf24}
+.cx-chip.lo  {background:rgba(34,197,94,.12);color:#4ade80}
+
+/* Overtime availability */
+.pc-overtime{display:flex;flex-direction:column;gap:5px}
+.pc-overtime-label{font-size:.63rem;font-weight:600;color:var(--ink-m);text-transform:uppercase;letter-spacing:.07em;margin-bottom:2px}
+.pc-overtime-chips{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.ot-chip{
+  display:inline-flex;align-items:center;gap:4px;padding:3px 9px;
+  border-radius:20px;font-size:.64rem;font-weight:600;border:1px solid;
+  transition:all .15s;cursor:pointer;user-select:none;
+}
+.ot-chip.active{background:rgba(245,158,11,.12);color:#fbbf24;border-color:rgba(245,158,11,.3)}
+.ot-chip.inactive{background:transparent;color:var(--ink-f);border-color:var(--ink-b)}
+.ot-chip:hover{filter:brightness(1.15)}
+.ot-extra{font-size:.63rem;color:var(--ink-m);display:flex;align-items:center;gap:4px;margin-left:2px}
+.ot-extra input{width:34px;background:var(--ink-r);border:1px solid var(--ink-b);border-radius:5px;padding:2px 5px;color:var(--ink-t);font-family:'JetBrains Mono',monospace;font-size:.65rem;text-align:center;outline:none}
+.ot-extra input:focus{border-color:var(--warn)}
+
+/* ═══ ADD BUTTONS ════════════════════════════════════ */
+.add-card{
+  border:2px dashed var(--ink-b);border-radius:16px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:8px;padding:32px 20px;cursor:pointer;transition:all .2s;
+  color:var(--ink-f);
+}
+.add-card:hover{border-color:var(--ink-f);color:var(--ink-m);background:rgba(255,255,255,.02)}
+.add-card-icon{width:36px;height:36px;border-radius:10px;background:var(--ink-b);display:flex;align-items:center;justify-content:center}
+.add-card-label{font-size:.75rem;font-weight:600}
+.add-card-sub{font-size:.65rem;color:var(--ink-f);text-align:center;line-height:1.4}
+
+/* ═══ MODAL ══════════════════════════════════════════ */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);
+  z-index:800;display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .2s;
+}
+.modal-overlay.open{opacity:1;pointer-events:auto}
+.modal{
+  background:var(--ink-s);border:1px solid var(--ink-b);border-radius:18px;
+  width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;
+  box-shadow:0 24px 80px rgba(0,0,0,.5);
+  transform:translateY(12px) scale(.97);transition:transform .25s var(--ease);
+}
+.modal-overlay.open .modal{transform:translateY(0) scale(1)}
+.modal-head{padding:20px 20px 16px;border-bottom:1px solid var(--ink-b);display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-family:'Fraunces',serif;font-size:1rem;font-weight:600;color:var(--ink-t)}
+.modal-close{width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.06);border:none;color:var(--ink-m);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.modal-close:hover{background:rgba(255,255,255,.12);color:var(--ink-t)}
+.modal-body{padding:20px}
+.form-group{margin-bottom:16px}
+.form-label{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-m);margin-bottom:6px;display:block}
+.form-input{width:100%;background:var(--ink-r);border:1px solid var(--ink-b);border-radius:8px;padding:8px 12px;color:var(--ink-t);font-family:'Sora',sans-serif;font-size:.8rem;outline:none;transition:border-color .15s}
+.form-input:focus{border-color:#6366f1}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pref-edit-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.pref-edit-rank{font-family:'JetBrains Mono',monospace;font-size:.65rem;font-weight:700;color:var(--ink-m);width:20px}
+.pref-section{flex:1;background:var(--ink-r);border:1px solid var(--ink-b);border-radius:6px;padding:6px 10px;color:var(--ink-t);font-size:.75rem;font-family:'Sora',sans-serif;outline:none}
+.pref-section:focus{border-color:#6366f1}
+.pref-speed{width:72px;background:var(--ink-r);border:1px solid var(--ink-b);border-radius:6px;padding:6px 10px;color:var(--ink-t);font-family:'JetBrains Mono',monospace;font-size:.75rem;outline:none;text-align:center}
+.pref-speed:focus{border-color:#6366f1}
+.form-footer{display:flex;justify-content:flex-end;gap:8px;padding-top:8px;border-top:1px solid var(--ink-b);margin-top:8px}
+
+/* gcal connection indicator */
+.gcal-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid var(--ink-b);border-radius:8px;margin-bottom:8px}
+.gcal-icon{width:26px;height:26px;border-radius:6px;background:rgba(66,133,244,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.gcal-info{flex:1}
+.gcal-name{font-size:.73rem;font-weight:600;color:var(--ink-t)}
+.gcal-status{font-size:.63rem;color:var(--ink-m);margin-top:1px}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.team-grid .person-card,.clients-grid .client-card{animation:fadeUp .35s var(--ease) both}
+.team-grid .person-card:nth-child(1){animation-delay:.05s}
+.team-grid .person-card:nth-child(2){animation-delay:.10s}
+.team-grid .person-card:nth-child(3){animation-delay:.15s}
+.team-grid .person-card:nth-child(4){animation-delay:.20s}
+.clients-grid .client-card:nth-child(1){animation-delay:.08s}
+.clients-grid .client-card:nth-child(2){animation-delay:.13s}
+.clients-grid .client-card:nth-child(3){animation-delay:.18s}
+.clients-grid .client-card:nth-child(4){animation-delay:.23s}
+.clients-grid .client-card:nth-child(5){animation-delay:.28s}
+</style>
+</head>
+<body>
+
+<!-- TOOLBAR -->
+<div id="toolbar">
+  <div class="brand">
+    <div class="brand-mark"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div>
+    <div><div class="brand-name">Planning Commesse</div><div class="brand-sub">LOTR Production Studio</div></div>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab" onclick="location.href='preview.html'">Calendario</button>
+    <button class="nav-tab active">Team</button>
+    <button class="nav-tab" onclick="location.href='clienti.html'">Clienti</button>
+    <button class="nav-tab" onclick="location.href='commesse.html'">Commesse</button>
+    <button class="nav-tab" onclick="location.href='status.html'">Status</button>
+    <button class="nav-tab" onclick="location.href='report.html'">Report</button>
+  </div>
+  <button class="btn btn-primary" onclick="openAddPerson()">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+    Aggiungi persona
+  </button>
+</div>
+
+<div id="main">
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">Team <span>&</span> Clienti</div>
+      <div class="page-sub">Gestisci capacità, preferenze e affiliazioni — l'AI usa questi dati per l'assegnazione automatica</div>
+    </div>
+  </div>
+
+  <!-- AI LOGIC BANNER -->
+  <div class="ai-banner" onclick="toggleAiLogic()">
+    <div class="ai-banner-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2"><path d="M12 2a4 4 0 014 4v1h1a3 3 0 013 3v2a3 3 0 01-3 3h-1v1a4 4 0 01-8 0v-1H7a3 3 0 01-3-3v-2a3 3 0 013-3h1V6a4 4 0 014-4z"/><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/></svg>
+    </div>
+    <div class="ai-banner-text">
+      <div class="ai-banner-title">Logica di assegnazione AI — come funziona</div>
+      <div class="ai-banner-sub">Clicca per vedere le regole che l'AI segue quando assegna automaticamente le commesse al team</div>
+    </div>
+    <svg class="ai-banner-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+  </div>
+
+  <div class="ai-logic-panel" id="ai-logic-panel">
+    <div class="ai-logic-inner">
+      <div class="ai-logic-title">Regole di assegnazione — in ordine di priorità</div>
+      <div class="ai-rules-grid">
+        <div class="ai-rule">
+          <div class="ai-rule-num">REGOLA 01</div>
+          <div class="ai-rule-title">Affiliazione cliente</div>
+          <div class="ai-rule-desc">Per ogni commessa si cerca prima la persona <em>primaria</em> del cliente, poi le persone <em>che conoscono</em> il cliente, poi chiunque abbia capacità disponibile.</div>
+          <div class="ai-rule-code">primary → known[] → any</div>
+        </div>
+        <div class="ai-rule">
+          <div class="ai-rule-num">REGOLA 02</div>
+          <div class="ai-rule-title">Preferenza di sezione</div>
+          <div class="ai-rule-desc">Tra i candidati validi, vince chi ha quella sezione al rango di preferenza più alto. A parità si guarda la velocità specifica su quel tipo di lavoro.</div>
+          <div class="ai-rule-code">pref.rank ASC → speed DESC</div>
+        </div>
+        <div class="ai-rule">
+          <div class="ai-rule-num">REGOLA 03</div>
+          <div class="ai-rule-title">Capacità giornaliera</div>
+          <div class="ai-rule-desc">Si assegna finché la persona non supera la propria soglia giornaliera (imgEq). Se piena, il surplus va alla persona successiva in ordine — split automatico.</div>
+          <div class="ai-rule-code">used + new ≤ dailyCap × complexityFactor</div>
+        </div>
+        <div class="ai-rule">
+          <div class="ai-rule-num">REGOLA 04</div>
+          <div class="ai-rule-title">Priorità URGENT</div>
+          <div class="ai-rule-desc">Una commessa URGENT entra in coda con priorità massima. Le commesse non urgenti vengono spostate in avanti. Se non c'è spazio → alert straordinari.</div>
+          <div class="ai-rule-code">URGENT &gt; HIGH &gt; MEDIUM &gt; LOW</div>
+        </div>
+        <div class="ai-rule">
+          <div class="ai-rule-num">REGOLA 05</div>
+          <div class="ai-rule-title">Tie-breaking</div>
+          <div class="ai-rule-desc">A parità di priorità: prima la data di consegna più vicina. Se anche quella è uguale, la commessa con più immagini prende precedenza (si cerca di distribuire su più persone).</div>
+          <div class="ai-rule-code">dueDate ASC → images DESC</div>
+        </div>
+        <div class="ai-rule">
+          <div class="ai-rule-num">REGOLA 06</div>
+          <div class="ai-rule-title">Assenze & ferie</div>
+          <div class="ai-rule-desc">I giorni di ferie, permessi e malattie vengono letti da Google Calendar. In quei giorni la capacità è 0. Malattie improvvise si aggiungono manualmente.</div>
+          <div class="ai-rule-code">gcal.events → capacity = 0</div>
+        </div>
+        <div class="ai-rule">
+          <div class="ai-rule-num">REGOLA 07</div>
+          <div class="ai-rule-title">Attesa approvazione cliente</div>
+          <div class="ai-rule-desc">Se una fase ha il flag <em>waitingApproval</em>, la fase successiva non viene schedulata finché il flag non viene rimosso manualmente.</div>
+          <div class="ai-rule-code">if waitingApproval → block next phase</div>
+        </div>
+        <div class="ai-rule">
+          <div class="ai-rule-num">REGOLA 08</div>
+          <div class="ai-rule-title">Ricompattamento</div>
+          <div class="ai-rule-desc">Se una commessa finisce prima del previsto, l'AI calcola il nuovo calendario ottimale, mostra un'anteprima diff e chiede conferma prima di applicare.</div>
+          <div class="ai-rule-code">propose → diff preview → confirm</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TEAM SECTION -->
+  <div class="section-header">
+    <div class="section-title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+      Persone
+      <span class="section-count">4</span>
+    </div>
+    <button class="btn btn-ghost" onclick="openAddPerson()" style="font-size:.72rem;padding:5px 12px">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+      Aggiungi
+    </button>
+  </div>
+
+  <div class="team-grid" id="team-grid"></div>
+
+</div>
+
+<!-- MODAL: Add/Edit Person -->
+<div class="modal-overlay" id="modal-person">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title" id="modal-person-title">Nuova persona</span>
+      <button class="modal-close" onclick="closeModal('modal-person')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nome</label>
+          <input class="form-input" id="p-name" placeholder="es. Marco">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Capacità base (imgEq/gg)</label>
+          <input class="form-input" id="p-cap" type="number" value="8" min="1" max="20">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Preferenze sezione (ordine + velocità imgEq/gg)</label>
+        <div id="pref-rows">
+          <div class="pref-edit-row"><span class="pref-edit-rank">1°</span><select class="pref-section"><option>Post Produzione (CC)</option><option>Compositing</option><option>Fotolito</option></select><input class="pref-speed" type="number" value="8" min="1" max="20"><span style="font-size:.6rem;color:var(--ink-m)">img/gg</span></div>
+          <div class="pref-edit-row"><span class="pref-edit-rank">2°</span><select class="pref-section"><option>Compositing</option><option>Post Produzione (CC)</option><option>Fotolito</option></select><input class="pref-speed" type="number" value="6" min="1" max="20"><span style="font-size:.6rem;color:var(--ink-m)">img/gg</span></div>
+          <div class="pref-edit-row"><span class="pref-edit-rank">3°</span><select class="pref-section"><option>Fotolito</option><option>Post Produzione (CC)</option><option>Compositing</option></select><input class="pref-speed" type="number" value="4" min="1" max="20"><span style="font-size:.6rem;color:var(--ink-m)">img/gg</span></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Disponibilità straordinari</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.75rem;color:var(--ink-d)">
+            <input type="checkbox" id="ot-morning" style="accent-color:#f59e0b"> 🌅 Mattina
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.75rem;color:var(--ink-d)">
+            <input type="checkbox" id="ot-evening" style="accent-color:#f59e0b"> 🌙 Sera
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.75rem;color:var(--ink-d)">
+            <input type="checkbox" id="ot-weekend" style="accent-color:#f59e0b"> 📅 Weekend
+          </label>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:.68rem;color:var(--ink-m)">imgEq extra per slot:</span>
+          <input class="form-input" id="ot-extra" type="number" value="3" min="0" max="12" style="width:70px;text-align:center">
+          <span style="font-size:.68rem;color:var(--ink-m)">img/giorno</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Connetti Google Calendar</label>
+        <div class="gcal-row">
+          <div class="gcal-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4285f4" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+          <div class="gcal-info">
+            <div class="gcal-name">Google Calendar</div>
+            <div class="gcal-status">Non connesso — clicca per autorizzare</div>
+          </div>
+          <button class="btn btn-ghost" style="font-size:.68rem;padding:4px 10px">Connetti</button>
+        </div>
+      </div>
+      <div class="form-footer">
+        <button class="btn btn-ghost" onclick="closeModal('modal-person')">Annulla</button>
+        <button class="btn btn-primary">Salva persona</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════
+   DATA
+════════════════════════════════════════════════ */
+const SECTIONS={CC:'Post Produzione',COMP:'Compositing',FT:'Fotolito'};
+const SEC_COLORS={CC:{bg:'#5b21b6',light:'#ede9fe',text:'#5b21b6'},COMP:{bg:'#1d4ed8',light:'#dbeafe',text:'#1d4ed8'},FT:{bg:'#166534',light:'#dcfce7',text:'#166534'}};
+
+const PERSONS=[
+  {
+    id:'col1',name:'Roberto',initials:'RO',
+    color:'#5b21b6',colorLight:'#ede9fe',
+    status:'ok',statusLabel:'Disponibile',
+    baseCap:8,
+    gcalConnected:true,gcalEmail:'roberto@lotr-studio.it',
+    prefs:[
+      {section:'CC',label:'Post Produzione',speed:9,rank:1},
+      {section:'COMP',label:'Compositing',speed:6,rank:2},
+      {section:'FT',label:'Fotolito',speed:4,rank:3},
+    ],
+    primaryClients:['c2','c5'],
+    knownClients:['c1','c3'],
+    overtime:{morning:false,evening:true,weekend:true,extraImgEq:4},
+    activeJobs:3,
+    deliveredThisMonth:7,
+    avgImgPerDay:8.4,
+  },
+  {
+    id:'col2',name:'Luigi',initials:'LU',
+    color:'#6d28d9',colorLight:'#f5f3ff',
+    status:'ok',statusLabel:'Disponibile',
+    baseCap:8,
+    gcalConnected:true,gcalEmail:'luigi@lotr-studio.it',
+    prefs:[
+      {section:'CC',label:'Post Produzione',speed:8,rank:1},
+      {section:'FT',label:'Fotolito',speed:5,rank:2},
+      {section:'COMP',label:'Compositing',speed:4,rank:3},
+    ],
+    primaryClients:['c4'],
+    knownClients:['c2','c5'],
+    overtime:{morning:true,evening:false,weekend:false,extraImgEq:3},
+    activeJobs:4,
+    deliveredThisMonth:6,
+    avgImgPerDay:7.8,
+  },
+  {
+    id:'col3',name:'Alessandro',initials:'AL',
+    color:'#1d4ed8',colorLight:'#dbeafe',
+    status:'away',statusLabel:'In permesso fino al 20/02',
+    baseCap:8,
+    gcalConnected:false,gcalEmail:null,
+    prefs:[
+      {section:'COMP',label:'Compositing',speed:10,rank:1},
+      {section:'CC',label:'Post Produzione',speed:6,rank:2},
+      {section:'FT',label:'Fotolito',speed:4,rank:3},
+    ],
+    primaryClients:['c1','c3'],
+    knownClients:['c4'],
+    overtime:{morning:false,evening:false,weekend:false,extraImgEq:0},
+    activeJobs:2,
+    deliveredThisMonth:9,
+    avgImgPerDay:9.1,
+  },
+  {
+    id:'col4',name:'Raul',initials:'RA',
+    color:'#166534',colorLight:'#dcfce7',
+    status:'ok',statusLabel:'Disponibile',
+    baseCap:8,
+    gcalConnected:true,gcalEmail:'raul@lotr-studio.it',
+    prefs:[
+      {section:'FT',label:'Fotolito',speed:10,rank:1},
+      {section:'COMP',label:'Compositing',speed:7,rank:2},
+      {section:'CC',label:'Post Produzione',speed:5,rank:3},
+    ],
+    primaryClients:['c5'],
+    knownClients:['c1','c4'],
+    overtime:{morning:true,evening:true,weekend:true,extraImgEq:5},
+    activeJobs:5,
+    deliveredThisMonth:11,
+    avgImgPerDay:8.9,
+  },
+];
+
+const CLIENTS=[
+  {id:'c1',name:'Contea di Hobbiton',code:'HOB',
+   primary:'col1',known:['col2'],
+   color:'#854d0e',colorLight:'#fef9c3',
+   activeJobs:2,totalJobs:14,
+   complexity:'med',
+   notes:'Preferiscono ricevere anteprima prima della consegna finale. FTP dedicato.',
+   jobTypes:['Magazine','Calendario','Catalogo'],
+  },
+  {id:'c2',name:'Gondor Editore',code:'GON',
+   primary:'col1',known:['col3'],
+   color:'#0f766e',colorLight:'#ccfbf1',
+   activeJobs:2,totalJobs:22,
+   complexity:'hi',
+   notes:'Cataloghi complessi, spesso URGENT. Referente tecnico: Aragorn (aragorn@gondor.it).',
+   jobTypes:['Catalogo','Annual Report','Brochure'],
+  },
+  {id:'c3',name:'Rohan Studio',code:'ROH',
+   primary:'col3',known:['col2','col4'],
+   color:'#b45309',colorLight:'#fef3c7',
+   activeJobs:1,totalJobs:9,
+   complexity:'med',
+   notes:'Video + immagini. Tempi medio-lunghi. Approvazione cliente necessaria su ogni fase.',
+   jobTypes:['Video CC','Catalogo','Poster'],
+  },
+  {id:'c4',name:'Mordor Industries',code:'MOR',
+   primary:'col2',known:['col4'],
+   color:'#7f1d1d',colorLight:'#fee2e2',
+   activeJobs:3,totalJobs:18,
+   complexity:'hi',
+   notes:'Lavori sempre complessi, nero profondo, CMYK+Pantone. Molto urgenti.',
+   jobTypes:['Packaging','Fotolito','Carte geografiche'],
+  },
+  {id:'c5',name:'Elrond & Associati',code:'ELR',
+   primary:'col4',known:['col1','col3'],
+   color:'#1e3a8a',colorLight:'#dbeafe',
+   activeJobs:3,totalJobs:27,
+   complexity:'lo',
+   notes:'Clienti top. Lavori raffinati, toni freddi. Brochure e libri fotografici.',
+   jobTypes:['Libro fotografico','Brochure','Portfolio'],
+  },
+];
+
+const PM={};PERSONS.forEach(p=>PM[p.id]=p);
+const CM={};CLIENTS.forEach(c=>CM[c.id]=c);
+
+/* ════════════════════════════════════════════════
+   AI LOGIC TOGGLE
+════════════════════════════════════════════════ */
+function toggleAiLogic(){
+  document.getElementById('ai-logic-panel').classList.toggle('open');
+}
+
+/* ════════════════════════════════════════════════
+   RENDER TEAM
+════════════════════════════════════════════════ */
+function renderTeam(){
+  const grid=document.getElementById('team-grid');
+  grid.innerHTML=PERSONS.map(p=>{
+    const maxSpeed=Math.max(...p.prefs.map(pr=>pr.speed));
+
+    // Capacity bar fill % (today's load vs cap — mock)
+    const loadPct=Math.round((p.activeJobs/5)*70)+Math.round(Math.random()*20);
+    const loadColor=loadPct>85?'var(--bad)':loadPct>65?'var(--warn)':'var(--ok)';
+
+    // Pref bars
+    const prefBars=p.prefs.map(pr=>{
+      const sc=SEC_COLORS[pr.section];
+      const w=Math.round((pr.speed/maxSpeed)*100);
+      return`<div class="pc-pref-row">
+        <span class="pc-pref-rank">${pr.rank}°</span>
+        <div class="pc-pref-bar"><div class="pc-pref-fill" style="width:${w}%;background:${sc.bg};opacity:.8"></div></div>
+        <span class="pc-pref-name" style="color:${sc.bg}">${pr.label}</span>
+        <span class="pc-pref-speed">${pr.speed} img/gg</span>
+      </div>`;
+    }).join('');
+
+    // Client chips
+    const priChips=p.primaryClients.map(cid=>{
+      const c=CM[cid];if(!c)return'';
+      return`<span class="pc-client-chip chip-primary" style="background:${c.colorLight};color:${c.color};border-color:${c.color}30" title="Cliente primario">
+        ${c.code}<span class="chip-tag" style="background:${c.color}22;color:${c.color}">P</span>
+      </span>`;
+    }).join('');
+    const knownChips=p.knownClients.map(cid=>{
+      const c=CM[cid];if(!c)return'';
+      return`<span class="pc-client-chip chip-known" style="color:var(--ink-d);border-color:var(--ink-b)" title="Conosce il cliente">
+        ${c.code}<span class="chip-tag" style="background:var(--ink-b);color:var(--ink-m)">K</span>
+      </span>`;
+    }).join('');
+
+    const gcalBtnCls=p.gcalConnected?'pc-gcal-btn connected':'pc-gcal-btn';
+    const gcalTxt=p.gcalConnected?
+      `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Calendario connesso`:
+      `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> Connetti Calendar`;
+
+    return`<div class="person-card" onclick="editPerson('${p.id}')">
+      <div class="pc-stripe" style="background:${p.color}"></div>
+      <div class="pc-head">
+        <div class="pc-avatar" style="background:${p.color}">${p.initials}</div>
+        <div class="pc-info">
+          <div class="pc-name">${p.name}</div>
+          <div class="pc-role">Post Production · ${p.prefs[0].label}</div>
+          <div class="pc-status">
+            <span class="status-dot ${p.status}"></span>
+            <span class="status-label ${p.status}">${p.statusLabel}</span>
+          </div>
+        </div>
+        <button class="${gcalBtnCls}" onclick="event.stopPropagation()" title="Google Calendar">${gcalTxt}</button>
+      </div>
+      <div class="pc-body">
+        <div class="pc-capacity">
+          <div class="pc-cap-row">
+            <span class="pc-cap-label">Carico oggi</span>
+            <span class="pc-cap-val" style="color:${loadColor}">${loadPct}%</span>
+          </div>
+          <div class="pc-cap-track"><div class="pc-cap-fill" style="width:${loadPct}%;background:${loadColor}"></div></div>
+        </div>
+        <div class="pc-prefs">
+          <div class="pc-prefs-label">Preferenze sezione</div>
+          ${prefBars}
+        </div>
+        <div class="pc-clients">
+          <div class="pc-clients-label">Clienti affiliati</div>
+          <div class="pc-client-chips">${priChips}${knownChips}</div>
+        </div>
+        <div class="pc-overtime">
+          <div class="pc-overtime-label">Disponibilità straordinari</div>
+          <div class="pc-overtime-chips">
+            ${['morning','evening','weekend'].map(slot=>{
+              const labels={morning:'🌅 Mattina',evening:'🌙 Sera',weekend:'📅 Weekend'};
+              const active=p.overtime&&p.overtime[slot];
+              return`<span class="ot-chip ${active?'active':'inactive'}" onclick="toggleOvertime('${p.id}','${slot}',this)">${labels[slot]}</span>`;
+            }).join('')}
+            <span class="ot-extra">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              +<input type="number" value="${p.overtime?.extraImgEq||0}" min="0" max="12" 
+                onchange="updateOvertimeExtra('${p.id}',this.value)"
+                onclick="event.stopPropagation()" title="imgEq extra per slot"> img/slot
+            </span>
+          </div>
+        </div>
+        <div class="pc-stats">
+          <div class="pc-stat"><div class="pc-stat-val">${p.activeJobs}</div><div class="pc-stat-lbl">Attive</div></div>
+          <div class="pc-stat"><div class="pc-stat-val">${p.deliveredThisMonth}</div><div class="pc-stat-lbl">Consegnate</div></div>
+          <div class="pc-stat"><div class="pc-stat-val">${p.avgImgPerDay}</div><div class="pc-stat-lbl">img/gg avg</div></div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Add card
+  grid.innerHTML+=`<div class="add-card" onclick="openAddPerson()">
+    <div class="add-card-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></div>
+    <div class="add-card-label">Aggiungi persona</div>
+    <div class="add-card-sub">Nuova risorsa nel team con<br>capacità e preferenze</div>
+  </div>`;
+}
+
+/* ════════════════════════════════════════════════
+   RENDER CLIENTS
+════════════════════════════════════════════════ */
+function renderClients(){
+  const grid=document.getElementById('clients-grid');
+  const cxLabel={hi:'Alta complessità',med:'Complessità media',lo:'Bassa complessità'};
+  const cxCls  ={hi:'hi',med:'med',lo:'lo'};
+
+  grid.innerHTML=CLIENTS.map(c=>{
+    const primary=PM[c.primary];
+    const knowns =c.known.map(id=>PM[id]).filter(Boolean);
+
+    const teamChips=`
+      ${primary?`<span class="cc-team-chip" style="background:${primary.colorLight};color:${primary.color};border-color:${primary.color}30" onclick="scrollToPerson('${c.primary}')">
+        <span>${primary.name}</span>
+        <span class="role-tag" style="background:${primary.color}22;color:${primary.color}">Primario</span>
+      </span>`:''}
+      ${knowns.map(k=>`<span class="cc-team-chip" style="color:var(--ink-d);border-color:var(--ink-b)" onclick="scrollToPerson('${k.id}')">
+        <span>${k.name}</span>
+        <span class="role-tag" style="background:var(--ink-b);color:var(--ink-m)">Conosce</span>
+      </span>`).join('')}`;
+
+    const activeBadge=c.activeJobs>0
+      ?`<span class="cc-active-badge"><span style="width:5px;height:5px;border-radius:50%;background:#4ade80;display:inline-block"></span>${c.activeJobs} attive</span>`
+      :`<span class="cc-active-badge none">Nessuna attiva</span>`;
+
+    const jobTypeChips=c.jobTypes.map(t=>`<span class="cx-chip">${t}</span>`).join('');
+
+    return`<div class="client-card">
+      <div class="cc-head">
+        <div class="cc-logo" style="background:${c.colorLight};color:${c.color}">${c.code}</div>
+        <div class="cc-info">
+          <div class="cc-name">${c.name}</div>
+          <div class="cc-code">${c.code} · <span class="cx-chip ${cxCls[c.complexity]}" style="padding:1px 6px;font-size:.55rem">${cxLabel[c.complexity]}</span></div>
+        </div>
+        ${activeBadge}
+      </div>
+      <div class="cc-body">
+        <div>
+          <div class="cc-team-label">Team assegnato</div>
+          <div class="cc-team-row">${teamChips}</div>
+        </div>
+        <div>
+          <div class="cc-team-label">Tipologie di lavoro</div>
+          <div class="cc-complexity">${jobTypeChips}</div>
+        </div>
+        <div>
+          <div class="cc-team-label">Note operative</div>
+          <div class="cc-notes-area" contenteditable="true" data-cid="${c.id}"
+               onblur="saveNote('${c.id}',this.innerText)">${c.notes||'<span class=cc-notes-placeholder>Aggiungi note operative…</span>'}</div>
+        </div>
+        <div class="cc-stats-row">
+          <div class="cc-stat"><div class="cc-stat-val">${c.activeJobs}</div><div class="cc-stat-lbl">Attive</div></div>
+          <div class="cc-stat"><div class="cc-stat-val">${c.totalJobs}</div><div class="cc-stat-lbl">Totali</div></div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  grid.innerHTML+=`<div class="add-card" onclick="openAddClient()">
+    <div class="add-card-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></div>
+    <div class="add-card-label">Aggiungi cliente</div>
+    <div class="add-card-sub">Nuovo cliente con affiliazioni<br>e note operative</div>
+  </div>`;
+}
+
+/* ════════════════════════════════════════════════
+   INTERACTIONS
+════════════════════════════════════════════════ */
+function saveNote(cid,text){
+  const c=CM[cid];if(c)c.notes=text;
+}
+function scrollToPerson(pid){
+  const cards=document.querySelectorAll('.person-card');
+  const idx=PERSONS.findIndex(p=>p.id===pid);
+  if(idx>=0&&cards[idx]){
+    cards[idx].scrollIntoView({behavior:'smooth',block:'center'});
+    cards[idx].classList.add('selected');
+    setTimeout(()=>cards[idx].classList.remove('selected'),2000);
+  }
+}
+function editPerson(pid){
+  document.getElementById('modal-person-title').textContent='Modifica persona';
+  openModal('modal-person');
+}
+function openAddPerson(){
+  document.getElementById('modal-person-title').textContent='Nuova persona';
+  openModal('modal-person');
+}
+function openAddClient(){/* TODO */}
+function openModal(id){document.getElementById(id).classList.add('open')}
+function toggleOvertime(pid,slot,el){
+  const p=PM[pid];if(!p)return;
+  if(!p.overtime)p.overtime={morning:false,evening:false,weekend:false,extraImgEq:0};
+  p.overtime[slot]=!p.overtime[slot];
+  el.classList.toggle('active',p.overtime[slot]);
+  el.classList.toggle('inactive',!p.overtime[slot]);
+}
+function updateOvertimeExtra(pid,val){
+  const p=PM[pid];if(!p)return;
+  if(!p.overtime)p.overtime={morning:false,evening:false,weekend:false,extraImgEq:0};
+  p.overtime.extraImgEq=parseFloat(val)||0;
+}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'))});
+
+/* Init */
+renderTeam();
+renderClients();
+</script>
+</body>
+</html>

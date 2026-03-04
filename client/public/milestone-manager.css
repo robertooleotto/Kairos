@@ -1,0 +1,212 @@
+/* ═══════════════════════════════════════════════════════════════
+   MILESTONE MANAGER CSS
+   Da includere in commesse.html
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Tab system */
+.modal-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 12px 20px 0;
+  border-bottom: 1px solid var(--paper-l);
+}
+
+.tab-btn {
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  color: var(--paper-m);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 8px 8px 0 0;
+  transition: all 0.15s;
+  font-family: 'Sora', sans-serif;
+  position: relative;
+}
+
+.tab-btn:hover {
+  background: var(--paper-h);
+  color: var(--paper-t);
+}
+
+.tab-btn.active {
+  background: var(--paper-h);
+  color: var(--paper-t);
+}
+
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #6366f1;
+}
+
+/* Tab content */
+.tab-content {
+  display: none;
+  padding: 20px;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* Milestone list in edit mode */
+.milestone-list-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* Milestone card */
+.milestone-card-edit {
+  background: var(--paper-h);
+  border: 1px solid var(--paper-l);
+  border-left: 3px solid #6366f1;
+  border-radius: 8px;
+  padding: 14px;
+  transition: all 0.15s;
+}
+
+.milestone-card-edit:hover {
+  background: var(--paper-l);
+  transform: translateX(4px);
+}
+
+.milestone-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.milestone-order {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--paper-m);
+  background: var(--paper-l);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.btn-milestone-edit,
+.btn-milestone-delete {
+  margin-left: auto;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-milestone-edit {
+  color: var(--paper-s);
+}
+
+.btn-milestone-edit:hover {
+  background: rgba(99, 102, 241, 0.15);
+  color: #a5b4fc;
+}
+
+.btn-milestone-delete {
+  color: #f87171;
+}
+
+.btn-milestone-delete:hover {
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.milestone-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.milestone-phase-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--paper-t);
+}
+
+.milestone-dept {
+  font-size: 0.7rem;
+  color: var(--paper-m);
+}
+
+.milestone-dates {
+  font-size: 0.68rem;
+  color: var(--paper-s);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.milestone-people {
+  font-size: 0.7rem;
+  color: var(--paper-s);
+}
+
+.milestone-status {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  align-self: flex-start;
+  margin-top: 4px;
+}
+
+/* Add milestone button inline */
+.btn-add-milestone-inline {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px dashed var(--paper-l);
+  background: transparent;
+  color: var(--paper-s);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.15s;
+  font-family: 'Sora', sans-serif;
+}
+
+.btn-add-milestone-inline:hover {
+  border-color: #6366f1;
+  background: rgba(99, 102, 241, 0.05);
+  color: #a5b4fc;
+}
+
+/* Scrollbar for milestone list */
+.milestone-list-edit::-webkit-scrollbar {
+  width: 6px;
+}
+
+.milestone-list-edit::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.milestone-list-edit::-webkit-scrollbar-thumb {
+  background: var(--paper-l);
+  border-radius: 3px;
+}
+
+.milestone-list-edit::-webkit-scrollbar-thumb:hover {
+  background: var(--paper-m);
+}

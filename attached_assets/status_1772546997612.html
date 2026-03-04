@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Status — LOTR Planning</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Sora:wght@400;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --paper:#0f0f17;--paper-h:#16161f;--paper-l:#24242d;
+  --paper-s:#cdd0de;--paper-m:#737889;--paper-t:#f9fafb;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);min-height:100vh}
+
+/* Header */
+.header{padding:16px 24px;border-bottom:1px solid var(--paper-l);display:flex;align-items:center;justify-content:space-between}
+.brand-name{font-family:'Fraunces',serif;font-size:1.2rem;font-weight:700}
+.brand-sub{font-size:.68rem;color:var(--paper-m);margin-top:2px}
+
+/* Container */
+.container{padding:24px;max-width:1400px;margin:0 auto}
+
+/* KPI Cards */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:32px}
+.kpi-card{
+  background:var(--paper-h);border:1px solid var(--paper-l);
+  border-radius:14px;padding:20px;
+  transition:all .2s;
+}
+.kpi-card:hover{
+  border-color:rgba(99,102,241,.3);
+  box-shadow:0 4px 12px rgba(0,0,0,.15);
+}
+.kpi-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.kpi-icon{
+  width:40px;height:40px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.2rem;
+}
+.kpi-icon.purple{background:rgba(139,92,246,.15)}
+.kpi-icon.blue{background:rgba(59,130,246,.15)}
+.kpi-icon.green{background:rgba(34,197,94,.15)}
+.kpi-icon.amber{background:rgba(245,158,11,.15)}
+.kpi-icon.red{background:rgba(239,68,68,.15)}
+.kpi-value{
+  font-family:'JetBrains Mono',monospace;
+  font-size:2rem;font-weight:700;
+  margin-bottom:6px;
+}
+.kpi-label{font-size:.72rem;color:var(--paper-m);margin-bottom:8px}
+.kpi-trend{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:4px 8px;border-radius:6px;
+  font-size:.65rem;font-weight:600;
+}
+.trend-up{background:rgba(34,197,94,.12);color:#4ade80}
+.trend-down{background:rgba(239,68,68,.12);color:#f87171}
+.trend-neutral{background:rgba(107,114,128,.12);color:#9ca3af}
+
+/* Chart sections */
+.chart-section{
+  background:var(--paper-h);border:1px solid var(--paper-l);
+  border-radius:14px;padding:24px;margin-bottom:24px;
+}
+.chart-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:20px;
+}
+.chart-title{
+  font-family:'Fraunces',serif;
+  font-size:1.05rem;font-weight:600;
+  display:flex;align-items:center;gap:10px;
+}
+.chart-filters{display:flex;gap:8px}
+.chart-filter-btn{
+  padding:6px 12px;border-radius:8px;
+  background:var(--paper-l);border:1px solid transparent;
+  color:var(--paper-s);font-size:.7rem;font-weight:600;
+  cursor:pointer;transition:all .15s;
+}
+.chart-filter-btn:hover{background:var(--paper-h);border-color:var(--paper-m)}
+.chart-filter-btn.active{background:rgba(99,102,241,.15);color:#a5b4fc;border-color:rgba(99,102,241,.3)}
+.chart-canvas{max-height:300px}
+
+/* Alert box */
+.alert-box{
+  background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);
+  border-radius:10px;padding:14px 16px;margin-bottom:24px;
+  display:flex;align-items:flex-start;gap:12px;
+}
+.alert-icon{font-size:1.2rem;flex-shrink:0}
+.alert-content{flex:1}
+.alert-title{font-size:.8rem;font-weight:600;color:#fca5a5;margin-bottom:4px}
+.alert-text{font-size:.7rem;color:var(--paper-s);line-height:1.5}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div><div class="brand-name">Status & Analytics</div><div class="brand-sub">LOTR Production Studio</div></div>
+  <div style="display:flex;gap:12px">
+    <button style="padding:5px 14px;border-radius:8px;font-size:.74rem;font-weight:600;color:#626882;cursor:pointer;border:none;background:transparent" onclick="location.href='preview.html'">Calendario</button>
+    <button style="padding:5px 14px;border-radius:8px;font-size:.74rem;font-weight:600;color:#626882;cursor:pointer;border:none;background:transparent" onclick="location.href='team.html'">Team</button>
+    <button style="padding:5px 14px;border-radius:8px;font-size:.74rem;font-weight:600;color:#626882;cursor:pointer;border:none;background:transparent" onclick="location.href='clienti.html'">Clienti</button>
+    <button style="padding:5px 14px;border-radius:8px;font-size:.74rem;font-weight:600;color:#626882;cursor:pointer;border:none;background:transparent" onclick="location.href='commesse.html'">Commesse</button>
+    <button style="padding:5px 14px;border-radius:8px;font-size:.74rem;font-weight:600;color:#a5b4fc;cursor:pointer;border:none;background:rgba(99,102,241,.12)">Status</button>
+    <button style="padding:5px 14px;border-radius:8px;font-size:.74rem;font-weight:600;color:#626882;cursor:pointer;border:none;background:transparent" onclick="location.href='report.html'">Report</button>
+  </div>
+</div>
+
+<div class="container">
+  <!-- Alerts -->
+  <div id="alerts-container"></div>
+
+  <!-- KPI Cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <div class="kpi-icon purple">📋</div>
+      </div>
+      <div class="kpi-value" id="kpi-active">0</div>
+      <div class="kpi-label">Commesse attive</div>
+      <div class="kpi-trend trend-up" id="kpi-active-trend">+2 da ieri</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <div class="kpi-icon blue">⚡</div>
+      </div>
+      <div class="kpi-value" id="kpi-load">0%</div>
+      <div class="kpi-label">Carico team medio</div>
+      <div class="kpi-trend" id="kpi-load-trend">Nei limiti</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <div class="kpi-icon green">🎯</div>
+      </div>
+      <div class="kpi-value" id="kpi-efficiency">0%</div>
+      <div class="kpi-label">Accuratezza stime</div>
+      <div class="kpi-trend trend-up" id="kpi-efficiency-trend">+3% questo mese</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <div class="kpi-icon amber">⏰</div>
+      </div>
+      <div class="kpi-value" id="kpi-overtime">0h</div>
+      <div class="kpi-label">Straordinari questo mese</div>
+      <div class="kpi-trend trend-neutral" id="kpi-overtime-trend">3 persone</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-header">
+        <div class="kpi-icon red">🚀</div>
+      </div>
+      <div class="kpi-value" id="kpi-ontime">0%</div>
+      <div class="kpi-label">Consegne in tempo</div>
+      <div class="kpi-trend" id="kpi-ontime-trend">In miglioramento</div>
+    </div>
+  </div>
+
+  <!-- Chart: Team Load -->
+  <div class="chart-section">
+    <div class="chart-header">
+      <div class="chart-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>
+        Carico lavoro team
+      </div>
+      <div class="chart-filters">
+        <button class="chart-filter-btn active" onclick="updateLoadChart('week')">Settimana</button>
+        <button class="chart-filter-btn" onclick="updateLoadChart('month')">Mese</button>
+      </div>
+    </div>
+    <canvas id="load-chart" class="chart-canvas"></canvas>
+  </div>
+
+  <!-- Chart: Accuracy -->
+  <div class="chart-section">
+    <div class="chart-header">
+      <div class="chart-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        Accuratezza stime (ultimi 10 lavori)
+      </div>
+    </div>
+    <canvas id="accuracy-chart" class="chart-canvas"></canvas>
+  </div>
+</div>
+
+<script>
+// Mock data
+const TEAM=[
+  {id:'col1',name:'Roberto',baseCapacity:8,overtime:{morning:false,evening:true,weekend:true,extraImgEq:4}},
+  {id:'col2',name:'Luigi',baseCapacity:8,overtime:{morning:true,evening:false,weekend:false,extraImgEq:3}},
+  {id:'col3',name:'Alessandro',baseCapacity:8,overtime:{morning:false,evening:false,weekend:false,extraImgEq:0}},
+  {id:'col4',name:'Raul',baseCapacity:8,overtime:{morning:true,evening:true,weekend:true,extraImgEq:5}}
+];
+
+const JOBS=[
+  {id:'j1',images:240,completed:85,startedAt:'2026-02-10',dueDate:'2026-02-28'},
+  {id:'j2',images:120,completed:45,startedAt:'2026-02-15',dueDate:'2026-02-25'},
+  {id:'j3',images:180,completed:120,startedAt:'2026-02-12',dueDate:'2026-02-26'},
+  {id:'j4',images:300,completed:180,startedAt:'2026-02-08',dueDate:'2026-02-22'},
+  {id:'j5',images:80,completed:55,startedAt:'2026-02-14',dueDate:'2026-02-24'},
+  {id:'j6',images:60,completed:20,startedAt:'2026-02-16',dueDate:'2026-03-01'},
+  {id:'j7',images:96,completed:60,startedAt:'2026-02-10',dueDate:'2026-02-27'},
+  {id:'j8',images:156,completed:100,startedAt:'2026-02-05',dueDate:'2026-02-20'},
+  {id:'j9',images:110,completed:35,startedAt:'2026-02-17',dueDate:'2026-03-08'}
+];
+
+// Mock completion data (per calcolo accuratezza)
+const COMPLETED_JOBS=[
+  {estimated:240,actual:268,variance:11.7},
+  {estimated:120,actual:115,variance:-4.2},
+  {estimated:180,actual:195,variance:8.3},
+  {estimated:300,actual:310,variance:3.3},
+  {estimated:80,actual:75,variance:-6.3},
+  {estimated:60,actual:62,variance:3.3},
+  {estimated:96,actual:88,variance:-8.3},
+  {estimated:156,actual:156,variance:0},
+  {estimated:110,actual:125,variance:13.6},
+  {estimated:90,actual:85,variance:-5.6}
+];
+
+// Calculate KPIs
+function calculateKPIs(){
+  const activeJobs=JOBS.filter(j=>j.completed<j.images).length;
+  
+  // Load: allocazioni vs capacità totale
+  const totalCapacity=TEAM.length*8*5; // 4 persone × 8h/gg × 5gg settimana
+  const allocatedHours=JOBS.reduce((sum,j)=>{
+    const remaining=j.images-j.completed;
+    return sum+(remaining*1.0); // 1h per immagine base
+  },0);
+  const load=Math.round((allocatedHours/totalCapacity)*100);
+  
+  // Efficiency: media accuratezza
+  const accuracy=COMPLETED_JOBS.map(c=>100-Math.abs(c.variance));
+  const avgAccuracy=Math.round(accuracy.reduce((a,b)=>a+b,0)/accuracy.length);
+  
+  // Overtime: somma straordinari
+  const overtimeHours=TEAM.reduce((sum,p)=>{
+    let h=0;
+    if(p.overtime.morning)h+=p.overtime.extraImgEq;
+    if(p.overtime.evening)h+=p.overtime.extraImgEq;
+    if(p.overtime.weekend)h+=p.overtime.extraImgEq*2;
+    return sum+h;
+  },0)*4; // × 4 settimane
+  
+  // On-time delivery
+  const onTimeJobs=JOBS.filter(j=>{
+    if(j.completed<j.images)return false;
+    const pct=(j.completed/j.images)*100;
+    return pct>=100;
+  }).length;
+  const onTimeRate=JOBS.length>0?Math.round((onTimeJobs/JOBS.length)*100):0;
+  
+  return{activeJobs,load,avgAccuracy,overtimeHours,onTimeRate};
+}
+
+function updateKPIs(){
+  const kpi=calculateKPIs();
+  
+  document.getElementById('kpi-active').textContent=kpi.activeJobs;
+  document.getElementById('kpi-load').textContent=kpi.load+'%';
+  document.getElementById('kpi-efficiency').textContent=kpi.avgAccuracy+'%';
+  document.getElementById('kpi-overtime').textContent=kpi.overtimeHours+'h';
+  document.getElementById('kpi-ontime').textContent=kpi.onTimeRate+'%';
+  
+  // Update trends
+  const loadTrend=document.getElementById('kpi-load-trend');
+  if(kpi.load>90){
+    loadTrend.textContent='⚠️ Critico';
+    loadTrend.className='kpi-trend trend-down';
+  }else if(kpi.load>75){
+    loadTrend.textContent='Occupato';
+    loadTrend.className='kpi-trend trend-neutral';
+  }else{
+    loadTrend.textContent='Nei limiti';
+    loadTrend.className='kpi-trend trend-up';
+  }
+  
+  // Alert if critical
+  if(kpi.load>90){
+    const alertsContainer=document.getElementById('alerts-container');
+    alertsContainer.innerHTML=`<div class="alert-box">
+      <div class="alert-icon">⚠️</div>
+      <div class="alert-content">
+        <div class="alert-title">Carico team critico</div>
+        <div class="alert-text">Il team è al ${kpi.load}% di capacità. Considera di posticipare commesse non urgenti o approvare straordinari.</div>
+      </div>
+    </div>`;
+  }
+}
+
+// Chart: Team Load
+let loadChart;
+function renderLoadChart(){
+  const ctx=document.getElementById('load-chart').getContext('2d');
+  
+  // Mock data: allocazioni per persona per giorno (in % del 100%)
+  const days=['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
+  
+  // Calcolo: ogni persona ha una % di 100/4 = 25% max
+  // Se lavora 8h su 8h = 25% del totale
+  // Se lavora 4h su 8h = 12.5% del totale
+  const data={
+    labels:days,
+    datasets:[
+      {
+        label:'Roberto',
+        data:[23,25,22,25,21,0,0], // % del 100% totale team
+        backgroundColor:'rgba(139,92,246,0.8)',
+        borderRadius:4
+      },
+      {
+        label:'Luigi',
+        data:[20,22,24,21,23,0,0],
+        backgroundColor:'rgba(59,130,246,0.8)',
+        borderRadius:4
+      },
+      {
+        label:'Alessandro',
+        data:[22,21,20,22,24,0,0],
+        backgroundColor:'rgba(34,197,94,0.8)',
+        borderRadius:4
+      },
+      {
+        label:'Raul',
+        data:[25,24,22,23,20,4,8], // Raul lavora anche weekend (straordinario)
+        backgroundColor:'rgba(245,158,11,0.8)',
+        borderRadius:4
+      }
+    ]
+  };
+  
+  loadChart=new Chart(ctx,{
+    type:'bar',
+    data:data,
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{
+          position:'bottom',
+          labels:{color:'#cdd0de',font:{family:'Sora',size:11}}
+        },
+        tooltip:{
+          callbacks:{
+            label:function(context){
+              return context.dataset.label+': '+context.parsed.y+'% del carico team';
+            }
+          }
+        }
+      },
+      scales:{
+        x:{
+          stacked:false, // Barre affiancate, non sovrapposte
+          grid:{color:'rgba(255,255,255,0.05)'},
+          ticks:{color:'#737889',font:{family:'Sora',size:11}}
+        },
+        y:{
+          stacked:false, // Barre affiancate, non sovrapposte
+          grid:{color:'rgba(255,255,255,0.05)'},
+          ticks:{
+            color:'#737889',
+            font:{family:'Sora',size:11},
+            callback:function(value){
+              return value+'%'; // Mostra % invece di ore
+            }
+          },
+          max:30, // Max 30% per persona (25% = pieno)
+          title:{display:true,text:'% Carico Team',color:'#737889',font:{family:'Sora',size:11}}
+        }
+      }
+    }
+  });
+}
+
+function updateLoadChart(period){
+  // Update active button
+  const chartSection=document.getElementById('load-chart').closest('.chart-section');
+  const buttons=chartSection.querySelectorAll('.chart-filter-btn');
+  buttons.forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  
+  // Update chart data based on period
+  if(period==='week'){
+    loadChart.data.labels=['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
+    loadChart.data.datasets=[
+      {
+        label:'Roberto',
+        data:[23,25,22,25,21,0,0],
+        backgroundColor:'rgba(139,92,246,0.8)',
+        borderRadius:4
+      },
+      {
+        label:'Luigi',
+        data:[20,22,24,21,23,0,0],
+        backgroundColor:'rgba(59,130,246,0.8)',
+        borderRadius:4
+      },
+      {
+        label:'Alessandro',
+        data:[22,21,20,22,24,0,0],
+        backgroundColor:'rgba(34,197,94,0.8)',
+        borderRadius:4
+      },
+      {
+        label:'Raul',
+        data:[25,24,22,23,20,4,8],
+        backgroundColor:'rgba(245,158,11,0.8)',
+        borderRadius:4
+      }
+    ];
+    loadChart.options.scales.y.max=30;
+    loadChart.options.scales.y.title.text='% Carico Team';
+  } else {
+    // Vista mensile: 4 settimane
+    loadChart.data.labels=['Sett 1','Sett 2','Sett 3','Sett 4'];
+    loadChart.data.datasets=[
+      {
+        label:'Roberto',
+        data:[92,95,88,91], // % su 4 settimane
+        backgroundColor:'rgba(139,92,246,0.8)',
+        borderRadius:4
+      },
+      {
+        label:'Luigi',
+        data:[85,88,92,87],
+        backgroundColor:'rgba(59,130,246,0.8)',
+        borderRadius:4
+      },
+      {
+        label:'Alessandro',
+        data:[88,84,80,86],
+        backgroundColor:'rgba(34,197,94,0.8)',
+        borderRadius:4
+      },
+      {
+        label:'Raul',
+        data:[96,94,90,92],
+        backgroundColor:'rgba(245,158,11,0.8)',
+        borderRadius:4
+      }
+    ];
+    loadChart.options.scales.y.max=120;
+    loadChart.options.scales.y.title.text='% Carico Team (settimana)';
+  }
+  
+  loadChart.update();
+}
+
+// Chart: Accuracy
+function renderAccuracyChart(){
+  const ctx=document.getElementById('accuracy-chart').getContext('2d');
+  
+  const data={
+    labels:COMPLETED_JOBS.map((_,i)=>`Job ${i+1}`),
+    datasets:[{
+      label:'Ore effettive',
+      data:COMPLETED_JOBS.map(c=>c.actual),
+      backgroundColor:'rgba(99,102,241,0.7)',
+      borderColor:'#6366f1',
+      borderWidth:2,
+      borderRadius:4
+    },{
+      label:'Ore stimate',
+      data:COMPLETED_JOBS.map(c=>c.estimated),
+      backgroundColor:'rgba(107,114,128,0.3)',
+      borderColor:'#6b7280',
+      borderWidth:2,
+      borderRadius:4,
+      borderDash:[5,5]
+    }]
+  };
+  
+  new Chart(ctx,{
+    type:'bar',
+    data:data,
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{
+          position:'bottom',
+          labels:{color:'#cdd0de',font:{family:'Sora',size:11}}
+        }
+      },
+      scales:{
+        x:{
+          grid:{color:'rgba(255,255,255,0.05)'},
+          ticks:{color:'#737889',font:{family:'Sora',size:10}}
+        },
+        y:{
+          grid:{color:'rgba(255,255,255,0.05)'},
+          ticks:{color:'#737889',font:{family:'Sora',size:11}},
+          title:{display:true,text:'Ore',color:'#737889'}
+        }
+      }
+    }
+  });
+}
+
+// Init
+updateKPIs();
+renderLoadChart();
+renderAccuracyChart();
+</script>
+</body>
+</html>

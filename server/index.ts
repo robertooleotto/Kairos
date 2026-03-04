@@ -2,6 +2,9 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import path from "path";
+
+const expressModule = express;
 
 const app = express();
 const httpServer = createServer(app);
@@ -75,14 +78,13 @@ app.use((req, res, next) => {
     return res.status(status).json({ message });
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
+  // Serve static files from client/public (the actual app pages)
+  // This must come before Vite's catch-all
+  const publicPath = path.resolve(process.cwd(), "client/public");
+  app.use(expressModule.static(publicPath));
+
   if (process.env.NODE_ENV === "production") {
     serveStatic(app);
-  } else {
-    const { setupVite } = await import("./vite");
-    await setupVite(httpServer, app);
   }
 
   // ALWAYS serve the app on the port specified in the environment variable PORT

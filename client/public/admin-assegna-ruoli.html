@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Assegna Ruoli — Admin</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#0f0f17;--paper-h:#16161f;--paper-l:#24242d;
+  --paper-s:#cdd0de;--paper-m:#737889;--paper-t:#f9fafb;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);min-height:100vh;padding:24px}
+
+.container{max-width:1200px;margin:0 auto}
+.header{margin-bottom:32px}
+.title{font-family:'Fraunces',serif;font-size:2rem;font-weight:700;margin-bottom:8px}
+.subtitle{color:var(--paper-m);font-size:.9rem}
+
+.person-table{width:100%;border-collapse:collapse;background:var(--paper-h);border-radius:12px;overflow:hidden}
+.person-table th{
+  background:var(--paper-l);
+  padding:12px 16px;
+  text-align:left;
+  font-size:.75rem;
+  font-weight:700;
+  text-transform:uppercase;
+  color:var(--paper-m);
+}
+.person-table td{
+  padding:16px;
+  border-top:1px solid var(--paper-l);
+}
+.person-name{font-weight:700;font-size:.95rem}
+.person-email{color:var(--paper-m);font-size:.75rem;margin-top:4px}
+
+select{
+  padding:8px 12px;
+  border-radius:6px;
+  background:var(--paper);
+  border:1px solid var(--paper-l);
+  color:var(--paper-t);
+  font-family:'Sora',sans-serif;
+  font-size:.8rem;
+  cursor:pointer;
+  min-width:180px;
+}
+select:focus{outline:2px solid #6366f1;border-color:#6366f1}
+
+.btn-save{
+  padding:10px 20px;
+  border-radius:8px;
+  background:#6366f1;
+  color:#fff;
+  border:none;
+  font-weight:600;
+  cursor:pointer;
+  font-family:'Sora',sans-serif;
+  font-size:.85rem;
+}
+.btn-save:hover{background:#5558e3}
+.btn-save:disabled{background:var(--paper-m);cursor:not-allowed}
+
+.badge{
+  display:inline-block;
+  padding:4px 8px;
+  border-radius:4px;
+  font-size:.7rem;
+  font-weight:600;
+}
+.badge-manager{background:rgba(99,102,241,.15);color:#a5b4fc}
+.badge-operator{background:rgba(107,114,128,.15);color:#9ca3af}
+.badge-saved{background:rgba(34,197,94,.15);color:#4ade80}
+
+.loading{text-align:center;padding:60px;color:var(--paper-m)}
+.status-msg{
+  padding:12px;
+  border-radius:8px;
+  margin-bottom:16px;
+  font-size:.85rem;
+}
+.status-success{background:rgba(34,197,94,.15);color:#4ade80}
+.status-error{background:rgba(239,68,68,.15);color:#f87171}
+
+.info-box{
+  background:rgba(59,130,246,.1);
+  border:1px solid rgba(59,130,246,.3);
+  border-radius:8px;
+  padding:16px;
+  margin-bottom:24px;
+  font-size:.85rem;
+  line-height:1.6;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <div class="title">🔧 Assegna Ruoli e Reparti</div>
+    <div class="subtitle">Configura le 30 persone del team</div>
+  </div>
+  
+  <div class="info-box">
+    <strong>ℹ️ Come funziona:</strong><br>
+    1. Seleziona il <strong>Ruolo</strong> per ogni persona<br>
+    2. Seleziona il <strong>Reparto principale</strong><br>
+    3. (Solo Area Manager) Seleziona quale <strong>Area gestisce</strong><br>
+    4. Click <strong>"Salva Tutte le Modifiche"</strong> in fondo alla pagina
+  </div>
+  
+  <div id="status-container"></div>
+  
+  <div id="people-container">
+    <div class="loading">Caricamento persone...</div>
+  </div>
+  
+  <div id="save-container" style="margin-top:24px;text-align:right;display:none">
+    <button class="btn-save" onclick="saveAll()">💾 Salva Tutte le Modifiche</button>
+  </div>
+</div>
+
+<script>
+let PEOPLE = [];
+let AS_AREAS = [];
+let DEPARTMENTS = [];
+let CHANGES = {};
+
+async function loadData() {
+  try {
+    [PEOPLE, AS_AREAS, DEPARTMENTS] = await Promise.all([
+      api.collaborators.list(),
+      api.areas.list(),
+      api.departments.list()
+    ]);
+    PEOPLE = (PEOPLE || []).sort((a,b) => a.name.localeCompare(b.name));
+    AS_AREAS = AS_AREAS || [];
+    DEPARTMENTS = (DEPARTMENTS || []).map(d => ({
+      ...d,
+      area: AS_AREAS.find(a => a.id === d.area_id) || null
+    }));
+    renderTable();
+  } catch (error) {
+    console.error('Error loading data:', error);
+    document.getElementById('people-container').innerHTML =
+      '<div class="status-error">Errore caricamento dati: ' + error.message + '</div>';
+  }
+}
+
+function renderTable() {
+  const container = document.getElementById('people-container');
+  
+  if (PEOPLE.length === 0) {
+    container.innerHTML = '<div class="loading">Nessuna persona trovata. Vai su Team per aggiungerne!</div>';
+    return;
+  }
+  
+  const html = `
+    <table class="person-table">
+      <thead>
+        <tr>
+          <th>Persona</th>
+          <th>Ruolo</th>
+          <th>Reparto Principale</th>
+          <th>Area Gestita (solo Manager)</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${PEOPLE.map(person => renderPersonRow(person)).join('')}
+      </tbody>
+    </table>
+  `;
+  
+  container.innerHTML = html;
+  document.getElementById('save-container').style.display = 'block';
+}
+
+function renderPersonRow(person) {
+  const currentRole = person.role || 'operator';
+  const currentDept = person.primary_department_id || '';
+  const currentManagedArea = person.managed_area_id || '';
+  
+  return `
+    <tr>
+      <td>
+        <div class="person-name">${person.name}</div>
+        ${person.email ? `<div class="person-email">${person.email}</div>` : ''}
+      </td>
+      <td>
+        <select onchange="updatePerson('${person.id}', 'role', this.value)">
+          <option value="operator" ${currentRole === 'operator' ? 'selected' : ''}>👤 Operatore</option>
+          <option value="project_manager" ${currentRole === 'project_manager' ? 'selected' : ''}>📋 Project Manager</option>
+          <option value="area_manager" ${currentRole === 'area_manager' ? 'selected' : ''}>🏢 Area Manager</option>
+          <option value="operation_manager" ${currentRole === 'operation_manager' ? 'selected' : ''}>⭐ Operation Manager</option>
+        </select>
+      </td>
+      <td>
+        <select onchange="updatePerson('${person.id}', 'department', this.value)">
+          <option value="">-- Nessun reparto --</option>
+          ${DEPARTMENTS.map(dept => `
+            <option value="${dept.id}" ${currentDept === dept.id ? 'selected' : ''}>
+              ${dept.name} (${dept.area?.name || ''})
+            </option>
+          `).join('')}
+        </select>
+      </td>
+      <td>
+        <select 
+          id="area-select-${person.id}"
+          onchange="updatePerson('${person.id}', 'managed_area', this.value)"
+          ${currentRole !== 'area_manager' ? 'disabled' : ''}
+        >
+          <option value="">-- Nessuna area --</option>
+          ${AREAS.map(area => `
+            <option value="${area.id}" ${currentManagedArea === area.id ? 'selected' : ''}>
+              ${area.icon} ${area.name}
+            </option>
+          `).join('')}
+        </select>
+      </td>
+      <td>
+        <span class="badge badge-operator" id="status-${person.id}">Non salvato</span>
+      </td>
+    </tr>
+  `;
+}
+
+function updatePerson(personId, field, value) {
+  if (!CHANGES[personId]) {
+    CHANGES[personId] = {};
+  }
+  
+  if (field === 'role') {
+    CHANGES[personId].role = value;
+    
+    // Se non è area_manager, disabilita il select dell'area
+    const areaSelect = document.getElementById('area-select-' + personId);
+    if (areaSelect) {
+      if (value === 'area_manager') {
+        areaSelect.disabled = false;
+      } else {
+        areaSelect.disabled = true;
+        areaSelect.value = '';
+        if (CHANGES[personId].managed_area_id !== undefined) {
+          delete CHANGES[personId].managed_area_id;
+        }
+      }
+    }
+  } else if (field === 'department') {
+    CHANGES[personId].primary_department_id = value || null;
+  } else if (field === 'managed_area') {
+    CHANGES[personId].managed_area_id = value || null;
+  }
+  
+  // Update status badge
+  const statusBadge = document.getElementById('status-' + personId);
+  if (statusBadge) {
+    statusBadge.className = 'badge badge-manager';
+    statusBadge.textContent = 'Da salvare';
+  }
+}
+
+async function saveAll() {
+  const statusContainer = document.getElementById('status-container');
+  const saveBtn = document.querySelector('.btn-save');
+  
+  if (Object.keys(CHANGES).length === 0) {
+    statusContainer.innerHTML = '<div class="status-error">Nessuna modifica da salvare!</div>';
+    setTimeout(() => statusContainer.innerHTML = '', 3000);
+    return;
+  }
+  
+  saveBtn.disabled = true;
+  saveBtn.textContent = '⏳ Salvataggio in corso...';
+  
+  let saved = 0;
+  let errors = 0;
+  
+  for (const [personId, updates] of Object.entries(CHANGES)) {
+    try {
+      await api.collaborators.update(personId, updates);
+      saved++;
+      const statusBadge = document.getElementById('status-' + personId);
+      if (statusBadge) { statusBadge.className = 'badge badge-saved'; statusBadge.textContent = '✓ Salvato'; }
+      const person = PEOPLE.find(p => p.id === personId);
+      if (person) Object.assign(person, updates);
+    } catch (error) {
+      console.error('Error saving person', personId, error);
+      errors++;
+      const statusBadge = document.getElementById('status-' + personId);
+      if (statusBadge) { statusBadge.className = 'badge badge-error'; statusBadge.textContent = '✗ Errore'; }
+    }
+  }
+  
+  // Clear changes
+  CHANGES = {};
+  
+  // Show result
+  if (errors === 0) {
+    statusContainer.innerHTML = `<div class="status-success">✓ Salvate ${saved} persone con successo!</div>`;
+  } else {
+    statusContainer.innerHTML = `<div class="status-error">✓ Salvate ${saved} persone, ${errors} errori.</div>`;
+  }
+  
+  saveBtn.disabled = false;
+  saveBtn.textContent = '💾 Salva Tutte le Modifiche';
+  
+  setTimeout(() => statusContainer.innerHTML = '', 5000);
+}
+
+// Init
+setTimeout(() => { loadData(); }, 300);
+</script>
+<script src="api-client.js"></script>
+</body>
+</html>

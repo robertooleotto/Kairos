@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Clienti — Planning Studio</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#0f0f17;--paper-h:#16161f;--paper-l:#24242d;
+  --paper-s:#cdd0de;--paper-m:#737889;--paper-t:#f9fafb;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);min-height:100vh}
+
+.header{
+  padding:14px 24px;border-bottom:1px solid var(--paper-l);
+  display:flex;align-items:center;gap:16px;
+  position:sticky;top:0;background:var(--paper);z-index:100;
+}
+.brand{flex-shrink:0}
+
+.header-actions{display:flex;gap:12px;align-items:center;margin-left:auto}
+.btn-primary{
+  padding:8px 16px;border-radius:8px;font-size:.74rem;font-weight:600;
+  background:#6366f1;color:#fff;border:none;cursor:pointer;
+  display:inline-flex;align-items:center;gap:6px;font-family:'Sora',sans-serif;
+}
+.btn-primary:hover{background:#5558e3}
+
+.nav-pills{display:flex;gap:2px;background:rgba(255,255,255,.05);border-radius:10px;padding:3px;position:absolute;left:50%;transform:translateX(-50%)}
+.nav-pill{padding:5px 16px;border-radius:8px;font-size:.72rem;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--paper-m);font-family:'Sora',sans-serif;transition:all .15s}
+.nav-pill.active{background:#1c1f30;color:var(--paper-t)}
+.nav-pill:hover:not(.active){color:var(--paper-s)}
+
+.nav-buttons{display:flex;gap:12px;margin-left:auto}
+.nav-btn{
+  padding:5px 14px;border-radius:8px;font-size:.74rem;font-weight:600;
+  cursor:pointer;border:none;background:transparent;color:#626882;font-family:'Sora',sans-serif;
+}
+.nav-btn.active{background:rgba(99,102,241,.12);color:#a5b4fc}
+.nav-btn:hover:not(.active){background:var(--paper-h)}
+
+.container{padding:24px;max-width:1400px;margin:0 auto}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.section-title{font-family:'Fraunces',serif;font-size:1.4rem;font-weight:700}
+
+.clients-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:20px}
+.client-card{
+  background:var(--paper-h);border-radius:12px;padding:24px;
+  border:1px solid var(--paper-l);transition:all .2s;position:relative;
+}
+.client-card:hover{border-color:var(--paper-m)}
+
+.client-header{display:flex;align-items:flex-start;gap:16px;margin-bottom:20px}
+.client-logo{font-size:2.5rem;flex-shrink:0;width:56px;height:56px;display:flex;align-items:center;justify-content:center}
+.client-logo img{width:56px;height:56px;object-fit:contain;border-radius:8px;border:1px solid var(--paper-l)}
+.client-info{flex:1;min-width:0}
+.client-name{font-weight:700;font-size:1.2rem;margin-bottom:4px}
+.client-short{font-size:.75rem;color:var(--paper-m)}
+
+.logo-upload-wrap{display:flex;flex-direction:column;gap:10px}
+.logo-upload-area{
+  width:100%;height:100px;border-radius:10px;
+  border:2px dashed var(--paper-l);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:6px;cursor:pointer;transition:border-color .15s;
+  background:rgba(255,255,255,.02);position:relative;overflow:hidden;
+}
+.logo-upload-area:hover{border-color:#6366f1}
+.logo-upload-area img{max-width:100%;max-height:96px;object-fit:contain;border-radius:6px}
+.logo-upload-hint{font-size:.7rem;color:var(--paper-m);pointer-events:none}
+.logo-upload-hint svg{display:block;margin:0 auto 4px}
+.logo-upload-bar{display:flex;align-items:center;gap:8px}
+.logo-remove-btn{font-size:.68rem;color:#f87171;background:none;border:none;cursor:pointer;padding:0;font-family:'Sora',sans-serif}
+.logo-remove-btn:hover{text-decoration:underline}
+
+.btn-edit-icon{
+  position:absolute;top:16px;right:16px;
+  width:32px;height:32px;border-radius:8px;
+  background:rgba(99,102,241,.15);border:none;
+  color:#a5b4fc;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;transition:all .2s;
+}
+.btn-edit-icon:hover{background:rgba(99,102,241,.25);transform:scale(1.1)}
+
+.client-section{margin-top:16px;padding-top:16px;border-top:1px solid var(--paper-l)}
+.section-title-small{font-size:.7rem;color:var(--paper-m);font-weight:700;margin-bottom:8px;text-transform:uppercase}
+.contact-item{font-size:.8rem;margin-bottom:6px}
+.contact-name{font-weight:600;color:var(--paper-t)}
+.contact-detail{font-size:.75rem;color:var(--paper-m)}
+.client-text{font-size:.8rem;color:var(--paper-s);line-height:1.5}
+
+.empty-state{text-align:center;padding:60px 20px;color:var(--paper-m)}
+
+/* Modal */
+.modal{
+  display:none;position:fixed;top:0;left:0;right:0;bottom:0;
+  background:rgba(0,0,0,.8);z-index:10000;
+  align-items:center;justify-content:center;overflow-y:auto;padding:20px;
+}
+.modal-content{
+  background:var(--paper-h);border-radius:16px;
+  width:100%;max-width:700px;max-height:90vh;
+  overflow-y:auto;padding:32px;
+}
+.modal-header{
+  display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;
+}
+.modal-title{font-family:'Fraunces',serif;font-size:1.6rem;font-weight:700}
+.modal-close{
+  background:none;border:none;color:var(--paper-s);cursor:pointer;
+  font-size:2rem;padding:0;width:40px;height:40px;
+  display:flex;align-items:center;justify-content:center;border-radius:8px;
+}
+.modal-close:hover{background:var(--paper-l)}
+
+.form-group{margin-bottom:20px}
+.form-label{
+  display:block;font-size:.75rem;color:var(--paper-m);
+  margin-bottom:6px;font-weight:600;
+}
+.form-input,.form-select,.form-textarea{
+  width:100%;padding:11px;border-radius:8px;
+  background:var(--paper);border:1px solid var(--paper-l);
+  color:var(--paper-t);font-family:'Sora',sans-serif;font-size:.85rem;
+}
+.form-input:focus,.form-select:focus,.form-textarea:focus{
+  outline:2px solid #6366f1;border-color:#6366f1;
+}
+.form-textarea{resize:vertical;min-height:80px}
+
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+.form-actions{
+  display:flex;gap:12px;margin-top:24px;
+  padding-top:20px;border-top:1px solid var(--paper-l);
+}
+.btn-save{
+  flex:1;padding:14px;border-radius:8px;
+  background:#6366f1;color:#fff;border:none;
+  font-weight:600;cursor:pointer;font-family:'Sora',sans-serif;font-size:.9rem;
+}
+.btn-save:hover{background:#5558e3}
+.btn-cancel{
+  padding:14px 24px;border-radius:8px;
+  background:var(--paper-l);color:var(--paper-t);border:none;
+  font-weight:600;cursor:pointer;font-family:'Sora',sans-serif;font-size:.9rem;
+}
+.btn-cancel:hover{background:var(--paper-m)}
+.btn-delete{
+  padding:14px 24px;border-radius:8px;
+  background:rgba(239,68,68,.15);color:#f87171;border:none;
+  font-weight:600;cursor:pointer;font-family:'Sora',sans-serif;font-size:.9rem;
+}
+.btn-delete:hover{background:rgba(239,68,68,.25)}
+
+.form-section{margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid var(--paper-l)}
+.form-section:last-child{border:none;margin-bottom:0;padding-bottom:0}
+.form-section-title{
+  font-size:.85rem;font-weight:700;color:var(--paper-t);margin-bottom:16px;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="brand">
+    <img src="nudesign-logo.png" alt="NuDesign" style="height:56px;object-fit:contain">
+  </div>
+  <div class="nav-pills">
+    <button class="nav-pill" onclick="location.href='preview.html'">Calendario</button>
+    <button class="nav-pill" onclick="location.href='status.html'">Stato</button>
+    <button class="nav-pill" onclick="location.href='report.html'">Report</button>
+    <button class="nav-pill" onclick="location.href='team.html'">Team</button>
+    <button class="nav-pill" onclick="location.href='commesse.html'">Commesse</button>
+    <button class="nav-pill active">Clienti</button>
+  </div>
+  <div class="header-actions">
+    <button class="btn-primary" onclick="openNewClientForm()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+      Nuovo Cliente
+    </button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="section-header">
+    <div class="section-title">I tuoi clienti</div>
+  </div>
+  
+  <div class="clients-grid" id="clients-grid">
+    <div class="empty-state">Caricamento clienti...</div>
+  </div>
+</div>
+
+<!-- Modal Form Cliente -->
+<div id="client-modal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Nuovo Cliente</div>
+      <button class="modal-close" onclick="closeClientForm()">&times;</button>
+    </div>
+    
+    <form id="client-form" onsubmit="saveClient(event)">
+      <!-- Info Generali -->
+      <div class="form-section">
+        <div class="form-section-title">📋 Info Generali</div>
+        
+        <div class="form-group">
+          <label class="form-label">Nome Cliente *</label>
+          <input type="text" class="form-input" id="client-name" name="name" required placeholder="es: ACME Corporation">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Sigla</label>
+          <input type="text" class="form-input" id="client-short" name="short" placeholder="es: ACME" maxlength="10">
+        </div>
+        <input type="hidden" id="client-logo" name="logo" value="🏢">
+
+        <div class="form-group">
+          <label class="form-label">Logo aziendale</label>
+          <input type="file" id="logo-file-input" accept="image/*" style="display:none" onchange="handleLogoFile(event)">
+          <div class="logo-upload-wrap">
+            <div class="logo-upload-area" id="logo-upload-area" onclick="document.getElementById('logo-file-input').click()">
+              <div class="logo-upload-hint" id="logo-hint">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 15l5-5 4 4 3-3 6 6"/><circle cx="8.5" cy="8.5" r="1.5"/></svg>
+                Clicca per caricare un'immagine
+              </div>
+            </div>
+            <div class="logo-upload-bar" id="logo-upload-bar" style="display:none">
+              <span style="font-size:.7rem;color:var(--paper-m)" id="logo-filename"></span>
+              <button type="button" class="logo-remove-btn" onclick="removeLogo()">✕ Rimuovi</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Contatti -->
+      <div class="form-section">
+        <div class="form-section-title">👤 Referente Commerciale</div>
+        
+        <div class="form-group">
+          <label class="form-label">Nome</label>
+          <input type="text" class="form-input" id="commercial-name" name="commercial_contact_name" placeholder="Mario Rossi">
+        </div>
+        
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-input" id="commercial-email" name="commercial_contact_email" placeholder="mario@cliente.it">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Telefono</label>
+            <input type="tel" class="form-input" id="commercial-phone" name="commercial_contact_phone" placeholder="+39 123 456 7890">
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-section">
+        <div class="form-section-title">🔧 Referente Tecnico</div>
+        
+        <div class="form-group">
+          <label class="form-label">Nome</label>
+          <input type="text" class="form-input" id="technical-name" name="technical_contact_name" placeholder="Sara Bianchi">
+        </div>
+        
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-input" id="technical-email" name="technical_contact_email" placeholder="sara@cliente.it">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Telefono</label>
+            <input type="tel" class="form-input" id="technical-phone" name="technical_contact_phone" placeholder="+39 098 765 4321">
+          </div>
+        </div>
+      </div>
+      
+      <!-- Note -->
+      <div class="form-section">
+        <div class="form-section-title">📝 Note</div>
+        
+        <div class="form-group">
+          <label class="form-label">Note Operative</label>
+          <textarea class="form-textarea" id="client-notes" name="notes" placeholder="Note, preferenze, informazioni utili..."></textarea>
+        </div>
+      </div>
+      
+      <!-- Actions -->
+      <div class="form-actions">
+        <button type="submit" class="btn-save">💾 Salva Cliente</button>
+        <button type="button" class="btn-cancel" onclick="closeClientForm()">Annulla</button>
+        <button type="button" class="btn-delete" id="btn-delete-client" onclick="deleteCurrentClient()" style="display:none">🗑️ Elimina</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+let CLIENTS=[];
+let EDITING_CLIENT=null;
+
+// === FORM MANAGEMENT ===
+
+function openNewClientForm(){
+  EDITING_CLIENT=null;
+  document.getElementById('modal-title').textContent='Nuovo Cliente';
+  document.getElementById('client-form').reset();
+  document.getElementById('btn-delete-client').style.display='none';
+  document.getElementById('client-modal').style.display='flex';
+}
+
+let CURRENT_LOGO_URL = null;
+
+function handleLogoFile(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  if(file.size > 5*1024*1024){ alert('Immagine troppo grande (max 5MB)'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    CURRENT_LOGO_URL = e.target.result;
+    const area = document.getElementById('logo-upload-area');
+    area.innerHTML = `<img src="${CURRENT_LOGO_URL}" alt="Logo">`;
+    document.getElementById('logo-hint') && null;
+    document.getElementById('logo-upload-bar').style.display = 'flex';
+    document.getElementById('logo-filename').textContent = file.name;
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeLogo(){
+  CURRENT_LOGO_URL = null;
+  document.getElementById('logo-file-input').value='';
+  document.getElementById('logo-upload-area').innerHTML = `
+    <div class="logo-upload-hint" id="logo-hint">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 15l5-5 4 4 3-3 6 6"/><circle cx="8.5" cy="8.5" r="1.5"/></svg>
+      Clicca per caricare un'immagine
+    </div>`;
+  document.getElementById('logo-upload-bar').style.display = 'none';
+}
+
+function setLogoPreview(url){
+  CURRENT_LOGO_URL = url || null;
+  const area = document.getElementById('logo-upload-area');
+  const bar = document.getElementById('logo-upload-bar');
+  if(url){
+    area.innerHTML = `<img src="${url}" alt="Logo">`;
+    bar.style.display = 'flex';
+    document.getElementById('logo-filename').textContent = 'logo esistente';
+  } else {
+    area.innerHTML = `
+      <div class="logo-upload-hint" id="logo-hint">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 15l5-5 4 4 3-3 6 6"/><circle cx="8.5" cy="8.5" r="1.5"/></svg>
+        Clicca per caricare un'immagine
+      </div>`;
+    bar.style.display = 'none';
+  }
+}
+
+function editClient(client){
+  EDITING_CLIENT=client;
+  document.getElementById('modal-title').textContent='Modifica Cliente';
+  
+  document.getElementById('client-name').value=client.name;
+  document.getElementById('client-short').value=client.short||'';
+  document.getElementById('client-logo').value=client.logo||'🏢';
+  document.getElementById('commercial-name').value=client.commercial_contact_name||'';
+  document.getElementById('commercial-email').value=client.commercial_contact_email||'';
+  document.getElementById('commercial-phone').value=client.commercial_contact_phone||'';
+  document.getElementById('technical-name').value=client.technical_contact_name||'';
+  document.getElementById('technical-email').value=client.technical_contact_email||'';
+  document.getElementById('technical-phone').value=client.technical_contact_phone||'';
+  document.getElementById('client-notes').value=client.notes||'';
+  setLogoPreview(client.logo_url||null);
+  
+  document.getElementById('btn-delete-client').style.display='block';
+  document.getElementById('client-modal').style.display='flex';
+}
+
+function closeClientForm(){
+  document.getElementById('client-modal').style.display='none';
+  document.getElementById('client-form').reset();
+  removeLogo();
+  EDITING_CLIENT=null;
+}
+
+async function saveClient(event){
+  event.preventDefault();
+  
+  const formData=new FormData(event.target);
+  
+  const clientData={
+    name:formData.get('name'),
+    short:(formData.get('short')||'').toUpperCase(),
+    logo:formData.get('logo')||'🏢',
+    logo_url:CURRENT_LOGO_URL||null,
+    commercial_contact_name:formData.get('commercial_contact_name')||null,
+    commercial_contact_email:formData.get('commercial_contact_email')||null,
+    commercial_contact_phone:formData.get('commercial_contact_phone')||null,
+    technical_contact_name:formData.get('technical_contact_name')||null,
+    technical_contact_email:formData.get('technical_contact_email')||null,
+    technical_contact_phone:formData.get('technical_contact_phone')||null,
+    notes:formData.get('notes')||null
+  };
+  
+  try{
+    if(EDITING_CLIENT){
+      await api.clients.update(EDITING_CLIENT.id, clientData);
+    }else{
+      await api.clients.create(clientData);
+    }
+    closeClientForm();
+    await loadClientsFromDB();
+    renderClients();
+  }catch(err){
+    console.error('Error saving client:', err);
+    alert('Errore: '+err.message);
+  }
+}
+
+async function deleteCurrentClient(){
+  if(!EDITING_CLIENT)return;
+  if(!confirm(`Vuoi eliminare "${EDITING_CLIENT.name}"?\n\nQuesta azione è irreversibile.`))return;
+  try{
+    await api.clients.delete(EDITING_CLIENT.id);
+    closeClientForm();
+    await loadClientsFromDB();
+    renderClients();
+  }catch(err){
+    console.error('Error deleting client:', err);
+    alert('Errore eliminazione: '+err.message);
+  }
+}
+
+// === DATA LOADING ===
+
+async function loadClientsFromDB(){
+  console.log('Loading clients...');
+  try{
+    CLIENTS = await api.clients.list();
+    console.log('Loaded',CLIENTS.length,'clients');
+  }catch(e){
+    console.error('Load clients error:', e);
+    CLIENTS=[];
+  }
+}
+
+// === RENDERING ===
+
+function renderClients(){
+  const grid=document.getElementById('clients-grid');
+  
+  if(CLIENTS.length===0){
+    grid.innerHTML='<div class="empty-state">Nessun cliente.<br>Click "+ Nuovo Cliente" per iniziare!</div>';
+    return;
+  }
+  
+  grid.innerHTML=CLIENTS.map(c=>`
+    <div class="client-card">
+      <button class="btn-edit-icon" onclick='editClient(${JSON.stringify(c).replace(/'/g,"&#39;")})'>✏️</button>
+      
+      <div class="client-header">
+        <div class="client-logo">${c.logo_url ? `<img src="${c.logo_url}" alt="${c.name}">` : (c.logo||'🏢')}</div>
+        <div class="client-info">
+          <div class="client-name">${c.name}</div>
+          ${c.short?`<div class="client-short">${c.short}</div>`:''}
+        </div>
+      </div>
+      
+      ${c.commercial_contact_name?`
+      <div class="client-section">
+        <div class="section-title-small">👤 Ref. Commerciale</div>
+        <div class="contact-item">
+          <div class="contact-name">${c.commercial_contact_name}</div>
+          ${c.commercial_contact_email?`<div class="contact-detail">📧 ${c.commercial_contact_email}</div>`:''}
+          ${c.commercial_contact_phone?`<div class="contact-detail">📞 ${c.commercial_contact_phone}</div>`:''}
+        </div>
+      </div>
+      `:''}
+      
+      ${c.technical_contact_name?`
+      <div class="client-section">
+        <div class="section-title-small">🔧 Ref. Tecnico</div>
+        <div class="contact-item">
+          <div class="contact-name">${c.technical_contact_name}</div>
+          ${c.technical_contact_email?`<div class="contact-detail">📧 ${c.technical_contact_email}</div>`:''}
+          ${c.technical_contact_phone?`<div class="contact-detail">📞 ${c.technical_contact_phone}</div>`:''}
+        </div>
+      </div>
+      `:''}
+      
+      ${c.notes?`
+      <div class="client-section">
+        <div class="section-title-small">📝 Note</div>
+        <div class="client-text">${c.notes.replace(/\n/g,'<br>')}</div>
+      </div>
+      `:''}
+    </div>
+  `).join('');
+}
+
+// === INIT ===
+
+async function init(){
+  console.log('Init clients page...');
+  await loadClientsFromDB();
+  renderClients();
+}
+
+setTimeout(init,200);
+</script>
+<script src="api-client.js"></script>
+</body>
+</html>

@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Status — Planning Studio</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Sora:wght@400;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --paper:#0f0f17;--paper-h:#16161f;--paper-l:#24242d;
+  --paper-s:#cdd0de;--paper-m:#737889;--paper-t:#f9fafb;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);min-height:100vh}
+
+.header{
+  padding:14px 24px;border-bottom:1px solid var(--paper-l);
+  display:flex;align-items:center;gap:16px;position:sticky;top:0;
+  background:var(--paper);z-index:100;
+}
+.brand{flex-shrink:0}
+.brand-name{font-family:'Fraunces',serif;font-size:1rem;font-weight:700}
+.brand-sub{font-size:.62rem;color:var(--paper-m);margin-top:1px}
+
+.nav-pills{
+  display:flex;gap:2px;background:rgba(255,255,255,.05);
+  border-radius:10px;padding:3px;
+  position:absolute;left:50%;transform:translateX(-50%);
+}
+.nav-pill{
+  padding:5px 16px;border-radius:8px;font-size:.72rem;font-weight:600;
+  cursor:pointer;border:none;background:transparent;color:var(--paper-m);
+  font-family:'Sora',sans-serif;transition:all .15s;
+}
+.nav-pill.active{background:#1c1f30;color:var(--paper-t)}
+.nav-pill:hover:not(.active){color:var(--paper-s)}
+
+.container{padding:28px 24px;max-width:1400px;margin:0 auto}
+
+.page-header{margin-bottom:28px}
+.page-title{font-family:'Fraunces',serif;font-size:1.7rem;font-weight:700;margin-bottom:4px}
+.page-sub{font-size:.78rem;color:var(--paper-m)}
+
+/* Alert */
+.alert-box{
+  background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);
+  border-radius:10px;padding:14px 16px;margin-bottom:24px;
+  display:flex;align-items:flex-start;gap:12px;
+}
+.alert-icon{font-size:1.1rem;flex-shrink:0;margin-top:1px}
+.alert-content{flex:1}
+.alert-title{font-size:.8rem;font-weight:600;color:#fca5a5;margin-bottom:4px}
+.alert-text{font-size:.72rem;color:var(--paper-s);line-height:1.5}
+
+/* KPI Cards */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:28px}
+.kpi-card{
+  background:var(--paper-h);border:1px solid var(--paper-l);
+  border-radius:14px;padding:20px;transition:all .2s;
+}
+.kpi-card:hover{border-color:rgba(99,102,241,.3);box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.kpi-icon{
+  width:38px;height:38px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;margin-bottom:14px;
+}
+.kpi-icon.purple{background:rgba(139,92,246,.15)}
+.kpi-icon.blue{background:rgba(59,130,246,.15)}
+.kpi-icon.green{background:rgba(34,197,94,.15)}
+.kpi-icon.amber{background:rgba(245,158,11,.15)}
+.kpi-icon.red{background:rgba(239,68,68,.15)}
+.kpi-value{
+  font-family:'JetBrains Mono',monospace;
+  font-size:1.9rem;font-weight:700;margin-bottom:4px;
+}
+.kpi-label{font-size:.7rem;color:var(--paper-m);margin-bottom:8px}
+.kpi-trend{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 8px;border-radius:6px;font-size:.63rem;font-weight:600;
+}
+.trend-up{background:rgba(34,197,94,.12);color:#4ade80}
+.trend-down{background:rgba(239,68,68,.12);color:#f87171}
+.trend-neutral{background:rgba(107,114,128,.12);color:#9ca3af}
+
+/* Charts */
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
+@media(max-width:900px){.chart-grid{grid-template-columns:1fr}}
+
+.chart-section{
+  background:var(--paper-h);border:1px solid var(--paper-l);
+  border-radius:14px;padding:22px;
+}
+.chart-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.chart-title{
+  font-family:'Fraunces',serif;font-size:.95rem;font-weight:600;
+  display:flex;align-items:center;gap:8px;
+}
+.chart-filters{display:flex;gap:6px}
+.chart-filter-btn{
+  padding:5px 11px;border-radius:7px;
+  background:var(--paper-l);border:1px solid transparent;
+  color:var(--paper-s);font-size:.68rem;font-weight:600;
+  cursor:pointer;transition:all .15s;font-family:'Sora',sans-serif;
+}
+.chart-filter-btn.active{background:rgba(99,102,241,.15);color:#a5b4fc;border-color:rgba(99,102,241,.3)}
+.chart-canvas{max-height:260px}
+
+/* Distribution mini-table */
+.dist-table{width:100%;border-collapse:collapse;margin-top:4px}
+.dist-table td{padding:6px 0;font-size:.75rem;border-bottom:1px solid var(--paper-l)}
+.dist-table tr:last-child td{border-bottom:none}
+.dist-bar-wrap{width:120px;padding:0 10px}
+.dist-bar-bg{background:var(--paper-l);border-radius:4px;height:6px;width:100%}
+.dist-bar-fill{background:#6366f1;border-radius:4px;height:6px;transition:width .5s}
+.dist-count{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:.75rem;text-align:right}
+
+/* Upcoming deadlines */
+.deadlines-section{
+  background:var(--paper-h);border:1px solid var(--paper-l);
+  border-radius:14px;padding:22px;margin-bottom:24px;
+}
+.deadline-list{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+.deadline-item{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 14px;border-radius:10px;
+  background:var(--paper);border:1px solid var(--paper-l);
+  transition:all .15s;
+}
+.deadline-item:hover{border-color:rgba(99,102,241,.3)}
+.deadline-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.deadline-code{font-family:'JetBrains Mono',monospace;font-size:.72rem;font-weight:600;color:var(--paper-s);flex-shrink:0;min-width:160px}
+.deadline-title{font-size:.75rem;color:var(--paper-m);flex:1}
+.deadline-date{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--paper-t);flex-shrink:0}
+.deadline-badge{
+  padding:3px 8px;border-radius:5px;font-size:.62rem;font-weight:600;flex-shrink:0;
+}
+.badge-urgent{background:rgba(239,68,68,.15);color:#f87171}
+.badge-high{background:rgba(245,158,11,.15);color:#fbbf24}
+.badge-medium{background:rgba(99,102,241,.15);color:#a5b4fc}
+.badge-low{background:rgba(107,114,128,.15);color:#9ca3af}
+.badge-overdue{background:rgba(239,68,68,.25);color:#f87171}
+
+.loading-spinner{text-align:center;padding:40px;color:var(--paper-m);font-size:.85rem}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="brand">
+    <img src="nudesign-logo.png" alt="NuDesign" style="height:56px;object-fit:contain">
+  </div>
+  <div class="nav-pills">
+    <button class="nav-pill" onclick="location.href='preview.html'">Calendario</button>
+    <button class="nav-pill active">Stato</button>
+    <button class="nav-pill" onclick="location.href='report.html'">Report</button>
+    <button class="nav-pill" onclick="location.href='team.html'">Team</button>
+    <button class="nav-pill" onclick="location.href='commesse.html'">Commesse</button>
+    <button class="nav-pill" onclick="location.href='clienti.html'">Clienti</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="page-header">
+    <div class="page-title">Status & Analytics</div>
+    <div class="page-sub">Panoramica in tempo reale del carico di lavoro e delle commesse</div>
+  </div>
+
+  <div id="alerts-container"></div>
+
+  <!-- KPI Grid -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-icon purple">📋</div>
+      <div class="kpi-value" id="kpi-active">—</div>
+      <div class="kpi-label">Commesse attive</div>
+      <div class="kpi-trend trend-neutral" id="kpi-active-trend">In corso</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon red">🚨</div>
+      <div class="kpi-value" id="kpi-urgent">—</div>
+      <div class="kpi-label">Commesse urgenti</div>
+      <div class="kpi-trend trend-neutral" id="kpi-urgent-trend">Priorità alta</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon green">✅</div>
+      <div class="kpi-value" id="kpi-done">—</div>
+      <div class="kpi-label">Completate totali</div>
+      <div class="kpi-trend trend-up" id="kpi-done-trend">Nel database</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon amber">⏰</div>
+      <div class="kpi-value" id="kpi-overdue">—</div>
+      <div class="kpi-label">Scadute / a rischio</div>
+      <div class="kpi-trend" id="kpi-overdue-trend">Richiedono attenzione</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon blue">👥</div>
+      <div class="kpi-value" id="kpi-team">—</div>
+      <div class="kpi-label">Collaboratori attivi</div>
+      <div class="kpi-trend trend-neutral" id="kpi-team-trend">Nel team</div>
+    </div>
+  </div>
+
+  <!-- Charts row -->
+  <div class="chart-grid">
+    <div class="chart-section">
+      <div class="chart-header">
+        <div class="chart-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>
+          Commesse per stato
+        </div>
+      </div>
+      <canvas id="status-chart" class="chart-canvas"></canvas>
+    </div>
+
+    <div class="chart-section">
+      <div class="chart-header">
+        <div class="chart-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          Distribuzione priorità
+        </div>
+      </div>
+      <canvas id="priority-chart" class="chart-canvas"></canvas>
+    </div>
+  </div>
+
+  <!-- Upcoming deadlines -->
+  <div class="deadlines-section">
+    <div class="chart-header">
+      <div class="chart-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        Scadenze prossime (30 giorni)
+      </div>
+      <div style="font-size:.72rem;color:var(--paper-m)" id="deadlines-count"></div>
+    </div>
+    <div class="deadline-list" id="deadline-list">
+      <div class="loading-spinner">Caricamento scadenze...</div>
+    </div>
+  </div>
+
+  <!-- Status distribution table -->
+  <div class="chart-section">
+    <div class="chart-header">
+      <div class="chart-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        Team — Carico commesse attive
+      </div>
+    </div>
+    <table class="dist-table" id="team-load-table">
+      <tr><td colspan="3" style="color:var(--paper-m);font-size:.75rem">Caricamento...</td></tr>
+    </table>
+  </div>
+</div>
+
+<script src="api-client.js"></script>
+<script>
+const MONTH_IT=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+const TODAY=new Date();TODAY.setHours(0,0,0,0);
+
+function fmtDate(s){
+  if(!s)return'—';
+  const d=new Date(s);
+  return`${d.getDate()} ${MONTH_IT[d.getMonth()]} ${d.getFullYear()}`;
+}
+function daysUntil(s){
+  if(!s)return null;
+  const d=new Date(s);d.setHours(0,0,0,0);
+  return Math.round((d-TODAY)/(1000*60*60*24));
+}
+
+const STATUS_LABELS={
+  IN_PRODUZIONE:'In produzione',in_produzione:'In produzione',
+  IN_ATTESA:'In attesa',in_attesa:'In attesa',
+  COMPLETATA:'Completata',completata:'Completata',
+  ANNULLATA:'Annullata',annullata:'Annullata',
+  BOZZA:'Bozza',bozza:'Bozza',
+  DA_AVVIARE:'Da avviare',da_avviare:'Da avviare',
+  nuova:'Nuova',
+};
+const PRIO_COLORS={URGENT:'#f87171',HIGH:'#fbbf24',MEDIUM:'#a5b4fc',LOW:'#9ca3af'};
+const PRIO_BG={URGENT:'rgba(239,68,68,.15)',HIGH:'rgba(245,158,11,.15)',MEDIUM:'rgba(99,102,241,.15)',LOW:'rgba(107,114,128,.15)'};
+
+let statusChart,priorityChart;
+
+async function loadData(){
+  try{
+    const [jobs,collaborators]=await Promise.all([
+      api.jobs.list(),
+      api.collaborators.list()
+    ]);
+
+    const DONE_STATUSES=['COMPLETATA','completata'];
+    const CANCELLED_STATUSES=['ANNULLATA','annullata'];
+    const active=jobs.filter(j=>!DONE_STATUSES.includes(j.status)&&!CANCELLED_STATUSES.includes(j.status));
+    const urgent=active.filter(j=>j.priority==='URGENT'||j.priority==='urgent'||j.priorita==='URGENT');
+    const done=jobs.filter(j=>DONE_STATUSES.includes(j.status));
+
+    const overdue=active.filter(j=>{
+      if(!j.due_date)return false;
+      return daysUntil(j.due_date)<0;
+    });
+
+    // KPIs
+    document.getElementById('kpi-active').textContent=active.length;
+    document.getElementById('kpi-urgent').textContent=urgent.length;
+    document.getElementById('kpi-done').textContent=done.length;
+    document.getElementById('kpi-overdue').textContent=overdue.length;
+    document.getElementById('kpi-team').textContent=collaborators.length;
+
+    // Trends
+    if(urgent.length>0){
+      const el=document.getElementById('kpi-urgent-trend');
+      el.textContent=`${urgent.length} richiede${urgent.length>1?'ono':''} attenzione`;
+      el.className='kpi-trend trend-down';
+    }
+    if(overdue.length>0){
+      const el=document.getElementById('kpi-overdue-trend');
+      el.textContent=`${overdue.length} scadut${overdue.length>1?'e':'a'}`;
+      el.className='kpi-trend trend-down';
+    }else{
+      const el=document.getElementById('kpi-overdue-trend');
+      el.textContent='Tutto nei tempi';
+      el.className='kpi-trend trend-up';
+    }
+
+    // Alerts
+    const alertsContainer=document.getElementById('alerts-container');
+    if(overdue.length>0){
+      alertsContainer.innerHTML=`<div class="alert-box">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-content">
+          <div class="alert-title">Commesse scadute</div>
+          <div class="alert-text">${overdue.length} commess${overdue.length>1?'e':'a'} ha superato la data di consegna: ${overdue.slice(0,3).map(j=>j.code||j.title).join(', ')}${overdue.length>3?` e altre ${overdue.length-3}`:''}.</div>
+        </div>
+      </div>`;
+    }else if(urgent.length>0){
+      alertsContainer.innerHTML=`<div class="alert-box" style="background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.25)">
+        <div class="alert-icon">🚨</div>
+        <div class="alert-content">
+          <div class="alert-title" style="color:#fcd34d">${urgent.length} commess${urgent.length>1?'e':'a'} URGENT</div>
+          <div class="alert-text">${urgent.map(j=>j.code||j.title).join(', ')}</div>
+        </div>
+      </div>`;
+    }
+
+    // Status chart
+    const statusCounts={};
+    jobs.forEach(j=>{
+      const s=j.status||'BOZZA';
+      statusCounts[s]=(statusCounts[s]||0)+1;
+    });
+    renderStatusChart(statusCounts);
+
+    // Priority chart
+    const prioCounts={URGENT:0,HIGH:0,MEDIUM:0,LOW:0};
+    active.forEach(j=>{
+      const p=j.priority||'MEDIUM';
+      if(prioCounts[p]!==undefined)prioCounts[p]++;
+    });
+    renderPriorityChart(prioCounts);
+
+    // Deadlines
+    const upcoming=active
+      .filter(j=>j.due_date)
+      .map(j=>({...j,days:daysUntil(j.due_date)}))
+      .sort((a,b)=>a.days-b.days)
+      .slice(0,10);
+
+    document.getElementById('deadlines-count').textContent=`${upcoming.length} commesse`;
+    const dl=document.getElementById('deadline-list');
+    if(upcoming.length===0){
+      dl.innerHTML='<div style="text-align:center;padding:32px;color:var(--paper-m);font-size:.8rem">Nessuna scadenza nei prossimi 30 giorni</div>';
+    }else{
+      dl.innerHTML=upcoming.map(j=>{
+        const p=j.priority||'MEDIUM';
+        const color=PRIO_COLORS[p]||'#9ca3af';
+        let badgeClass='badge-medium',badgeText=fmtDate(j.due_date);
+        if(j.days<0){badgeClass='badge-overdue';badgeText=`${Math.abs(j.days)}gg scaduta`}
+        else if(j.days===0){badgeClass='badge-urgent';badgeText='Scade oggi'}
+        else if(j.days<=3){badgeClass='badge-urgent';badgeText=`${j.days}gg`}
+        else if(j.days<=7){badgeClass='badge-high';badgeText=`${j.days}gg`}
+        else{badgeText=fmtDate(j.due_date)}
+        return`<div class="deadline-item">
+          <div class="deadline-dot" style="background:${color}"></div>
+          <div class="deadline-code">${j.job_code||'—'}</div>
+          <div class="deadline-title">${j.title||'—'}</div>
+          <div class="deadline-badge ${badgeClass}">${badgeText}</div>
+        </div>`;
+      }).join('');
+    }
+
+    // Team load table
+    if(collaborators.length>0){
+      const teamJobs={};
+      collaborators.forEach(c=>{teamJobs[c.id]=0});
+      active.forEach(j=>{
+        if(j.assigned_to&&teamJobs[j.assigned_to]!==undefined)teamJobs[j.assigned_to]++;
+      });
+      const maxJobs=Math.max(1,...Object.values(teamJobs));
+      const table=document.getElementById('team-load-table');
+      table.innerHTML=collaborators.map(c=>{
+        const count=teamJobs[c.id]||0;
+        const pct=Math.round((count/maxJobs)*100);
+        return`<tr>
+          <td style="color:var(--paper-t);font-weight:600;width:140px">${c.name}</td>
+          <td class="dist-bar-wrap"><div class="dist-bar-bg"><div class="dist-bar-fill" style="width:${pct}%"></div></div></td>
+          <td class="dist-count">${count} commesse</td>
+        </tr>`;
+      }).join('');
+    }else{
+      document.getElementById('team-load-table').innerHTML='<tr><td colspan="3" style="color:var(--paper-m);font-size:.75rem;padding:8px 0">Nessun collaboratore nel team</td></tr>';
+    }
+
+  }catch(err){
+    console.error('Errore caricamento status:',err);
+    document.getElementById('kpi-active').textContent='!';
+    document.getElementById('deadline-list').innerHTML='<div style="text-align:center;padding:32px;color:#f87171;font-size:.8rem">Errore nel caricamento dei dati</div>';
+  }
+}
+
+function renderStatusChart(counts){
+  const labels=Object.keys(counts).map(k=>STATUS_LABELS[k]||k);
+  const data=Object.values(counts);
+  const colors=['rgba(99,102,241,.8)','rgba(245,158,11,.8)','rgba(34,197,94,.8)','rgba(239,68,68,.8)','rgba(107,114,128,.8)','rgba(59,130,246,.8)'];
+  if(statusChart)statusChart.destroy();
+  const ctx=document.getElementById('status-chart').getContext('2d');
+  statusChart=new Chart(ctx,{
+    type:'doughnut',
+    data:{labels,datasets:[{data,backgroundColor:colors.slice(0,data.length),borderWidth:0,hoverOffset:6}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'bottom',labels:{color:'#cdd0de',font:{family:'Sora',size:11},padding:12}},
+        tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.parsed}`}}
+      },
+      cutout:'68%'
+    }
+  });
+}
+
+function renderPriorityChart(counts){
+  if(priorityChart)priorityChart.destroy();
+  const ctx=document.getElementById('priority-chart').getContext('2d');
+  priorityChart=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:['URGENT','HIGH','MEDIUM','LOW'],
+      datasets:[{
+        data:[counts.URGENT,counts.HIGH,counts.MEDIUM,counts.LOW],
+        backgroundColor:['rgba(239,68,68,.75)','rgba(245,158,11,.75)','rgba(99,102,241,.75)','rgba(107,114,128,.75)'],
+        borderRadius:6,borderSkipped:false
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#737889',font:{family:'Sora',size:11}}},
+        y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#737889',font:{family:'Sora',size:11},stepSize:1},beginAtZero:true}
+      }
+    }
+  });
+}
+
+loadData();
+</script>
+</body>
+</html>

@@ -695,7 +695,7 @@ function getSelectedAreaIds(){
 function populateFormDropdowns(){
   const deptSelect=document.getElementById('person-department');
   deptSelect.innerHTML='<option value="">-- Seleziona --</option>'+
-    DEPARTMENTS.map(d=>`<option value="${d.id}">${d.name}${d.area?` (${d.area.name})`:''}</option>`).join('');
+    DEPARTMENTS.map(d=>`<option value="${d.id}">${d.name}</option>`).join('');
 
   const areaSelect=document.getElementById('person-managed-area');
   areaSelect.innerHTML='<option value="">-- Nessuna --</option>'+

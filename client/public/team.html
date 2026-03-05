@@ -398,7 +398,7 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
 
       <div class="form-grid">
         <div class="form-group">
-          <label class="form-label">Reparto Principale *</label>
+          <label class="form-label">Area Principale *</label>
           <select class="form-select" id="person-department" name="department" required>
             <option value="">-- Seleziona --</option>
           </select>
@@ -625,7 +625,7 @@ function renderPersonCard(person){
   const ini=initials(person.name);
   const roleLabel=ROLE_LABELS[person.role]||'Operatore';
   const roleClass=ROLE_CLASSES[person.role]||'role-operator';
-  const dept=DEPARTMENTS.find(d=>d.id===person.primary_department_id);
+  const primaryArea=AREAS.find(a=>a.id===person.primary_area_id);
   const caps=(person.capacities||[]);
   const areas=(person.areas||[]);
 
@@ -638,7 +638,8 @@ function renderPersonCard(person){
       </div>`).join('')}
     </div>`:'';
 
-  const deptHtml=dept?`<div style="font-size:.68rem;color:var(--paper-m);display:flex;align-items:center;gap:4px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg> ${dept.name}</div>`:'';
+  const deptHtml=primaryArea?`<div style="font-size:.68rem;color:var(--paper-m);display:flex;align-items:center;gap:4px">${areaIconSmall(primaryArea.id,primaryArea.color)} ${primaryArea.name}</div>`:'';
+
   const areasHtml=areas.length>0?`<div class="pc-areas">${areas.map(a=>`<span class="pc-area-badge" style="background:${a.color}22;color:${a.color}">${areaIconSmall(a.id,a.color)} ${a.name}</span>`).join('')}</div>`:'';
 
   const avatarHtml = person.avatar
@@ -695,7 +696,7 @@ function getSelectedAreaIds(){
 function populateFormDropdowns(){
   const deptSelect=document.getElementById('person-department');
   deptSelect.innerHTML='<option value="">-- Seleziona --</option>'+
-    DEPARTMENTS.map(d=>`<option value="${d.id}">${d.name}</option>`).join('');
+    AREAS.map(a=>`<option value="${a.id}">${a.name}</option>`).join('');
 
   const areaSelect=document.getElementById('person-managed-area');
   areaSelect.innerHTML='<option value="">-- Nessuna --</option>'+
@@ -765,7 +766,7 @@ function openPersonForm(person=null){
     document.getElementById('person-id').value=person.id;
     document.getElementById('person-name').value=person.name;
     document.getElementById('person-email').value=person.email||'';
-    document.getElementById('person-department').value=person.primary_department_id||'';
+    document.getElementById('person-department').value=person.primary_area_id||'';
     document.getElementById('person-role').value=person.role||'operator';
     document.getElementById('person-managed-area').value=person.managed_area_id||'';
     document.getElementById('person-avatar-url').value=person.avatar||'';
@@ -842,10 +843,13 @@ async function savePerson(event){
   const formData=new FormData(event.target);
   const personId=formData.get('person_id');
   const avatarUrl=document.getElementById('person-avatar-url').value||null;
+  const selectedAreaId=formData.get('department')||null;
+  const dept=selectedAreaId?DEPARTMENTS.find(d=>d.area_id===selectedAreaId):null;
   const personData={
     name:formData.get('name'),
     email:formData.get('email')||null,
-    primary_department_id:formData.get('department')||null,
+    primary_department_id:dept?dept.id:null,
+    primary_area_id:selectedAreaId,
     role:formData.get('role'),
     managed_area_id:formData.get('role')==='area_manager'?formData.get('managed_area'):null,
     avatar:avatarUrl,

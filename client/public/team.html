@@ -760,7 +760,8 @@ function openPersonForm(person=null){
     setAvatarPreview(person.avatar);
     if(person.capacities){
       person.capacities.forEach(cap=>{
-        SELECTED_CAPACITIES[cap.task_type_id]={task_type:cap.task_type,capacity:cap.capacity_per_day};
+        const tt=TASK_TYPES.find(t=>t.id===cap.task_type_id)||{id:cap.task_type_id,name:cap.task_name||'Sconosciuta',icon:cap.task_icon,unit:cap.task_unit};
+        SELECTED_CAPACITIES[cap.task_type_id]={task_type:tt,capacity:cap.capacity_per_day};
       });
     }
   }else{

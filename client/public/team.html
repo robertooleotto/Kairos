@@ -116,7 +116,28 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
   width:46px;height:46px;border-radius:13px;
   display:flex;align-items:center;justify-content:center;
   font-size:1rem;font-weight:700;color:#fff;flex-shrink:0;
-  letter-spacing:-.02em;
+  letter-spacing:-.02em;overflow:hidden;
+}
+.pc-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.avatar-upload-zone{
+  display:flex;align-items:center;gap:16px;padding:12px;
+  border:1.5px dashed var(--paper-l);border-radius:12px;
+  cursor:pointer;transition:border-color .2s;
+}
+.avatar-upload-zone:hover{border-color:#6366f1}
+.avatar-upload-zone .avatar-preview{
+  width:64px;height:64px;border-radius:14px;overflow:hidden;
+  background:var(--paper-l);display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.avatar-upload-zone .avatar-preview img{width:100%;height:100%;object-fit:cover;display:block}
+.avatar-upload-zone .avatar-placeholder{
+  width:64px;height:64px;border-radius:14px;
+  background:rgba(99,102,241,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.avatar-upload-zone .avatar-text{font-size:.78rem;color:var(--paper-m);line-height:1.4}
+.avatar-upload-zone .avatar-text strong{color:var(--paper-s);display:block;margin-bottom:2px}
+.avatar-remove-btn{
+  font-size:.7rem;color:#ef4444;background:none;border:none;cursor:pointer;padding:2px 6px;margin-top:4px;
 }
 .pc-info{flex:1;min-width:0}
 .pc-name{font-family:'Fraunces',serif;font-size:.98rem;font-weight:600;color:var(--paper-t);line-height:1.2}
@@ -348,6 +369,22 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
 
     <form id="person-form" onsubmit="savePerson(event)">
       <input type="hidden" id="person-id" name="person_id">
+      <input type="hidden" id="person-avatar-url" name="avatar_url">
+      <input type="file" id="person-avatar-file" accept="image/*" style="display:none" onchange="handleAvatarSelect(this)">
+
+      <div class="form-group">
+        <label class="form-label">Foto</label>
+        <div class="avatar-upload-zone" id="avatar-upload-zone" onclick="document.getElementById('person-avatar-file').click()" data-testid="avatar-upload-zone">
+          <div class="avatar-placeholder" id="avatar-preview-container">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div class="avatar-text">
+            <strong>Carica una foto</strong>
+            Clicca per selezionare un'immagine (max 5MB)
+            <button type="button" class="avatar-remove-btn" id="avatar-remove-btn" style="display:none" onclick="event.stopPropagation();removeAvatar()" data-testid="avatar-remove-btn">Rimuovi foto</button>
+          </div>
+        </div>
+      </div>
 
       <div class="form-group">
         <label class="form-label">Nome Completo *</label>
@@ -604,10 +641,14 @@ function renderPersonCard(person){
   const deptHtml=dept?`<div style="font-size:.68rem;color:var(--paper-m);display:flex;align-items:center;gap:4px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg> ${dept.name}</div>`:'';
   const areasHtml=areas.length>0?`<div class="pc-areas">${areas.map(a=>`<span class="pc-area-badge" style="background:${a.color}22;color:${a.color}">${areaIconSmall(a.id,a.color)} ${a.name}</span>`).join('')}</div>`:'';
 
+  const avatarHtml = person.avatar
+    ? `<div class="pc-avatar"><img src="${person.avatar}" alt="${person.name}"></div>`
+    : `<div class="pc-avatar" style="background:${color}">${ini}</div>`;
+
   return`<div class="person-card">
     <div class="pc-stripe" style="background:${color}"></div>
     <div class="pc-head">
-      <div class="pc-avatar" style="background:${color}">${ini}</div>
+      ${avatarHtml}
       <div class="pc-info">
         <div class="pc-name">${person.name}</div>
         ${person.email?`<div class="pc-sub">${person.email}</div>`:''}
@@ -679,6 +720,43 @@ async function addSubdivision(areaId,el){
   }catch(e){alert('Errore: '+e.message)}
 }
 
+function setAvatarPreview(url){
+  const container=document.getElementById('avatar-preview-container');
+  const removeBtn=document.getElementById('avatar-remove-btn');
+  if(url){
+    container.className='avatar-preview';
+    container.innerHTML=`<img src="${url}" alt="Avatar">`;
+    removeBtn.style.display='inline-block';
+  }else{
+    container.className='avatar-placeholder';
+    container.innerHTML=`<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+    removeBtn.style.display='none';
+  }
+}
+
+async function handleAvatarSelect(input){
+  const file=input.files[0];
+  if(!file)return;
+  if(file.size>5*1024*1024){alert('File troppo grande (max 5MB)');input.value='';return}
+  const fd=new FormData();
+  fd.append('avatar',file);
+  try{
+    const resp=await fetch('/api/upload-avatar',{method:'POST',body:fd});
+    const data=await resp.json();
+    if(data.url){
+      document.getElementById('person-avatar-url').value=data.url;
+      setAvatarPreview(data.url);
+    }else{alert('Errore upload: '+(data.error||'sconosciuto'))}
+  }catch(err){alert('Errore upload: '+err.message)}
+  input.value='';
+}
+
+function removeAvatar(){
+  document.getElementById('person-avatar-url').value='';
+  document.getElementById('person-avatar-file').value='';
+  setAvatarPreview(null);
+}
+
 function openPersonForm(person=null){
   EDITING_PERSON=person;
   SELECTED_CAPACITIES={};
@@ -690,6 +768,8 @@ function openPersonForm(person=null){
     document.getElementById('person-department').value=person.primary_department_id||'';
     document.getElementById('person-role').value=person.role||'operator';
     document.getElementById('person-managed-area').value=person.managed_area_id||'';
+    document.getElementById('person-avatar-url').value=person.avatar||'';
+    setAvatarPreview(person.avatar);
     if(person.capacities){
       person.capacities.forEach(cap=>{
         SELECTED_CAPACITIES[cap.task_type_id]={task_type:cap.task_type,capacity:cap.capacity_per_day};
@@ -700,6 +780,8 @@ function openPersonForm(person=null){
   }else{
     document.getElementById('person-form').reset();
     document.getElementById('person-id').value='';
+    document.getElementById('person-avatar-url').value='';
+    setAvatarPreview(null);
     renderAreaCheckboxes([]);
   }
   toggleAreaManaged();
@@ -759,12 +841,14 @@ async function savePerson(event){
   event.preventDefault();
   const formData=new FormData(event.target);
   const personId=formData.get('person_id');
+  const avatarUrl=document.getElementById('person-avatar-url').value||null;
   const personData={
     name:formData.get('name'),
     email:formData.get('email')||null,
     primary_department_id:formData.get('department')||null,
     role:formData.get('role'),
     managed_area_id:formData.get('role')==='area_manager'?formData.get('managed_area'):null,
+    avatar:avatarUrl,
     active:true
   };
   const selectedAreaIds=getSelectedAreaIds();

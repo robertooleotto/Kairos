@@ -1,7 +1,28 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import path from "path";
+import fs from "fs";
+import multer from "multer";
 import { query } from "./db";
+
+const uploadsDir = path.resolve(process.cwd(), "uploads");
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, uploadsDir),
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname) || ".jpg";
+    cb(null, `avatar_${Date.now()}${ext}`);
+  },
+});
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) cb(null, true);
+    else cb(new Error("Solo immagini consentite"));
+  },
+});
 
 export async function registerRoutes(
   httpServer: Server,
@@ -10,6 +31,27 @@ export async function registerRoutes(
   app.get("/", (req, res) => {
     const publicPath = path.resolve(process.cwd(), "client/public");
     res.sendFile(path.join(publicPath, "preview.html"));
+  });
+
+  app.use("/uploads", (await import("express")).default.static(uploadsDir));
+
+  app.post("/api/upload-avatar", (req, res) => {
+    upload.single("avatar")(req, res, (err) => {
+      if (err) {
+        const msg = err instanceof multer.MulterError
+          ? (err.code === "LIMIT_FILE_SIZE" ? "File troppo grande (max 5MB)" : err.message)
+          : err.message || "Errore upload";
+        return res.status(400).json({ error: msg });
+      }
+      if (!req.file) return res.status(400).json({ error: "Nessun file caricato" });
+      const allowedExts = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
+      const ext = path.extname(req.file.filename).toLowerCase();
+      if (!allowedExts.includes(ext)) {
+        fs.unlinkSync(path.join(uploadsDir, req.file.filename));
+        return res.status(400).json({ error: "Formato non supportato. Usa JPG, PNG, GIF o WebP." });
+      }
+      res.json({ url: `/uploads/${req.file.filename}` });
+    });
   });
 
   // ─── AREAS ────────────────────────────────────────────────
@@ -71,19 +113,19 @@ export async function registerRoutes(
   });
 
   app.post("/api/collaborators", async (req, res) => {
-    const { name, email, role, primary_department_id } = req.body;
+    const { name, email, role, primary_department_id, avatar } = req.body;
     const rows = await query(
-      "INSERT INTO collaborators (name, email, role, primary_department_id) VALUES ($1,$2,$3,$4) RETURNING *",
-      [name, email || null, role || "operator", primary_department_id || null]
+      "INSERT INTO collaborators (name, email, role, primary_department_id, avatar) VALUES ($1,$2,$3,$4,$5) RETURNING *",
+      [name, email || null, role || "operator", primary_department_id || null, avatar || null]
     );
     res.json(rows[0]);
   });
 
   app.put("/api/collaborators/:id", async (req, res) => {
-    const { name, email, role, primary_department_id } = req.body;
+    const { name, email, role, primary_department_id, avatar } = req.body;
     const rows = await query(
-      "UPDATE collaborators SET name=$1, email=$2, role=$3, primary_department_id=$4 WHERE id=$5 RETURNING *",
-      [name, email || null, role, primary_department_id || null, req.params.id]
+      "UPDATE collaborators SET name=$1, email=$2, role=$3, primary_department_id=$4, avatar=$5 WHERE id=$6 RETURNING *",
+      [name, email || null, role, primary_department_id || null, avatar || null, req.params.id]
     );
     res.json(rows[0]);
   });

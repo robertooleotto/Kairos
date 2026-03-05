@@ -39,9 +39,13 @@ Project management tool for NuDesign creative studio. Manages jobs (commesse), t
 
 ## Key Files
 - `server/db.ts` - PostgreSQL connection pool
-- `server/routes.ts` - All REST API endpoints (/api/*)
+- `server/routes.ts` - All REST API endpoints (/api/*), includes multer for avatar uploads
 - `server/index.ts` - Express server setup, static file serving
 - `client/public/api-client.js` - Frontend API helper
+- `uploads/` - Stored avatar images, served statically at /uploads/
+
+## Features
+- Team photo upload: collaborators can have avatar photos uploaded via the team form. Files stored in /uploads/, URL saved in collaborators.avatar column. Max 5MB, supports JPG/PNG/GIF/WebP.
 
 ## Notes
 - Originally used Supabase auth (login page still references it) - not active

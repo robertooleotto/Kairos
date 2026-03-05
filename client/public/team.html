@@ -574,7 +574,7 @@ function renderTeam(){
 
   let html='';
   AREAS.forEach(area=>{
-    const people=TEAM.filter(p=>(p.areas||[]).some(a=>a.id===area.id));
+    const people=TEAM.filter(p=>(p.areas||[]).some(a=>a.id===area.id) || p.primary_area_id===area.id);
     const depts=DEPARTMENTS.filter(d=>d.area_id===area.id);
     const accentBg=area.color+'22';
     html+=`<div class="area-section">
@@ -605,7 +605,7 @@ function renderTeam(){
     return;
   }
 
-  const unassigned=TEAM.filter(p=>!(p.areas||[]).length);
+  const unassigned=TEAM.filter(p=>!(p.areas||[]).length && !p.primary_area_id);
   if(unassigned.length>0){
     html+=`<div class="area-section">
       <div class="area-header" style="border-left:3px solid #6b7280">

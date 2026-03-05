@@ -399,7 +399,7 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">Area Principale *</label>
-          <select class="form-select" id="person-department" name="department" required>
+          <select class="form-select" id="person-department" name="department" required onchange="onAreaChanged(this.value)">
             <option value="">-- Seleziona --</option>
           </select>
         </div>
@@ -784,6 +784,33 @@ function editPerson(person){openPersonForm(person)}
 function toggleAreaManaged(){
   const role=document.getElementById('person-role').value;
   document.getElementById('area-managed-group').style.display=role==='area_manager'?'block':'none';
+}
+
+const AREA_TO_CATEGORY={
+  area_artdirection:'ART DIRECTION',
+  area_creativita:'CONCEPT',
+  area_grafica:'GRAFICA',
+  area_modelli:'MODELLAZIONE',
+  area_immagini:'PRODUZIONE 3D',
+  area_fotografia:'SHOOTING',
+  area_ai:'PRODUZIONE AI',
+  area_video:'SHOOTING',
+  area_montaggio:'POST-PRODUZIONE',
+  area_color:'POST-PRODUZIONE',
+  area_configuratore:null
+};
+
+function onAreaChanged(areaId){
+  if(!areaId)return;
+  const category=AREA_TO_CATEGORY[areaId];
+  if(!category)return;
+  const tasksForArea=TASK_TYPES.filter(t=>t.category===category);
+  tasksForArea.forEach(t=>{
+    if(!SELECTED_CAPACITIES[t.id]){
+      SELECTED_CAPACITIES[t.id]={task_type:t,capacity:8};
+    }
+  });
+  renderCapacities();
 }
 
 function addCapacity(taskTypeId){

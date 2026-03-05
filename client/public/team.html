@@ -414,11 +414,6 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
         </div>
       </div>
 
-      <div class="form-group">
-        <label class="form-label">Aree di competenza</label>
-        <div class="area-checks-grid" id="area-checks-container"></div>
-      </div>
-
       <div class="form-group" id="area-managed-group" style="display:none">
         <label class="form-label">Area Gestita (solo Area Manager)</label>
         <select class="form-select" id="person-managed-area" name="managed_area">
@@ -427,8 +422,8 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
       </div>
 
       <div class="form-group">
-        <label class="form-label">Mansioni e Capacità</label>
-        <div class="info-note">Seleziona le mansioni e indica la capacità giornaliera per ciascuna.</div>
+        <label class="form-label">Mansioni</label>
+        <div class="info-note">Seleziona le mansioni dalla tendina per aggiungerle.</div>
         <div id="capacities-container"></div>
         <select class="form-select" id="add-capacity-select" onchange="addCapacity(this.value)" style="margin-top:8px">
           <option value="">+ Aggiungi mansione...</option>
@@ -675,23 +670,6 @@ function renderPersonCard(person){
   </div>`;
 }
 
-function renderAreaCheckboxes(selectedIds=[]){
-  const container=document.getElementById('area-checks-container');
-  if(!container)return;
-  container.innerHTML=AREAS.map(a=>{
-    const checked=selectedIds.includes(a.id);
-    return`<label class="area-check-item${checked?' selected':''}">
-      <input type="checkbox" value="${a.id}" ${checked?'checked':''} onchange="this.parentElement.classList.toggle('selected',this.checked)">
-      ${areaIconSmall(a.id,a.color)}
-      <span class="area-check-label" style="color:${a.color}">${a.name}</span>
-    </label>`;
-  }).join('');
-}
-
-function getSelectedAreaIds(){
-  const checks=document.querySelectorAll('#area-checks-container input[type=checkbox]');
-  return Array.from(checks).filter(c=>c.checked).map(c=>parseInt(c.value));
-}
 
 function populateFormDropdowns(){
   const deptSelect=document.getElementById('person-department');
@@ -703,10 +681,19 @@ function populateFormDropdowns(){
     AREAS.map(a=>`<option value="${a.id}">${a.name}</option>`).join('');
 
   const taskSelect=document.getElementById('add-capacity-select');
-  taskSelect.innerHTML='<option value="">+ Aggiungi mansione...</option>'+
-    TASK_TYPES.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
-
-  renderAreaCheckboxes();
+  const categories=[...new Set(TASK_TYPES.map(t=>t.category).filter(Boolean))];
+  let taskOpts='<option value="">+ Aggiungi mansione...</option>';
+  categories.forEach(cat=>{
+    const tasks=TASK_TYPES.filter(t=>t.category===cat);
+    if(tasks.length>0){
+      taskOpts+=`<optgroup label="${cat}">`;
+      tasks.forEach(t=>{taskOpts+=`<option value="${t.id}">${t.name}</option>`});
+      taskOpts+=`</optgroup>`;
+    }
+  });
+  const uncategorized=TASK_TYPES.filter(t=>!t.category);
+  uncategorized.forEach(t=>{taskOpts+=`<option value="${t.id}">${t.name}</option>`});
+  taskSelect.innerHTML=taskOpts;
 }
 
 async function addSubdivision(areaId,el){
@@ -776,14 +763,11 @@ function openPersonForm(person=null){
         SELECTED_CAPACITIES[cap.task_type_id]={task_type:cap.task_type,capacity:cap.capacity_per_day};
       });
     }
-    const selectedAreaIds=(person.areas||[]).map(a=>a.id);
-    renderAreaCheckboxes(selectedAreaIds);
   }else{
     document.getElementById('person-form').reset();
     document.getElementById('person-id').value='';
     document.getElementById('person-avatar-url').value='';
     setAvatarPreview(null);
-    renderAreaCheckboxes([]);
   }
   toggleAreaManaged();
   renderCapacities();
@@ -855,15 +839,10 @@ async function savePerson(event){
     avatar:avatarUrl,
     active:true
   };
-  const selectedAreaIds=getSelectedAreaIds();
   try{
     let savedPerson;
     if(personId){savedPerson=await api.collaborators.update(personId,personData)}
     else{savedPerson=await api.collaborators.create(personData)}
-    await fetch(`/api/collaborators/${savedPerson.id}/areas`,{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({area_ids:selectedAreaIds})
-    });
     for(const[taskId,cap]of Object.entries(SELECTED_CAPACITIES)){
       await api.collaborators.addCapacity(savedPerson.id,{task_type_id:parseInt(taskId),capacity_per_day:cap.capacity});
     }

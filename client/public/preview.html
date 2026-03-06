@@ -129,6 +129,10 @@ html,body{font-family:'Sora',system-ui,sans-serif;background:var(--ink);color:va
 .ev-more{font-size:.6rem;font-weight:700;color:var(--paper-m);padding:0 6px;cursor:pointer;line-height:var(--bar-h)}
 .ev-more:hover{color:var(--paper-t)}
 
+.dept-legend{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px}
+.dept-legend-item{display:flex;align-items:center;gap:5px;font-size:.62rem;color:var(--ink-m)}
+.dept-legend-swatch{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+
 /* PHASE TIMELINE (inside detail panel) */
 .ph-section{margin-top:6px}
 .ph-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
@@ -351,6 +355,8 @@ html,body{font-family:'Sora',system-ui,sans-serif;background:var(--ink);color:va
       <span id="job-count"></span>
     </div>
 
+    <div class="dept-legend" id="dept-legend"></div>
+
     <!-- CALENDAR -->
     <div class="cal-card">
       <div class="cal-head">
@@ -469,6 +475,72 @@ const COLOR_HEX=[
   '#5b21b6','#0369a1','#065f46','#78350f','#881337'
 ];
 
+const DEPT_COLORS={
+  'ART DIRECTION':   ['#7c3aed','#8b5cf6','#a78bfa','#c4b5fd'],
+  'CONCEPT':         ['#ec4899','#f472b6','#f9a8d4','#fbcfe8'],
+  'GRAFICA':         ['#f97316','#fb923c','#fdba74','#fed7aa'],
+  'MODELLAZIONE':    ['#22c55e','#4ade80','#86efac','#bbf7d0'],
+  'SET DESIGN':      ['#eab308','#facc15','#fde047','#fef08a'],
+  'PRODUZIONE 3D':   ['#14b8a6','#2dd4bf','#5eead4','#99f6e4'],
+  'PRODUZIONE AI':   ['#06b6d4','#22d3ee','#67e8f9','#a5f3fc'],
+  'SHOOTING':        ['#ef4444','#f87171','#fca5a5','#fecaca'],
+  'POST-PRODUZIONE': ['#3b82f6','#60a5fa','#93c5fd','#bfdbfe'],
+};
+let ALL_PHASES={};
+
+function phaseColorForDay(jobId,date){
+  const phases=ALL_PHASES[jobId];
+  if(!phases||!phases.length)return null;
+  const d=new Date(date);d.setHours(0,0,0,0);
+  const active=phases.filter(p=>{
+    const ps=p.start_date?new Date(p.start_date):null;
+    const pe=p.due_date?new Date(p.due_date):null;
+    if(ps)ps.setHours(0,0,0,0);
+    if(pe)pe.setHours(0,0,0,0);
+    if(ps&&pe)return d>=ps&&d<=pe;
+    if(ps)return d>=ps;
+    if(pe)return d<=pe;
+    return false;
+  });
+  if(!active.length)return null;
+  const p=active[0];
+  const cat=(p.task_type_category||'').toUpperCase();
+  const shades=DEPT_COLORS[cat];
+  if(!shades)return p.color||'#6366f1';
+  const catPhases=phases.filter(pp=>(pp.task_type_category||'').toUpperCase()===cat);
+  const idx=catPhases.findIndex(pp=>pp.id===p.id);
+  return shades[Math.min(idx,shades.length-1)];
+}
+
+function getDayPhaseColors(jobId,date){
+  const phases=ALL_PHASES[jobId];
+  if(!phases||!phases.length)return [];
+  const d=new Date(date);d.setHours(0,0,0,0);
+  const active=phases.filter(p=>{
+    const ps=p.start_date?new Date(p.start_date):null;
+    const pe=p.due_date?new Date(p.due_date):null;
+    if(ps)ps.setHours(0,0,0,0);
+    if(pe)pe.setHours(0,0,0,0);
+    if(ps&&pe)return d>=ps&&d<=pe;
+    if(ps)return d>=ps;
+    if(pe)return d<=pe;
+    return false;
+  });
+  if(!active.length)return [];
+  const seen=new Set();
+  const colors=[];
+  active.forEach(p=>{
+    const cat=(p.task_type_category||'').toUpperCase();
+    const shades=DEPT_COLORS[cat];
+    if(!shades){colors.push(p.color||'#6366f1');return;}
+    const catPhases=phases.filter(pp=>(pp.task_type_category||'').toUpperCase()===cat);
+    const idx=catPhases.findIndex(pp=>pp.id===p.id);
+    const col=shades[Math.min(idx,shades.length-1)];
+    if(!seen.has(col)){seen.add(col);colors.push(col);}
+  });
+  return colors;
+}
+
 const STATUS_LABELS={
   nuova:'Nuova',in_produzione:'In produzione',in_corso:'In corso',
   in_attesa:'In attesa',sospesa:'Sospesa',completata:'Completata',annullata:'Annullata'
@@ -476,10 +548,23 @@ const STATUS_LABELS={
 
 async function init(){
   try{
-    [JOBS, TEAM]=await Promise.all([api.jobs.list(), api.collaborators.list()]);
-    JOBS=(JOBS||[]).filter(j=>j.started_at&&j.due_date);
-    TEAM=TEAM||[];
+    const [jobsData, teamData, phasesData]=await Promise.all([
+      api.jobs.list(), api.collaborators.list(),
+      fetch('/api/all-phases').then(r=>r.json())
+    ]);
+    JOBS=(jobsData||[]).filter(j=>j.started_at&&j.due_date);
+    TEAM=teamData||[];
+    ALL_PHASES={};
+    (phasesData||[]).forEach(p=>{
+      if(!ALL_PHASES[p.job_id])ALL_PHASES[p.job_id]=[];
+      ALL_PHASES[p.job_id].push(p);
+    });
     JOBS.forEach(j=>jobColor(j.id));
+
+    const legendEl=document.getElementById('dept-legend');
+    legendEl.innerHTML=Object.entries(DEPT_COLORS).map(([cat,shades])=>
+      `<div class="dept-legend-item"><div class="dept-legend-swatch" style="background:${shades[0]}"></div>${cat}</div>`
+    ).join('');
 
     const clients=[...new Set(JOBS.map(j=>j.client))].filter(Boolean).sort();
     document.getElementById('filter-client').innerHTML=
@@ -656,8 +741,22 @@ function renderWeekEvents(days,jobs){
       const isSelected=j.id===SELECTED_JOB_ID;
       const jStr=JSON.stringify(j).replace(/'/g,'&apos;');
 
-      rowHTML+=`<div class="seg ${type} jc-${ci}${isSelected?' active-sel':''}" onclick='showDetail(${jStr})'>
-        <div class="seg-inner">
+      const hasPhases=!!(ALL_PHASES[j.id]&&ALL_PHASES[j.id].length);
+      const dayPhaseColors=getDayPhaseColors(j.id,day);
+      let bgStyle='';
+      if(dayPhaseColors.length===1){
+        bgStyle=`background:${dayPhaseColors[0]};`;
+      }else if(dayPhaseColors.length>1){
+        const pct=100/dayPhaseColors.length;
+        const stops=dayPhaseColors.map((c,i)=>`${c} ${i*pct}%,${c} ${(i+1)*pct}%`).join(',');
+        bgStyle=`background:linear-gradient(to bottom,${stops});`;
+      }else if(hasPhases){
+        bgStyle='background:rgba(255,255,255,.08);';
+      }
+      const useInline=dayPhaseColors.length>0||(hasPhases&&dayPhaseColors.length===0);
+
+      rowHTML+=`<div class="seg ${type}${useInline?'':' jc-'+ci}${isSelected?' active-sel':''}" onclick='showDetail(${jStr})'>
+        <div class="seg-inner"${useInline?` style="${bgStyle}"`:''}>
           ${showLabel?`<div class="seg-body">
             <span class="seg-client">${j.client||''}</span>
             ${j.client&&j.code?'<span class="seg-sep">·</span>':''}
@@ -903,14 +1002,29 @@ async function submitPhForm(e){
     if(phaseId) await fetch(`/api/jobs/${jobId}/phases/${phaseId}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     else await fetch(`/api/jobs/${jobId}/phases`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     closePhForm();
+    await refreshAllPhases();
+    render();
     if(DETAIL_JOB) await showDetail(DETAIL_JOB);
   }catch(err){alert('Errore nel salvataggio')}
+}
+
+async function refreshAllPhases(){
+  try{
+    const data=await fetch('/api/all-phases').then(r=>r.json());
+    ALL_PHASES={};
+    (data||[]).forEach(p=>{
+      if(!ALL_PHASES[p.job_id])ALL_PHASES[p.job_id]=[];
+      ALL_PHASES[p.job_id].push(p);
+    });
+  }catch(e){}
 }
 
 async function deletePh(jobId,phaseId){
   if(!confirm('Eliminare questa fase?'))return;
   try{
     await fetch(`/api/jobs/${jobId}/phases/${phaseId}`,{method:'DELETE'});
+    await refreshAllPhases();
+    render();
     if(DETAIL_JOB) await showDetail(DETAIL_JOB);
   }catch(e){}
 }
@@ -918,6 +1032,8 @@ async function deletePh(jobId,phaseId){
 async function togglePh(jobId,phaseId,completed){
   try{
     await fetch(`/api/jobs/${jobId}/phases/${phaseId}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({completed})});
+    await refreshAllPhases();
+    render();
     if(DETAIL_JOB) await showDetail(DETAIL_JOB);
   }catch(e){}
 }

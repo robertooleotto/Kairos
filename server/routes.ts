@@ -393,6 +393,18 @@ export async function registerRoutes(
     res.json({ ok: true });
   });
 
+  // ─── ALL PHASES (bulk) ───────────────────────────────────
+  app.get("/api/all-phases", async (req, res) => {
+    const rows = await query(`
+      SELECT p.*, tt.name AS task_type_name, tt.category AS task_type_category, c.name AS assigned_name
+      FROM job_phases p
+      LEFT JOIN task_types tt ON tt.id = p.task_type_id
+      LEFT JOIN collaborators c ON c.id = p.assigned_to
+      ORDER BY p.job_id, p.order_index, p.start_date, p.id
+    `);
+    res.json(rows);
+  });
+
   // ─── JOB PHASES ───────────────────────────────────────────
   app.get("/api/jobs/:id/phases", async (req, res) => {
     const rows = await query(

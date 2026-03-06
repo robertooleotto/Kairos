@@ -520,6 +520,37 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
   </div>
 </div>
 
+<!-- Modal Scheda Tecnica Persona -->
+<div id="detail-modal" class="modal">
+  <div class="modal-content" style="max-width:640px">
+    <div class="modal-header">
+      <div class="modal-title" style="display:flex;align-items:center;gap:10px">
+        <div id="detail-avatar"></div>
+        <div>
+          <div id="detail-name" style="font-size:1.1rem"></div>
+          <div id="detail-email" style="font-size:.72rem;color:var(--paper-m)"></div>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closePersonDetail()">✕</button>
+    </div>
+    <div id="detail-body" style="padding:0 24px 20px"></div>
+    <div style="display:flex;gap:8px;padding:0 24px 20px">
+      <button class="pc-btn pc-btn-edit" id="detail-btn-edit" style="flex:1" data-testid="detail-btn-edit">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Modifica
+      </button>
+      <button class="pc-btn" style="flex:1;color:#f59e0b" id="detail-btn-overtime" data-testid="detail-btn-overtime">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Straordinari
+      </button>
+      <button class="pc-btn pc-btn-del" id="detail-btn-delete" style="flex:1" data-testid="detail-btn-delete">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        Elimina
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal Gestisci Ruoli (Admin) -->
 <div id="roles-modal" class="modal">
   <div class="modal-content" style="max-width:1100px">
@@ -707,40 +738,21 @@ function renderPersonCard(person){
   const roleClass=ROLE_CLASSES[person.role]||'role-operator';
   const primaryArea=AREAS.find(a=>a.id===person.primary_area_id);
   const caps=(person.capacities||[]);
-  const areas=(person.areas||[]);
-
-  const ot=person.overtime;
-  let otParts=[];
-  if(ot){
-    if(ot.extra_before>0) otParts.push('+'+ot.extra_before+'h prima');
-    if(ot.extra_after>0) otParts.push('+'+ot.extra_after+'h dopo');
-    if(ot.available_saturday) otParts.push('Sab '+ot.saturday_hours+'h');
-    if(ot.available_sunday) otParts.push('Dom '+ot.sunday_hours+'h');
-    if(ot.available_holidays) otParts.push('Festivi '+ot.holiday_hours+'h');
-  }
-  const otHtml=otParts.length>0?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">${otParts.map(p=>`<span style="display:inline-flex;align-items:center;gap:3px;font-size:.6rem;padding:1px 6px;border-radius:4px;background:#f59e0b18;color:#f59e0b;border:1px solid #f59e0b33">${p}</span>`).join('')}</div>`:'';
 
   const capsVisible=caps.slice(0,4);
   const capsExtra=caps.length-4;
-  const capsHtml=caps.length>0?`
-    <div>
-      <div class="pc-caps-label">Mansioni principali</div>
-      ${capsVisible.map(c=>`<div class="pc-cap-item">
-        <span class="pc-cap-name">${c.task_type.name}</span>
-        <span class="pc-cap-val">${c.capacity_per_day} <span style="font-weight:400;color:var(--paper-m)">${c.task_type.unit||'u/gg'}</span></span>
-      </div>`).join('')}
-      ${capsExtra>0?`<div style="font-size:.68rem;color:var(--indigo);cursor:pointer;padding:2px 0;text-align:right" onclick='editPerson(${JSON.stringify(person).replace(/'/g,"&#39;")})'>+ altre ${capsExtra} mansioni</div>`:''}
-    </div>`:'';
+  const capsBadges=capsVisible.map(c=>`<span style="display:inline-flex;font-size:.6rem;padding:1px 6px;border-radius:4px;background:var(--paper-d);color:var(--paper-s)">${c.task_type.name}</span>`).join('');
+  const capsExtraBadge=capsExtra>0?`<span style="display:inline-flex;font-size:.6rem;padding:1px 6px;border-radius:4px;background:var(--indigo);color:#fff">+${capsExtra}</span>`:'';
 
   const deptHtml=primaryArea?`<div style="font-size:.68rem;color:var(--paper-m);display:flex;align-items:center;gap:4px">${areaIconSmall(primaryArea.id,primaryArea.color)} ${primaryArea.name}</div>`:'';
-
-  const areasHtml=areas.length>0?`<div class="pc-areas">${areas.map(a=>`<span class="pc-area-badge" style="background:${a.color}22;color:${a.color}">${areaIconSmall(a.id,a.color)} ${a.name}</span>`).join('')}</div>`:'';
 
   const avatarHtml = person.avatar
     ? `<div class="pc-avatar"><img src="${person.avatar}" alt="${person.name}"></div>`
     : `<div class="pc-avatar" style="background:${color}">${ini}</div>`;
 
-  return`<div class="person-card">
+  const personJson=JSON.stringify(person).replace(/'/g,"&#39;");
+
+  return`<div class="person-card" style="cursor:pointer" onclick='openPersonDetail(${personJson})' data-testid="card-person-${person.id}">
     <div class="pc-stripe" style="background:${color}"></div>
     <div class="pc-head">
       ${avatarHtml}
@@ -750,28 +762,9 @@ function renderPersonCard(person){
         ${deptHtml}
         <span class="pc-role-badge ${roleClass}">${roleLabel}</span>
         ${person.google_calendar_id?`<span style="display:inline-flex;align-items:center;gap:3px;font-size:.62rem;color:#4285f4;margin-top:2px" data-testid="badge-gcal-${person.id}"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#4285f4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Calendar</span>`:''}
-        ${otHtml}
       </div>
     </div>
-    ${areasHtml}
-    <div class="pc-body">
-      ${capsHtml}
-      ${caps.length===0?'<div style="font-size:.72rem;color:var(--paper-m);text-align:center;padding:8px 0">Nessuna mansione configurata</div>':''}
-    </div>
-    <div class="pc-actions">
-      <button class="pc-btn pc-btn-edit" onclick='editPerson(${JSON.stringify(person).replace(/'/g,"&#39;")})'>
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        Modifica
-      </button>
-      <button class="pc-btn" style="color:#f59e0b" onclick="openOvertimeModal('${person.id}','${person.name.replace(/'/g,"\\'")}')" data-testid="button-overtime-${person.id}">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        Straordinari
-      </button>
-      <button class="pc-btn pc-btn-del" onclick="deletePerson('${person.id}','${person.name.replace(/'/g,"\\'")}')">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-        Elimina
-      </button>
-    </div>
+    ${caps.length>0?`<div style="display:flex;flex-wrap:wrap;gap:3px;padding:6px 14px 8px">${capsBadges}${capsExtraBadge}</div>`:''}
   </div>`;
 }
 
@@ -887,6 +880,70 @@ function closePersonForm(){
 }
 
 function editPerson(person){openPersonForm(person)}
+
+function openPersonDetail(person){
+  const color=avatarColor(person.name);
+  const ini=initials(person.name);
+  const roleLabel=ROLE_LABELS[person.role]||'Operatore';
+  const primaryArea=AREAS.find(a=>a.id===person.primary_area_id);
+  const caps=(person.capacities||[]);
+  const ot=person.overtime;
+
+  document.getElementById('detail-avatar').innerHTML=person.avatar
+    ?`<div class="pc-avatar" style="width:48px;height:48px;font-size:1.2rem"><img src="${person.avatar}" alt="${person.name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>`
+    :`<div class="pc-avatar" style="width:48px;height:48px;font-size:1.2rem;background:${color}">${ini}</div>`;
+  document.getElementById('detail-name').textContent=person.name;
+  document.getElementById('detail-email').textContent=person.email||'';
+
+  let html='';
+
+  html+=`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">`;
+  html+=`<span class="pc-role-badge ${ROLE_CLASSES[person.role]||'role-operator'}" style="font-size:.7rem">${roleLabel}</span>`;
+  if(primaryArea) html+=`<span style="display:inline-flex;align-items:center;gap:4px;font-size:.68rem;padding:2px 8px;border-radius:5px;background:${primaryArea.color}18;color:${primaryArea.color}">${areaIconSmall(primaryArea.id,primaryArea.color)} ${primaryArea.name}</span>`;
+  if(person.google_calendar_id) html+=`<span style="display:inline-flex;align-items:center;gap:3px;font-size:.65rem;padding:2px 8px;border-radius:5px;background:#4285f418;color:#4285f4"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#4285f4" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> ${person.google_calendar_id}</span>`;
+  html+=`</div>`;
+
+  if(caps.length>0){
+    html+=`<div style="margin-bottom:14px">
+      <div class="pc-caps-label">Mansioni (${caps.length})</div>
+      ${caps.map(c=>`<div class="pc-cap-item">
+        <span class="pc-cap-name">${c.task_type.name}</span>
+        <span class="pc-cap-val">${c.capacity_per_day} <span style="font-weight:400;color:var(--paper-m)">${c.task_type.unit||'u/gg'}</span></span>
+      </div>`).join('')}
+    </div>`;
+  }else{
+    html+=`<div style="font-size:.75rem;color:var(--paper-m);margin-bottom:14px">Nessuna mansione configurata</div>`;
+  }
+
+  if(ot){
+    let otParts=[];
+    if(ot.extra_before>0) otParts.push('+'+ot.extra_before+'h prima dell\'orario');
+    if(ot.extra_after>0) otParts.push('+'+ot.extra_after+'h dopo l\'orario');
+    if(ot.available_saturday) otParts.push('Sabato: '+ot.saturday_hours+'h');
+    if(ot.available_sunday) otParts.push('Domenica: '+ot.sunday_hours+'h');
+    if(ot.available_holidays) otParts.push('Festivi: '+ot.holiday_hours+'h');
+    if(otParts.length>0){
+      html+=`<div style="margin-bottom:14px">
+        <div class="pc-caps-label">Straordinari</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px">${otParts.map(p=>`<span style="display:inline-flex;align-items:center;gap:3px;font-size:.68rem;padding:3px 8px;border-radius:5px;background:#f59e0b15;color:#f59e0b;border:1px solid #f59e0b30">${p}</span>`).join('')}</div>
+        ${ot.notes?`<div style="font-size:.7rem;color:var(--paper-m);margin-top:6px;font-style:italic">${ot.notes}</div>`:''}
+      </div>`;
+    }
+  }
+
+  document.getElementById('detail-body').innerHTML=html;
+
+  const personJson=JSON.stringify(person).replace(/'/g,"\\'");
+  document.getElementById('detail-btn-edit').onclick=()=>{closePersonDetail();editPerson(person)};
+  document.getElementById('detail-btn-overtime').onclick=()=>{closePersonDetail();openOvertimeModal(person.id,person.name)};
+  document.getElementById('detail-btn-delete').onclick=()=>{closePersonDetail();deletePerson(person.id,person.name)};
+
+  document.getElementById('detail-modal').style.display='flex';
+}
+
+function closePersonDetail(){
+  document.getElementById('detail-modal').style.display='none';
+}
 
 function toggleAreaManaged(){
   const role=document.getElementById('person-role').value;

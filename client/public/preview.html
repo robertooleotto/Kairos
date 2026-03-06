@@ -649,12 +649,31 @@ function changeMonth(dir){
   render();
 }
 
+function computeGlobalLanes(jobs){
+  const sorted=[...jobs].sort((a,b)=>parseDate(a.started_at)-parseDate(b.started_at));
+  const lanes=[];
+  const laneMap={};
+  sorted.forEach(j=>{
+    const s=parseDate(j.started_at),e=parseDate(j.due_date);
+    let lane=lanes.findIndex(l=>!l.some(ex=>{
+      const es=parseDate(ex.started_at),ee=parseDate(ex.due_date);
+      return s<=ee&&e>=es;
+    }));
+    if(lane===-1){lane=lanes.length;lanes.push([]);}
+    lanes[lane].push(j);
+    laneMap[j.id]=lane;
+  });
+  return {lanes,laneMap,totalLanes:lanes.length};
+}
+
 function render(){
   const MONTHS=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
   document.getElementById('cal-title').textContent=MONTHS[CURRENT_MONTH]+' '+CURRENT_YEAR;
 
   const jobs=filteredJobs();
   document.getElementById('job-count').textContent=jobs.length+' commess'+(jobs.length===1?'a':'e');
+
+  const globalLanes=computeGlobalLanes(jobs);
 
   const first=new Date(CURRENT_YEAR,CURRENT_MONTH,1);
   const startDay=first.getDay()===0?6:first.getDay()-1;
@@ -679,16 +698,14 @@ function render(){
     }
     html+=`<div class="cal-week">
       <div class="cal-cells-row">${cells}</div>
-      ${renderWeekEvents(weekDays,jobs)}
+      ${renderWeekEvents(weekDays,jobs,globalLanes)}
     </div>`;
     if(d.getMonth()!==CURRENT_MONTH&&w>=4)break;
   }
   document.getElementById('cal-weeks').innerHTML=html;
 }
 
-const MAX_ROWS=8;
-
-function renderWeekEvents(days,jobs){
+function renderWeekEvents(days,jobs,globalLanes){
   const wStart=days[0],wEnd=days[6];
   const weekJobs=jobs.filter(j=>{
     const s=parseDate(j.started_at),e=parseDate(j.due_date);
@@ -696,26 +713,12 @@ function renderWeekEvents(days,jobs){
   });
   if(weekJobs.length===0)return '<div class="week-events"></div>';
 
-  const lanes=[];
-  const jobLane={};
-  weekJobs.forEach(j=>{
-    const s=parseDate(j.started_at),e=parseDate(j.due_date);
-    let lane=lanes.findIndex(l=>!l.some(ex=>{
-      const es=parseDate(ex.started_at),ee=parseDate(ex.due_date);
-      return s<=ee&&e>=es;
-    }));
-    if(lane===-1){lane=lanes.length;lanes.push([]);}
-    lanes[lane].push(j);
-    jobLane[j.id]=lane;
-  });
-
-  const totalRows=lanes.length;
-  const visibleRows=Math.min(totalRows,MAX_ROWS);
-  const hiddenCount=totalRows-visibleRows;
+  const activeLanes=new Set(weekJobs.map(j=>globalLanes.laneMap[j.id]));
+  const sortedLanes=[...activeLanes].sort((a,b)=>a-b);
 
   let evHTML='';
-  for(let li=0;li<visibleRows;li++){
-    const rowJobs=lanes[li];
+  for(const li of sortedLanes){
+    const rowJobs=globalLanes.lanes[li];
     let rowHTML='';
     for(let di=0;di<7;di++){
       const day=days[di];
@@ -766,10 +769,6 @@ function renderWeekEvents(days,jobs){
       </div>`;
     }
     evHTML+=`<div class="ev-row">${rowHTML}</div>`;
-  }
-
-  if(hiddenCount>0){
-    evHTML+=`<div class="ev-row"><div style="grid-column:1/-1;padding:0 8px;font-size:.62rem;color:var(--paper-m);line-height:var(--bar-h)">+${hiddenCount} altr${hiddenCount>1?'e':'a'}</div></div>`;
   }
 
   return`<div class="week-events">${evHTML}</div>`;

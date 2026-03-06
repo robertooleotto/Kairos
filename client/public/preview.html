@@ -116,9 +116,12 @@ html,body{font-family:'Sora',system-ui,sans-serif;background:var(--ink);color:va
 .seg.solo   .seg-inner{left:3px;right:3px;border-radius:var(--bar-r)}
 .seg.mid    .seg-inner{left:-1px;right:-1px;border-radius:0}
 .seg.active-sel .seg-inner{
-  box-shadow:inset 0 0 0 2px rgba(255,255,255,.7),0 0 0 2px rgba(255,255,255,.2),0 4px 12px rgba(0,0,0,.15);
-  transform:translateY(-1px);
+  filter:brightness(1.15);
 }
+.seg.active-sel.start .seg-inner{box-shadow:inset 2px 2px 0 0 rgba(255,255,255,.5),inset 0 -2px 0 0 rgba(255,255,255,.5)}
+.seg.active-sel.end   .seg-inner{box-shadow:inset -2px 2px 0 0 rgba(255,255,255,.5),inset 0 -2px 0 0 rgba(255,255,255,.5)}
+.seg.active-sel.mid   .seg-inner{box-shadow:inset 0 2px 0 0 rgba(255,255,255,.5),inset 0 -2px 0 0 rgba(255,255,255,.5)}
+.seg.active-sel.solo  .seg-inner{box-shadow:inset 0 0 0 2px rgba(255,255,255,.5)}
 
 .seg-body{display:flex;align-items:center;gap:6px;padding:0 8px;height:100%;overflow:hidden}
 .seg-client{font-size:.64rem;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

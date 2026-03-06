@@ -124,6 +124,7 @@ html,body{font-family:'Sora',system-ui,sans-serif;background:var(--ink);color:va
 .seg-client{font-size:.64rem;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .seg-sep{color:#fff;opacity:.4;font-size:.62rem;flex-shrink:0}
 .seg-code{font-family:'JetBrains Mono',monospace;font-size:.56rem;color:rgba(255,255,255,.7);white-space:nowrap;flex-shrink:0}
+.seg-phase{font-size:.58rem;font-weight:500;color:rgba(255,255,255,.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* MORE badge */
 .ev-more{font-size:.6rem;font-weight:700;color:var(--paper-m);padding:0 6px;cursor:pointer;line-height:var(--bar-h)}
@@ -649,21 +650,36 @@ function changeMonth(dir){
   render();
 }
 
-function computeGlobalLanes(jobs){
+function buildGanttRows(jobs){
+  const rows=[];
   const sorted=[...jobs].sort((a,b)=>parseDate(a.started_at)-parseDate(b.started_at));
-  const lanes=[];
-  const laneMap={};
   sorted.forEach(j=>{
-    const s=parseDate(j.started_at),e=parseDate(j.due_date);
-    let lane=lanes.findIndex(l=>!l.some(ex=>{
-      const es=parseDate(ex.started_at),ee=parseDate(ex.due_date);
-      return s<=ee&&e>=es;
-    }));
-    if(lane===-1){lane=lanes.length;lanes.push([]);}
-    lanes[lane].push(j);
-    laneMap[j.id]=lane;
+    const phases=(ALL_PHASES[j.id]||[]).filter(p=>p.start_date&&p.due_date);
+    if(phases.length===0){
+      rows.push({type:'job',job:j,start:parseDate(j.started_at),end:parseDate(j.due_date),label:`${j.client||''} · ${j.code||''}`,color:null,phase:null});
+    }else{
+      const pSorted=[...phases].sort((a,b)=>parseDate(a.start_date)-parseDate(b.start_date));
+      pSorted.forEach((p,pi)=>{
+        const cat=(p.task_type_category||'').toUpperCase();
+        const shades=DEPT_COLORS[cat];
+        const catPhases=pSorted.filter(pp=>(pp.task_type_category||'').toUpperCase()===cat);
+        const catIdx=catPhases.findIndex(pp=>pp.id===p.id);
+        const color=shades?shades[Math.min(catIdx,shades.length-1)]:(p.color||'#6366f1');
+        const label=pi===0?`${j.client||''} · ${j.code||''}`:(p.task_type_name||p.name||'');
+        rows.push({type:'phase',job:j,phase:p,start:parseDate(p.start_date),end:parseDate(p.due_date),label,color,phaseIdx:pi});
+      });
+    }
   });
-  return {lanes,laneMap,totalLanes:lanes.length};
+
+  const lanes=[];
+  const rowLane={};
+  rows.forEach((r,ri)=>{
+    let lane=lanes.findIndex(l=>!l.some(ex=>r.start<=ex.end&&r.end>=ex.start));
+    if(lane===-1){lane=lanes.length;lanes.push([]);}
+    lanes[lane].push(r);
+    rowLane[ri]=lane;
+  });
+  return {rows,lanes,rowLane};
 }
 
 function render(){
@@ -673,7 +689,7 @@ function render(){
   const jobs=filteredJobs();
   document.getElementById('job-count').textContent=jobs.length+' commess'+(jobs.length===1?'a':'e');
 
-  const globalLanes=computeGlobalLanes(jobs);
+  const gantt=buildGanttRows(jobs);
 
   const first=new Date(CURRENT_YEAR,CURRENT_MONTH,1);
   const startDay=first.getDay()===0?6:first.getDay()-1;
@@ -698,73 +714,70 @@ function render(){
     }
     html+=`<div class="cal-week">
       <div class="cal-cells-row">${cells}</div>
-      ${renderWeekEvents(weekDays,jobs,globalLanes)}
+      ${renderWeekEvents(weekDays,gantt)}
     </div>`;
     if(d.getMonth()!==CURRENT_MONTH&&w>=4)break;
   }
   document.getElementById('cal-weeks').innerHTML=html;
 }
 
-function renderWeekEvents(days,jobs,globalLanes){
+function renderWeekEvents(days,gantt){
   const wStart=days[0],wEnd=days[6];
-  const weekJobs=jobs.filter(j=>{
-    const s=parseDate(j.started_at),e=parseDate(j.due_date);
-    return s<=wEnd&&e>=wStart;
-  });
-  if(weekJobs.length===0)return '<div class="week-events"></div>';
 
-  const activeLanes=new Set(weekJobs.map(j=>globalLanes.laneMap[j.id]));
-  const sortedLanes=[...activeLanes].sort((a,b)=>a-b);
+  const activeRows=[];
+  gantt.rows.forEach((r,ri)=>{
+    if(r.start<=wEnd&&r.end>=wStart)activeRows.push({r,ri});
+  });
+  if(activeRows.length===0)return '<div class="week-events"></div>';
+
+  const activeLaneSet=new Set(activeRows.map(({ri})=>gantt.rowLane[ri]));
+  const sortedLanes=[...activeLaneSet].sort((a,b)=>a-b);
 
   let evHTML='';
-  for(const li of sortedLanes){
-    const rowJobs=globalLanes.lanes[li];
+  for(const laneIdx of sortedLanes){
+    const laneRows=gantt.lanes[laneIdx];
+    const weekItems=laneRows.filter(r=>r.start<=wEnd&&r.end>=wStart);
     let rowHTML='';
     for(let di=0;di<7;di++){
       const day=days[di];
-      const j=rowJobs.find(job=>{
-        const s=parseDate(job.started_at),e=parseDate(job.due_date);
-        return day>=s&&day<=e;
-      });
-      if(!j){rowHTML+='<div class="seg empty"></div>';continue;}
+      const r=weekItems.find(item=>day>=item.start&&day<=item.end);
+      if(!r){rowHTML+='<div class="seg empty"></div>';continue;}
 
-      const s=parseDate(j.started_at),e=parseDate(j.due_date);
-      const realStart=day.toDateString()===s.toDateString();
-      const realEnd=day.toDateString()===e.toDateString();
+      const realStart=day.toDateString()===r.start.toDateString();
+      const realEnd=day.toDateString()===r.end.toDateString();
       const isWeekStart=di===0;
-      const isWeekEnd=di===6;
 
       let type='mid';
       if(realStart&&realEnd)type='solo';
-      else if(realStart||isWeekStart)type=realStart?'start':'start';
-      else if(realEnd||isWeekEnd)type=realEnd?'end':'end';
+      else if(realStart||isWeekStart)type='start';
+      else if(realEnd||di===6)type='end';
 
-      const ci=jobColor(j.id);
+      const ci=jobColor(r.job.id);
       const showLabel=realStart||isWeekStart;
-      const isSelected=j.id===SELECTED_JOB_ID;
-      const jStr=JSON.stringify(j).replace(/'/g,'&apos;');
+      const isSelected=r.job.id===SELECTED_JOB_ID;
+      const jStr=JSON.stringify(r.job).replace(/'/g,'&apos;');
 
-      const hasPhases=!!(ALL_PHASES[j.id]&&ALL_PHASES[j.id].length);
-      const dayPhaseColors=getDayPhaseColors(j.id,day);
-      let bgStyle='';
-      if(dayPhaseColors.length===1){
-        bgStyle=`background:${dayPhaseColors[0]};`;
-      }else if(dayPhaseColors.length>1){
-        const pct=100/dayPhaseColors.length;
-        const stops=dayPhaseColors.map((c,i)=>`${c} ${i*pct}%,${c} ${(i+1)*pct}%`).join(',');
-        bgStyle=`background:linear-gradient(to bottom,${stops});`;
-      }else if(hasPhases){
-        bgStyle='background:rgba(255,255,255,.08);';
+      const bgStyle=r.color?`background:${r.color};`:'';
+      const useInline=!!r.color;
+
+      const labelParts=[];
+      if(r.type==='phase'&&r.phaseIdx===0){
+        if(r.job.client)labelParts.push(`<span class="seg-client">${r.job.client}</span>`);
+        if(r.job.client&&r.job.code)labelParts.push('<span class="seg-sep">·</span>');
+        if(r.job.code)labelParts.push(`<span class="seg-code">${r.job.code}</span>`);
+        labelParts.push('<span class="seg-sep">—</span>');
+        labelParts.push(`<span class="seg-phase">${r.phase.task_type_name||r.phase.name||''}</span>`);
+      }else if(r.type==='phase'){
+        labelParts.push(`<span class="seg-phase">${r.phase.task_type_name||r.phase.name||''}</span>`);
+      }else{
+        if(r.job.client)labelParts.push(`<span class="seg-client">${r.job.client}</span>`);
+        if(r.job.client&&r.job.code)labelParts.push('<span class="seg-sep">·</span>');
+        if(r.job.code)labelParts.push(`<span class="seg-code">${r.job.code}</span>`);
       }
-      const useInline=dayPhaseColors.length>0||(hasPhases&&dayPhaseColors.length===0);
 
       rowHTML+=`<div class="seg ${type}${useInline?'':' jc-'+ci}${isSelected?' active-sel':''}" onclick='showDetail(${jStr})'>
         <div class="seg-inner"${useInline?` style="${bgStyle}"`:''}>
-          ${showLabel?`<div class="seg-body">
-            <span class="seg-client">${j.client||''}</span>
-            ${j.client&&j.code?'<span class="seg-sep">·</span>':''}
-            <span class="seg-code">${j.code||''}</span>
-          </div>`:''}
+          ${showLabel?`<div class="seg-body">${labelParts.join('')}</div>`:''}
         </div>
       </div>`;
     }

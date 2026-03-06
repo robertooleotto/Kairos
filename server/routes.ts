@@ -175,6 +175,27 @@ export async function registerRoutes(
     res.json({ ok: true });
   });
 
+  // ─── OVERTIME SETTINGS ──────────────────────────────────────
+  app.get("/api/collaborators/:id/overtime", async (req, res) => {
+    const rows = await query("SELECT * FROM person_overtime WHERE person_id=$1", [req.params.id]);
+    res.json(rows[0] || null);
+  });
+
+  app.put("/api/collaborators/:id/overtime", async (req, res) => {
+    const { extra_before, extra_after, available_saturday, saturday_hours, available_sunday, sunday_hours, available_holidays, holiday_hours, notes, updated_by } = req.body;
+    const rows = await query(
+      `INSERT INTO person_overtime (person_id, extra_before, extra_after, available_saturday, saturday_hours, available_sunday, sunday_hours, available_holidays, holiday_hours, notes, updated_by, updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,now())
+       ON CONFLICT (person_id) DO UPDATE SET
+         extra_before=$2, extra_after=$3, available_saturday=$4, saturday_hours=$5,
+         available_sunday=$6, sunday_hours=$7, available_holidays=$8, holiday_hours=$9,
+         notes=$10, updated_by=$11, updated_at=now()
+       RETURNING *`,
+      [req.params.id, extra_before||0, extra_after||0, available_saturday||false, saturday_hours||0, available_sunday||false, sunday_hours||0, available_holidays||false, holiday_hours||0, notes||null, updated_by||null]
+    );
+    res.json(rows[0]);
+  });
+
   // ─── GOOGLE CALENDAR ────────────────────────────────────────
   async function getAllowedCalendarIds(): Promise<string[]> {
     const rows = await query("SELECT google_calendar_id FROM collaborators WHERE active=true AND google_calendar_id IS NOT NULL");

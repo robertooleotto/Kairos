@@ -164,6 +164,7 @@ html,body{font-family:'Sora',system-ui,sans-serif;background:var(--ink);color:va
 .ph-bar-track{height:3px;background:var(--ink-b);border-radius:2px;overflow:hidden;margin-top:6px}
 .ph-bar-fill{height:100%;border-radius:2px}
 .ph-actions{display:flex;gap:2px;align-items:center}
+.ph-sub{padding-left:20px}
 .ph-act-btn{background:none;border:none;color:var(--ink-m);cursor:pointer;padding:2px;border-radius:3px;display:inline-flex;transition:all .15s}
 .ph-act-btn:hover{background:var(--ink-b);color:var(--ink-t)}
 .ph-empty{text-align:center;padding:20px 12px;color:var(--ink-m);font-size:.72rem;border:1px dashed var(--ink-b);border-radius:8px}
@@ -404,23 +405,27 @@ html,body{font-family:'Sora',system-ui,sans-serif;background:var(--ink);color:va
     <form id="ph-form" onsubmit="submitPhForm(event)">
       <input type="hidden" id="phf-id">
       <input type="hidden" id="phf-job-id">
+      <input type="hidden" id="phf-parent-id">
       <div class="phf-row">
         <div class="phf-full">
           <label class="phf-label">Nome fase *</label>
           <input type="text" id="phf-name" class="phf-input" required data-testid="input-cal-phase-name" placeholder="es. Post-produzione immagini">
         </div>
       </div>
+      <div id="phf-parent-info" style="display:none;margin-bottom:10px;padding:6px 10px;border-radius:6px;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.2);font-size:.68rem;color:var(--ink-m)">
+        <span style="font-weight:600;color:var(--ink-t)">Sottolavorazione di:</span> <span id="phf-parent-label"></span>
+      </div>
       <div class="phf-row">
         <div>
-          <label class="phf-label">Categoria / Reparto</label>
-          <select id="phf-category" class="phf-input" data-testid="select-cal-phase-cat" onchange="filterPhTasks()">
-            <option value="">— Tutte —</option>
+          <label class="phf-label">Reparto</label>
+          <select id="phf-area" class="phf-input" data-testid="select-cal-phase-area" onchange="onAreaChange()">
+            <option value="">— Seleziona reparto —</option>
           </select>
         </div>
         <div>
-          <label class="phf-label">Mansione specifica</label>
+          <label class="phf-label">Lavorazione</label>
           <select id="phf-task-type" class="phf-input" data-testid="select-cal-phase-task">
-            <option value="">— Nessuna —</option>
+            <option value="">— Seleziona lavorazione —</option>
           </select>
         </div>
       </div>
@@ -490,7 +495,23 @@ const DEPT_COLORS={
   'SHOOTING':        ['#ef4444','#f87171','#fca5a5','#fecaca'],
   'POST-PRODUZIONE': ['#3b82f6','#60a5fa','#93c5fd','#bfdbfe'],
 };
+
+const AREA_TO_CATEGORIES={
+  'area_artdirection': ['ART DIRECTION'],
+  'area_creativita':   ['CONCEPT'],
+  'area_grafica':      ['GRAFICA'],
+  'area_modelli':      ['MODELLAZIONE'],
+  'area_immagini':     ['PRODUZIONE 3D'],
+  'area_fotografia':   ['SHOOTING'],
+  'area_ai':           ['PRODUZIONE AI'],
+  'area_video':        ['SHOOTING'],
+  'area_montaggio':    ['POST-PRODUZIONE'],
+  'area_color':        ['POST-PRODUZIONE'],
+  'area_configuratore':['SET DESIGN'],
+};
+
 let ALL_PHASES={};
+let ALL_AREAS=[];
 
 function phaseColorForDay(jobId,date){
   const phases=ALL_PHASES[jobId];
@@ -552,9 +573,10 @@ const STATUS_LABELS={
 
 async function init(){
   try{
-    const [jobsData, teamData, phasesData]=await Promise.all([
+    const [jobsData, teamData, phasesData, areasData]=await Promise.all([
       api.jobs.list(), api.collaborators.list(),
-      fetch('/api/all-phases').then(r=>r.json())
+      fetch('/api/all-phases').then(r=>r.json()),
+      fetch('/api/areas').then(r=>r.json())
     ]);
     JOBS=(jobsData||[]).filter(j=>j.started_at&&j.due_date);
     TEAM=teamData||[];
@@ -563,6 +585,7 @@ async function init(){
       if(!ALL_PHASES[p.job_id])ALL_PHASES[p.job_id]=[];
       ALL_PHASES[p.job_id].push(p);
     });
+    ALL_AREAS=areasData||[];
     JOBS.forEach(j=>jobColor(j.id));
 
     const legendEl=document.getElementById('dept-legend');
@@ -892,8 +915,15 @@ async function showDetail(j){
 function renderPhTimeline(phases){
   if(!phases.length) return'<div class="ph-empty">Nessuna fase definita</div>';
   const today=new Date();today.setHours(0,0,0,0);
-  return`<div class="ph-list">${phases.map((p,i)=>{
-    const isLast=i===phases.length-1;
+  const roots=phases.filter(p=>!p.parent_phase_id);
+  const children=phases.filter(p=>p.parent_phase_id);
+  const childMap={};
+  children.forEach(c=>{
+    if(!childMap[c.parent_phase_id])childMap[c.parent_phase_id]=[];
+    childMap[c.parent_phase_id].push(c);
+  });
+
+  function renderItem(p,idx,isLast,isSub){
     const dotCls=p.completed?'done':(!p.completed&&p.start_date&&new Date(p.start_date)<=today)?'active':'';
     const col=p.color||'#6366f1';
     let pct=0;
@@ -906,23 +936,28 @@ function renderPhTimeline(phases){
     const sTxt=p.start_date?new Date(p.start_date).toLocaleDateString('it-IT',{day:'numeric',month:'short'}):'—';
     const dTxt=p.due_date?new Date(p.due_date).toLocaleDateString('it-IT',{day:'numeric',month:'short'}):'—';
     const catBadge=p.task_type_category?`<span class="ph-cat-badge" style="background:${col}20;color:${col}">${p.task_type_category}</span>`:'';
-    return`<div class="ph-item">
+    const subs=childMap[p.id]||[];
+    const subBtn=!isSub?`<button class="ph-act-btn" title="Aggiungi sottolavorazione" onclick="openPhForm('${DETAIL_JOB.id}',null,'${p.id}')">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+    </button>`:'';
+    return`<div class="ph-item${isSub?' ph-sub':''}">
       <div class="ph-track">
         <div class="ph-dot ${dotCls}" style="${dotCls==='done'?'':'border-color:'+col}"></div>
         ${!isLast?'<div class="ph-line"></div>':''}
       </div>
-      <div class="ph-card">
+      <div class="ph-card" style="${isSub?'border-left:3px solid '+col+';margin-left:0':''}">
         <div class="ph-card-head">
           <div>
-            <div class="ph-name">${p.name}</div>
+            <div class="ph-name">${isSub?'↳ ':''}${p.name}</div>
             ${p.task_type_name?`<div style="font-size:.58rem;color:var(--ink-m);margin-top:1px">${p.task_type_name}</div>`:''}
           </div>
           <div class="ph-actions">
             ${catBadge}
+            ${subBtn}
             <button class="ph-act-btn" title="${p.completed?'Riapri':'Completa'}" onclick="togglePh('${DETAIL_JOB.id}','${p.id}',${!p.completed})">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="${p.completed?'#22c55e':'none'}" stroke="${p.completed?'#22c55e':'currentColor'}" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
             </button>
-            <button class="ph-act-btn" title="Modifica" onclick="editPhase(${i})">
+            <button class="ph-act-btn" title="Modifica" onclick="editPhase(${idx})">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
             </button>
             <button class="ph-act-btn" title="Elimina" onclick="deletePh('${DETAIL_JOB.id}','${p.id}')">
@@ -937,13 +972,21 @@ function renderPhTimeline(phases){
         ${p.assigned_name?`<div class="ph-assignee"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ${p.assigned_name}</div>`:''}
         ${(p.start_date&&p.due_date)?`<div class="ph-bar-track"><div class="ph-bar-fill" style="width:${pct}%;background:${p.completed?'#22c55e':col}"></div></div>`:''}
       </div>
-    </div>`;
+    </div>
+    ${subs.map((s,si)=>renderItem(s,phases.indexOf(s),si===subs.length-1&&isLast,true)).join('')}`;
+  }
+
+  return`<div class="ph-list">${roots.map((p,i)=>{
+    const idx=phases.indexOf(p);
+    const hasSubs=(childMap[p.id]||[]).length>0;
+    const isLast=i===roots.length-1&&!hasSubs;
+    return renderItem(p,idx,isLast,false);
   }).join('')}</div>`;
 }
 
 function editPhase(idx){
   const p=DETAIL_PHASES[idx];
-  if(p&&DETAIL_JOB) openPhForm(DETAIL_JOB.id,p);
+  if(p&&DETAIL_JOB) openPhForm(DETAIL_JOB.id,p,p.parent_phase_id||null);
 }
 
 async function loadCalTaskTypes(){
@@ -951,23 +994,36 @@ async function loadCalTaskTypes(){
   try{CAL_TASK_TYPES=await fetch('/api/task-types').then(r=>r.json())}catch(e){}
 }
 
-function openPhForm(jobId,phase){
+function openPhForm(jobId,phase,parentPhaseId){
   loadCalTaskTypes().then(()=>{
-    const catSel=document.getElementById('phf-category');
-    const cats=[...new Set(CAL_TASK_TYPES.map(t=>t.category))].sort();
-    catSel.innerHTML='<option value="">— Tutte —</option>';
-    cats.forEach(c=>catSel.innerHTML+=`<option value="${c}">${c}</option>`);
+    const areaSel=document.getElementById('phf-area');
+    areaSel.innerHTML='<option value="">— Seleziona reparto —</option>';
+    ALL_AREAS.forEach(a=>areaSel.innerHTML+=`<option value="${a.id}">${a.icon||''} ${a.name}</option>`);
+
     const assignSel=document.getElementById('phf-assigned');
     assignSel.innerHTML='<option value="">— Nessuno —</option>';
     TEAM.forEach(c=>assignSel.innerHTML+=`<option value="${c.id}">${c.name}</option>`);
+
+    document.getElementById('phf-parent-id').value=parentPhaseId||'';
+    const parentInfo=document.getElementById('phf-parent-info');
+    if(parentPhaseId){
+      const parent=DETAIL_PHASES.find(p=>p.id===parentPhaseId);
+      document.getElementById('phf-parent-label').textContent=parent?(parent.task_type_name||parent.name):'';
+      parentInfo.style.display='block';
+    }else{
+      parentInfo.style.display='none';
+    }
+
     if(phase){
-      document.getElementById('ph-form-title').textContent='Modifica Fase';
+      document.getElementById('ph-form-title').textContent=parentPhaseId?'Modifica Sottolavorazione':'Modifica Fase';
       document.getElementById('phf-submit-btn').textContent='Aggiorna';
       document.getElementById('phf-id').value=phase.id;
       document.getElementById('phf-job-id').value=jobId;
       document.getElementById('phf-name').value=phase.name||'';
-      document.getElementById('phf-category').value=phase.task_type_category||'';
-      filterPhTasks();
+      const phCat=phase.task_type_category||'';
+      const matchArea=Object.entries(AREA_TO_CATEGORIES).find(([,cats])=>cats.includes(phCat));
+      areaSel.value=matchArea?matchArea[0]:'';
+      onAreaChange();
       document.getElementById('phf-task-type').value=phase.task_type_id||'';
       document.getElementById('phf-start').value=phase.start_date||'';
       document.getElementById('phf-due').value=phase.due_date||'';
@@ -975,13 +1031,14 @@ function openPhForm(jobId,phase){
       document.getElementById('phf-color').value=phase.color||'#6366f1';
       document.getElementById('phf-notes').value=phase.notes||'';
     }else{
-      document.getElementById('ph-form-title').textContent='Aggiungi Fase';
+      document.getElementById('ph-form-title').textContent=parentPhaseId?'Aggiungi Sottolavorazione':'Aggiungi Fase';
       document.getElementById('phf-submit-btn').textContent='Salva';
       document.getElementById('ph-form').reset();
       document.getElementById('phf-id').value='';
       document.getElementById('phf-job-id').value=jobId;
+      document.getElementById('phf-parent-id').value=parentPhaseId||'';
       document.getElementById('phf-color').value=PH_COLORS[DETAIL_PHASES.length%PH_COLORS.length];
-      filterPhTasks();
+      onAreaChange();
     }
     document.getElementById('ph-form-modal').style.display='flex';
   });
@@ -989,20 +1046,27 @@ function openPhForm(jobId,phase){
 
 function closePhForm(){document.getElementById('ph-form-modal').style.display='none'}
 
-function filterPhTasks(){
-  const cat=document.getElementById('phf-category').value;
+function onAreaChange(){
+  const areaId=document.getElementById('phf-area').value;
   const sel=document.getElementById('phf-task-type');
   const prev=sel.value;
-  sel.innerHTML='<option value="">— Nessuna —</option>';
-  const f=cat?CAL_TASK_TYPES.filter(t=>t.category===cat):CAL_TASK_TYPES;
+  sel.innerHTML='<option value="">— Seleziona lavorazione —</option>';
+  const cats=AREA_TO_CATEGORIES[areaId]||[];
+  const f=cats.length?CAL_TASK_TYPES.filter(t=>cats.includes(t.category)):CAL_TASK_TYPES;
   f.forEach(t=>sel.innerHTML+=`<option value="${t.id}">${t.name}</option>`);
   if(f.find(t=>t.id===prev))sel.value=prev;
+
+  const area=ALL_AREAS.find(a=>a.id===areaId);
+  if(area&&area.color){
+    document.getElementById('phf-color').value=area.color;
+  }
 }
 
 async function submitPhForm(e){
   e.preventDefault();
   const jobId=document.getElementById('phf-job-id').value;
   const phaseId=document.getElementById('phf-id').value;
+  const parentId=document.getElementById('phf-parent-id').value||null;
   const payload={
     name:document.getElementById('phf-name').value.trim(),
     task_type_id:document.getElementById('phf-task-type').value||null,
@@ -1011,7 +1075,8 @@ async function submitPhForm(e){
     assigned_to:document.getElementById('phf-assigned').value||null,
     color:document.getElementById('phf-color').value||'#6366f1',
     notes:document.getElementById('phf-notes').value.trim()||null,
-    order_index:phaseId?undefined:DETAIL_PHASES.length
+    order_index:phaseId?undefined:DETAIL_PHASES.length,
+    parent_phase_id:parentId
   };
   if(!payload.name)return;
   try{

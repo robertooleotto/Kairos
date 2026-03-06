@@ -393,6 +393,12 @@ export async function registerRoutes(
     res.json({ ok: true });
   });
 
+  // ─── AREAS ──────────────────────────────────────────────
+  app.get("/api/areas", async (req, res) => {
+    const rows = await query("SELECT * FROM areas WHERE active=true ORDER BY sort_order");
+    res.json(rows);
+  });
+
   // ─── ALL PHASES (bulk) ───────────────────────────────────
   app.get("/api/all-phases", async (req, res) => {
     const rows = await query(`
@@ -400,7 +406,7 @@ export async function registerRoutes(
       FROM job_phases p
       LEFT JOIN task_types tt ON tt.id = p.task_type_id
       LEFT JOIN collaborators c ON c.id = p.assigned_to
-      ORDER BY p.job_id, p.order_index, p.start_date, p.id
+      ORDER BY p.job_id, p.parent_phase_id NULLS FIRST, p.order_index, p.start_date, p.id
     `);
     res.json(rows);
   });
@@ -419,25 +425,26 @@ export async function registerRoutes(
   });
 
   app.post("/api/jobs/:id/phases", async (req, res) => {
-    const { name, order_index, assigned_to, start_date, due_date, task_type_id, color, notes } = req.body;
+    const { name, order_index, assigned_to, start_date, due_date, task_type_id, color, notes, parent_phase_id } = req.body;
     const rows = await query(
-      `INSERT INTO job_phases (job_id, name, order_index, assigned_to, start_date, due_date, task_type_id, color, notes)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+      `INSERT INTO job_phases (job_id, name, order_index, assigned_to, start_date, due_date, task_type_id, color, notes, parent_phase_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
       [req.params.id, name || "Nuova fase", order_index || 0, assigned_to || null,
-       start_date || null, due_date || null, task_type_id || null, color || '#6366f1', notes || null]
+       start_date || null, due_date || null, task_type_id || null, color || '#6366f1', notes || null, parent_phase_id || null]
     );
     res.json(rows[0]);
   });
 
   app.put("/api/jobs/:jobId/phases/:id", async (req, res) => {
-    const { name, assigned_to, start_date, due_date, completed, order_index, task_type_id, color, notes } = req.body;
+    const { name, assigned_to, start_date, due_date, completed, order_index, task_type_id, color, notes, parent_phase_id } = req.body;
     const rows = await query(
       `UPDATE job_phases SET name=COALESCE($1,name), assigned_to=$2, start_date=$3, due_date=$4,
        completed=COALESCE($5,completed), order_index=COALESCE($6,order_index),
-       task_type_id=$7, color=COALESCE($8,color), notes=$9
-       WHERE id=$10 RETURNING *`,
+       task_type_id=$7, color=COALESCE($8,color), notes=$9, parent_phase_id=$10
+       WHERE id=$11 RETURNING *`,
       [name || null, assigned_to || null, start_date || null, due_date || null,
-       completed ?? null, order_index ?? null, task_type_id || null, color || null, notes || null, req.params.id]
+       completed ?? null, order_index ?? null, task_type_id || null, color || null, notes || null,
+       parent_phase_id || null, req.params.id]
     );
     res.json(rows[0]);
   });

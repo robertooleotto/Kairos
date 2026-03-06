@@ -94,7 +94,8 @@ export async function registerRoutes(
         COALESCE(
           json_agg(
             json_build_object('id', pc.id, 'task_type_id', pc.task_type_id, 'capacity_per_day', pc.capacity_per_day,
-              'task_name', tt.name, 'task_icon', tt.icon, 'task_unit', tt.unit)
+              'task_name', tt.name, 'task_icon', tt.icon, 'task_unit', tt.unit, 'sort_order', pc.sort_order)
+            ORDER BY pc.sort_order, pc.created_at
           ) FILTER (WHERE pc.id IS NOT NULL), '[]'
         ) AS capacities,
         COALESCE(
@@ -157,13 +158,13 @@ export async function registerRoutes(
 
   // Capacities
   app.post("/api/collaborators/:id/capacities", async (req, res) => {
-    const { task_type_id, capacity_per_day } = req.body;
+    const { task_type_id, capacity_per_day, sort_order } = req.body;
     const rows = await query(
-      `INSERT INTO person_capacities (person_id, task_type_id, capacity_per_day)
-       VALUES ($1,$2,$3)
-       ON CONFLICT (person_id, task_type_id) DO UPDATE SET capacity_per_day=$3
+      `INSERT INTO person_capacities (person_id, task_type_id, capacity_per_day, sort_order)
+       VALUES ($1,$2,$3,$4)
+       ON CONFLICT (person_id, task_type_id) DO UPDATE SET capacity_per_day=$3, sort_order=$4
        RETURNING *`,
-      [req.params.id, task_type_id, capacity_per_day]
+      [req.params.id, task_type_id, capacity_per_day, sort_order ?? 0]
     );
     res.json(rows[0]);
   });

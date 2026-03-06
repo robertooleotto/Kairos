@@ -720,13 +720,16 @@ function renderPersonCard(person){
   }
   const otHtml=otParts.length>0?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">${otParts.map(p=>`<span style="display:inline-flex;align-items:center;gap:3px;font-size:.6rem;padding:1px 6px;border-radius:4px;background:#f59e0b18;color:#f59e0b;border:1px solid #f59e0b33">${p}</span>`).join('')}</div>`:'';
 
+  const capsVisible=caps.slice(0,4);
+  const capsExtra=caps.length-4;
   const capsHtml=caps.length>0?`
     <div>
-      <div class="pc-caps-label">Mansioni</div>
-      ${caps.map(c=>`<div class="pc-cap-item">
+      <div class="pc-caps-label">Mansioni principali</div>
+      ${capsVisible.map(c=>`<div class="pc-cap-item">
         <span class="pc-cap-name">${c.task_type.name}</span>
         <span class="pc-cap-val">${c.capacity_per_day} <span style="font-weight:400;color:var(--paper-m)">${c.task_type.unit||'u/gg'}</span></span>
       </div>`).join('')}
+      ${capsExtra>0?`<div style="font-size:.68rem;color:var(--indigo);cursor:pointer;padding:2px 0;text-align:right" onclick='editPerson(${JSON.stringify(person).replace(/'/g,"&#39;")})'>+ altre ${capsExtra} mansioni</div>`:''}
     </div>`:'';
 
   const deptHtml=primaryArea?`<div style="font-size:.68rem;color:var(--paper-m);display:flex;align-items:center;gap:4px">${areaIconSmall(primaryArea.id,primaryArea.color)} ${primaryArea.name}</div>`:'';
@@ -937,12 +940,17 @@ function updateCapacity(taskTypeId,value){
 
 function renderCapacities(){
   const container=document.getElementById('capacities-container');
-  if(Object.keys(SELECTED_CAPACITIES).length===0){
+  const entries=Object.entries(SELECTED_CAPACITIES);
+  if(entries.length===0){
     container.innerHTML='<div style="padding:10px;text-align:center;color:var(--paper-m);font-size:.78rem">Nessuna mansione selezionata</div>';
     return;
   }
-  container.innerHTML=Object.entries(SELECTED_CAPACITIES).map(([taskId,cap])=>`
-    <div class="capacity-input-group">
+  container.innerHTML=entries.map(([taskId,cap],idx)=>`
+    <div class="capacity-input-group" style="align-items:center">
+      <div style="display:flex;flex-direction:column;gap:1px;margin-right:4px">
+        <button type="button" onclick="moveCapacity('${taskId}',-1)" style="background:none;border:none;color:${idx===0?'var(--paper-d)':'var(--paper-m)'};cursor:${idx===0?'default':'pointer'};font-size:.65rem;padding:0;line-height:1" ${idx===0?'disabled':''} data-testid="btn-cap-up-${taskId}">▲</button>
+        <button type="button" onclick="moveCapacity('${taskId}',1)" style="background:none;border:none;color:${idx===entries.length-1?'var(--paper-d)':'var(--paper-m)'};cursor:${idx===entries.length-1?'default':'pointer'};font-size:.65rem;padding:0;line-height:1" ${idx===entries.length-1?'disabled':''} data-testid="btn-cap-down-${taskId}">▼</button>
+      </div>
       <span style="flex:1;font-size:.8rem;color:var(--paper-s)">${cap.task_type.name}</span>
       <input type="number" class="capacity-input" value="${cap.capacity}" min="0" step="0.5"
         onchange="updateCapacity('${taskId}',this.value)">
@@ -951,6 +959,18 @@ function renderCapacities(){
         style="background:none;border:none;color:#f87171;cursor:pointer;font-size:1rem;padding:0 4px">×</button>
     </div>
   `).join('');
+}
+
+function moveCapacity(taskId,direction){
+  const entries=Object.entries(SELECTED_CAPACITIES);
+  const idx=entries.findIndex(([id])=>id===taskId);
+  if(idx<0)return;
+  const newIdx=idx+direction;
+  if(newIdx<0||newIdx>=entries.length)return;
+  [entries[idx],entries[newIdx]]=[entries[newIdx],entries[idx]];
+  SELECTED_CAPACITIES={};
+  entries.forEach(([id,val])=>{SELECTED_CAPACITIES[id]=val});
+  renderCapacities();
 }
 
 async function savePerson(event){
@@ -975,8 +995,10 @@ async function savePerson(event){
     let savedPerson;
     if(personId){savedPerson=await api.collaborators.update(personId,personData)}
     else{savedPerson=await api.collaborators.create(personData)}
-    for(const[taskId,cap]of Object.entries(SELECTED_CAPACITIES)){
-      await api.collaborators.addCapacity(savedPerson.id,{task_type_id:taskId,capacity_per_day:cap.capacity});
+    const capEntries=Object.entries(SELECTED_CAPACITIES);
+    for(let i=0;i<capEntries.length;i++){
+      const[taskId,cap]=capEntries[i];
+      await api.collaborators.addCapacity(savedPerson.id,{task_type_id:taskId,capacity_per_day:cap.capacity,sort_order:i});
     }
     closePersonForm();
     await loadAllData();

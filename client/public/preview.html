@@ -110,7 +110,7 @@ html,body{font-family:'Sora',system-ui,sans-serif;background:var(--ink);color:va
   background:var(--jc,#4f46e5);
   transition:filter .12s,transform .1s;
 }
-.seg:hover .seg-inner{filter:brightness(.82);transform:scaleY(1.06)}
+.seg.bar-hover .seg-inner{filter:brightness(.82);transform:scaleY(1.06)}
 .seg.start  .seg-inner{left:3px;right:-1px;border-radius:var(--bar-r) 0 0 var(--bar-r)}
 .seg.end    .seg-inner{left:-1px;right:3px;border-radius:0 var(--bar-r) var(--bar-r) 0}
 .seg.solo   .seg-inner{left:3px;right:3px;border-radius:var(--bar-r)}
@@ -775,7 +775,8 @@ function renderWeekEvents(days,gantt){
         if(r.job.code)labelParts.push(`<span class="seg-code">${r.job.code}</span>`);
       }
 
-      rowHTML+=`<div class="seg ${type}${useInline?'':' jc-'+ci}${isSelected?' active-sel':''}" onclick='showDetail(${jStr})'>
+      const barId=r.phase?r.phase.id:(r.job.id+'_job');
+      rowHTML+=`<div class="seg ${type}${useInline?'':' jc-'+ci}${isSelected?' active-sel':''}" data-bar="${barId}" onclick='showDetail(${jStr})'>
         <div class="seg-inner"${useInline?` style="${bgStyle}"`:''}>
           ${showLabel?`<div class="seg-body">${labelParts.join('')}</div>`:''}
         </div>
@@ -1062,6 +1063,26 @@ function closePanel(){
 }
 
 setTimeout(init,200);
+
+let _hoverBar=null;
+document.addEventListener('mouseover',e=>{
+  const seg=e.target.closest('.seg[data-bar]');
+  const barId=seg?seg.dataset.bar:null;
+  if(barId===_hoverBar)return;
+  if(_hoverBar){
+    document.querySelectorAll(`.seg[data-bar="${_hoverBar}"]`).forEach(el=>el.classList.remove('bar-hover'));
+  }
+  _hoverBar=barId;
+  if(_hoverBar){
+    document.querySelectorAll(`.seg[data-bar="${_hoverBar}"]`).forEach(el=>el.classList.add('bar-hover'));
+  }
+});
+document.addEventListener('mouseleave',()=>{
+  if(_hoverBar){
+    document.querySelectorAll(`.seg[data-bar="${_hoverBar}"]`).forEach(el=>el.classList.remove('bar-hover'));
+    _hoverBar=null;
+  }
+},true);
 
 /* ════════════════════════════════════════════════
    AUTO-ASSIGN

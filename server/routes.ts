@@ -4,6 +4,7 @@ import path from "path";
 import fs from "fs";
 import multer from "multer";
 import { query } from "./db";
+import { getFreeBusy, getEvents, checkAvailability } from "./googleCalendar";
 
 const uploadsDir = path.resolve(process.cwd(), "uploads");
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
@@ -113,19 +114,19 @@ export async function registerRoutes(
   });
 
   app.post("/api/collaborators", async (req, res) => {
-    const { name, email, role, primary_department_id, avatar } = req.body;
+    const { name, email, role, primary_department_id, avatar, google_calendar_id } = req.body;
     const rows = await query(
-      "INSERT INTO collaborators (name, email, role, primary_department_id, avatar) VALUES ($1,$2,$3,$4,$5) RETURNING *",
-      [name, email || null, role || "operator", primary_department_id || null, avatar || null]
+      "INSERT INTO collaborators (name, email, role, primary_department_id, avatar, google_calendar_id) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *",
+      [name, email || null, role || "operator", primary_department_id || null, avatar || null, google_calendar_id || null]
     );
     res.json(rows[0]);
   });
 
   app.put("/api/collaborators/:id", async (req, res) => {
-    const { name, email, role, primary_department_id, avatar } = req.body;
+    const { name, email, role, primary_department_id, avatar, google_calendar_id } = req.body;
     const rows = await query(
-      "UPDATE collaborators SET name=$1, email=$2, role=$3, primary_department_id=$4, avatar=$5 WHERE id=$6 RETURNING *",
-      [name, email || null, role, primary_department_id || null, avatar || null, req.params.id]
+      "UPDATE collaborators SET name=$1, email=$2, role=$3, primary_department_id=$4, avatar=$5, google_calendar_id=$6 WHERE id=$7 RETURNING *",
+      [name, email || null, role, primary_department_id || null, avatar || null, google_calendar_id || null, req.params.id]
     );
     res.json(rows[0]);
   });
@@ -172,6 +173,73 @@ export async function registerRoutes(
       req.params.id, req.params.taskTypeId
     ]);
     res.json({ ok: true });
+  });
+
+  // ─── GOOGLE CALENDAR ────────────────────────────────────────
+  async function getAllowedCalendarIds(): Promise<string[]> {
+    const rows = await query("SELECT google_calendar_id FROM collaborators WHERE active=true AND google_calendar_id IS NOT NULL");
+    return rows.map((r: any) => r.google_calendar_id);
+  }
+
+  app.get("/api/calendar/events/:calendarId", async (req, res) => {
+    try {
+      const allowed = await getAllowedCalendarIds();
+      if (!allowed.includes(req.params.calendarId)) return res.status(403).json({ message: "Calendar not linked to any collaborator" });
+      const { timeMin, timeMax } = req.query as { timeMin: string; timeMax: string };
+      if (!timeMin || !timeMax) return res.status(400).json({ message: "timeMin and timeMax required" });
+      const events = await getEvents(req.params.calendarId, timeMin, timeMax);
+      res.json(events);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.post("/api/calendar/freebusy", async (req, res) => {
+    try {
+      const { calendarIds, timeMin, timeMax } = req.body;
+      if (!calendarIds?.length || !timeMin || !timeMax) return res.status(400).json({ message: "calendarIds, timeMin, timeMax required" });
+      const allowed = await getAllowedCalendarIds();
+      const filtered = calendarIds.filter((id: string) => allowed.includes(id));
+      if (filtered.length === 0) return res.status(400).json({ message: "No valid calendar IDs" });
+      const data = await getFreeBusy(filtered, timeMin, timeMax);
+      res.json(data);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.post("/api/calendar/availability", async (req, res) => {
+    try {
+      const { calendarIds, date } = req.body;
+      if (!calendarIds?.length || !date) return res.status(400).json({ message: "calendarIds and date required" });
+      const allowed = await getAllowedCalendarIds();
+      const filtered = calendarIds.filter((id: string) => allowed.includes(id));
+      if (filtered.length === 0) return res.status(400).json({ message: "No valid calendar IDs" });
+      const data = await checkAvailability(filtered, date);
+      res.json(data);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.get("/api/calendar/team-availability", async (req, res) => {
+    try {
+      const { date } = req.query as { date: string };
+      if (!date) return res.status(400).json({ message: "date required" });
+      const collabs = await query("SELECT id, name, google_calendar_id FROM collaborators WHERE active=true AND google_calendar_id IS NOT NULL");
+      if (collabs.length === 0) return res.json([]);
+      const calendarIds = collabs.map((c: any) => c.google_calendar_id);
+      const availability = await checkAvailability(calendarIds, date);
+      const result = collabs.map((c: any) => ({
+        person_id: c.id,
+        person_name: c.name,
+        calendar_id: c.google_calendar_id,
+        ...(availability[c.google_calendar_id] || { available: true, busySlots: [] })
+      }));
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
   });
 
   // ─── CLIENTS ──────────────────────────────────────────────

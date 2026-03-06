@@ -422,6 +422,15 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
       </div>
 
       <div class="form-group">
+        <label class="form-label" style="display:flex;align-items:center;gap:6px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4285f4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Google Calendar ID
+        </label>
+        <div class="info-note">Inserisci l'email Google della persona per collegare il calendario (es. nome@gmail.com). Il calendario deve essere condiviso con l'account collegato.</div>
+        <input type="email" class="form-input" id="person-gcal" name="google_calendar_id" placeholder="nome@gmail.com" data-testid="input-gcal">
+      </div>
+
+      <div class="form-group">
         <label class="form-label">Mansioni</label>
         <div class="info-note">Seleziona le mansioni dalla tendina per aggiungerle.</div>
         <div id="capacities-container"></div>
@@ -650,6 +659,7 @@ function renderPersonCard(person){
         ${person.email?`<div class="pc-sub">${person.email}</div>`:''}
         ${deptHtml}
         <span class="pc-role-badge ${roleClass}">${roleLabel}</span>
+        ${person.google_calendar_id?`<span style="display:inline-flex;align-items:center;gap:3px;font-size:.62rem;color:#4285f4;margin-top:2px" data-testid="badge-gcal-${person.id}"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#4285f4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Calendar</span>`:''}
       </div>
     </div>
     ${areasHtml}
@@ -757,6 +767,7 @@ function openPersonForm(person=null){
     document.getElementById('person-role').value=person.role||'operator';
     document.getElementById('person-managed-area').value=person.managed_area_id||'';
     document.getElementById('person-avatar-url').value=person.avatar||'';
+    document.getElementById('person-gcal').value=person.google_calendar_id||'';
     setAvatarPreview(person.avatar);
     if(person.capacities){
       person.capacities.forEach(cap=>{
@@ -865,6 +876,7 @@ async function savePerson(event){
     role:formData.get('role'),
     managed_area_id:formData.get('role')==='area_manager'?formData.get('managed_area'):null,
     avatar:avatarUrl,
+    google_calendar_id:formData.get('google_calendar_id')||null,
     active:true
   };
   try{

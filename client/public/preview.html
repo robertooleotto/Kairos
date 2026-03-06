@@ -129,6 +129,46 @@ html,body{font-family:'Sora',system-ui,sans-serif;background:var(--ink);color:va
 .ev-more{font-size:.6rem;font-weight:700;color:var(--paper-m);padding:0 6px;cursor:pointer;line-height:var(--bar-h)}
 .ev-more:hover{color:var(--paper-t)}
 
+/* PHASE TIMELINE (inside detail panel) */
+.ph-section{margin-top:6px}
+.ph-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.ph-title{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--ink-m)}
+.ph-add-btn{
+  padding:4px 10px;border-radius:6px;background:#6366f1;color:#fff;border:none;
+  font-size:.62rem;font-weight:600;cursor:pointer;font-family:'Sora',sans-serif;
+  display:inline-flex;align-items:center;gap:3px;transition:background .15s
+}
+.ph-add-btn:hover{background:#5558e3}
+.ph-list{display:flex;flex-direction:column;gap:0}
+.ph-item{display:flex;align-items:stretch;gap:0}
+.ph-track{width:26px;flex-shrink:0;display:flex;flex-direction:column;align-items:center}
+.ph-dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--ink-b);background:var(--ink-s);z-index:2;flex-shrink:0;margin-top:12px}
+.ph-dot.done{background:#22c55e;border-color:#22c55e}
+.ph-dot.active{background:#6366f1;border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.2)}
+.ph-line{width:2px;flex:1;background:var(--ink-b)}
+.ph-card{flex:1;background:rgba(255,255,255,.03);border:1px solid var(--ink-b);border-radius:8px;padding:10px 12px;margin:4px 0;transition:all .15s}
+.ph-card:hover{border-color:rgba(99,102,241,.3);background:rgba(99,102,241,.04)}
+.ph-card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
+.ph-name{font-size:.74rem;font-weight:600;color:var(--ink-t)}
+.ph-cat-badge{padding:1px 6px;border-radius:4px;font-size:.55rem;font-weight:600;white-space:nowrap}
+.ph-dates{font-size:.62rem;color:var(--ink-m);display:flex;align-items:center;gap:6px;margin-bottom:3px}
+.ph-assignee{font-size:.62rem;color:var(--ink-m);display:flex;align-items:center;gap:3px}
+.ph-bar-track{height:3px;background:var(--ink-b);border-radius:2px;overflow:hidden;margin-top:6px}
+.ph-bar-fill{height:100%;border-radius:2px}
+.ph-actions{display:flex;gap:2px;align-items:center}
+.ph-act-btn{background:none;border:none;color:var(--ink-m);cursor:pointer;padding:2px;border-radius:3px;display:inline-flex;transition:all .15s}
+.ph-act-btn:hover{background:var(--ink-b);color:var(--ink-t)}
+.ph-empty{text-align:center;padding:20px 12px;color:var(--ink-m);font-size:.72rem;border:1px dashed var(--ink-b);border-radius:8px}
+
+/* Phase Form Modal */
+.ph-form-overlay{display:none;position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center}
+.ph-form-box{background:var(--ink-s);border:1px solid var(--ink-b);border-radius:14px;width:440px;max-width:92vw;padding:22px 24px}
+.phf-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.phf-full{grid-column:span 2}
+.phf-label{font-size:.65rem;font-weight:600;color:var(--ink-m);display:block;margin-bottom:3px}
+.phf-input{width:100%;padding:7px 10px;border-radius:7px;border:1px solid var(--ink-b);background:var(--ink);color:var(--ink-t);font-family:'Sora',sans-serif;font-size:.74rem;outline:none}
+.phf-input:focus{border-color:#6366f1}
+
 /* DETAIL PANEL */
 #detail-panel{
   position:fixed;top:58px;right:0;bottom:0;width:var(--panel-w);
@@ -339,6 +379,72 @@ html,body{font-family:'Sora',system-ui,sans-serif;background:var(--ink);color:va
     <button class="dp-close" onclick="closePanel()">×</button>
     <div id="dp-head" class="dp-head"></div>
     <div id="dp-body" class="dp-body"></div>
+  </div>
+</div>
+
+<!-- Phase Form Modal -->
+<div class="ph-form-overlay" id="ph-form-modal">
+  <div class="ph-form-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h3 id="ph-form-title" style="font-family:'Fraunces',serif;font-size:1rem;font-weight:600">Aggiungi Fase</h3>
+      <button onclick="closePhForm()" style="background:none;border:none;color:var(--ink-m);cursor:pointer;padding:4px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form id="ph-form" onsubmit="submitPhForm(event)">
+      <input type="hidden" id="phf-id">
+      <input type="hidden" id="phf-job-id">
+      <div class="phf-row">
+        <div class="phf-full">
+          <label class="phf-label">Nome fase *</label>
+          <input type="text" id="phf-name" class="phf-input" required data-testid="input-cal-phase-name" placeholder="es. Post-produzione immagini">
+        </div>
+      </div>
+      <div class="phf-row">
+        <div>
+          <label class="phf-label">Categoria / Reparto</label>
+          <select id="phf-category" class="phf-input" data-testid="select-cal-phase-cat" onchange="filterPhTasks()">
+            <option value="">— Tutte —</option>
+          </select>
+        </div>
+        <div>
+          <label class="phf-label">Mansione specifica</label>
+          <select id="phf-task-type" class="phf-input" data-testid="select-cal-phase-task">
+            <option value="">— Nessuna —</option>
+          </select>
+        </div>
+      </div>
+      <div class="phf-row">
+        <div>
+          <label class="phf-label">Data inizio</label>
+          <input type="date" id="phf-start" class="phf-input" data-testid="input-cal-phase-start">
+        </div>
+        <div>
+          <label class="phf-label">Data fine</label>
+          <input type="date" id="phf-due" class="phf-input" data-testid="input-cal-phase-due">
+        </div>
+      </div>
+      <div class="phf-row">
+        <div>
+          <label class="phf-label">Assegnato a</label>
+          <select id="phf-assigned" class="phf-input" data-testid="select-cal-phase-assigned">
+            <option value="">— Nessuno —</option>
+          </select>
+        </div>
+        <div>
+          <label class="phf-label">Colore</label>
+          <input type="color" id="phf-color" class="phf-input" value="#6366f1" style="height:36px;padding:3px" data-testid="input-cal-phase-color">
+        </div>
+      </div>
+      <div style="margin-bottom:10px">
+        <label class="phf-label">Note</label>
+        <textarea id="phf-notes" class="phf-input" rows="2" data-testid="input-cal-phase-notes" style="resize:vertical" placeholder="Note..."></textarea>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button type="button" onclick="closePhForm()" style="padding:7px 16px;border-radius:7px;background:var(--ink);border:1px solid var(--ink-b);color:var(--ink-m);font-family:'Sora',sans-serif;font-size:.72rem;font-weight:600;cursor:pointer">Annulla</button>
+        <button type="submit" class="ph-add-btn" style="padding:7px 16px" data-testid="button-save-cal-phase" id="phf-submit-btn">Salva Fase</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -582,8 +688,14 @@ function daysUntil(str){
 
 function fmt(s){return s?new Date(s).toLocaleDateString('it-IT'):'—'}
 
-function showDetail(j){
+let DETAIL_PHASES=[];
+let DETAIL_JOB=null;
+let CAL_TASK_TYPES=[];
+const PH_COLORS=['#6366f1','#8b5cf6','#ec4899','#f43f5e','#f97316','#eab308','#22c55e','#14b8a6','#06b6d4','#3b82f6'];
+
+async function showDetail(j){
   SELECTED_JOB_ID=j.id;
+  DETAIL_JOB=j;
   const pm=TEAM.find(t=>t.id===j.pm_id);
   const rp=TEAM.find(t=>t.id===j.rp_id);
   const ci=jobColor(j.id);
@@ -599,6 +711,10 @@ function showDetail(j){
     else duStr=`${du}gg`;
   }
   const duColor=du!==null&&du<0?'#f87171':du!==null&&du<=3?'#fcd34d':'var(--ink-t)';
+
+  let phases=[];
+  try{phases=await fetch(`/api/jobs/${j.id}/phases`).then(r=>r.json())}catch(e){}
+  DETAIL_PHASES=phases;
 
   document.getElementById('dp-head').innerHTML=`
     <div class="dp-type-row">
@@ -643,12 +759,167 @@ function showDetail(j){
     ${j.notes?`<div class="dp-section">
       <div class="dp-section-title">Note</div>
       <div style="font-size:.74rem;color:var(--ink-m);line-height:1.6;background:rgba(255,255,255,.03);border:1px solid var(--ink-b);border-radius:10px;padding:12px;font-style:italic">${j.notes}</div>
-    </div>`:''}`;
+    </div>`:''}
+    <div class="ph-section">
+      <div class="ph-header">
+        <div class="ph-title">Fasi di lavorazione (${phases.length})</div>
+        <button class="ph-add-btn" data-testid="button-cal-add-phase" onclick="openPhForm('${j.id}')">+ Fase</button>
+      </div>
+      <div id="ph-timeline">${renderPhTimeline(phases)}</div>
+    </div>`;
 
   document.getElementById('detail-panel').classList.add('open');
   document.getElementById('layout').classList.add('panel-open');
 
   render();
+}
+
+function renderPhTimeline(phases){
+  if(!phases.length) return'<div class="ph-empty">Nessuna fase definita</div>';
+  const today=new Date();today.setHours(0,0,0,0);
+  return`<div class="ph-list">${phases.map((p,i)=>{
+    const isLast=i===phases.length-1;
+    const dotCls=p.completed?'done':(!p.completed&&p.start_date&&new Date(p.start_date)<=today)?'active':'';
+    const col=p.color||'#6366f1';
+    let pct=0;
+    if(p.start_date&&p.due_date){
+      const s=new Date(p.start_date),d=new Date(p.due_date);
+      const tot=Math.max(1,Math.ceil((d-s)/86400000));
+      const el=Math.max(0,Math.ceil((today-s)/86400000));
+      pct=p.completed?100:Math.min(100,Math.round((el/tot)*100));
+    }
+    const sTxt=p.start_date?new Date(p.start_date).toLocaleDateString('it-IT',{day:'numeric',month:'short'}):'—';
+    const dTxt=p.due_date?new Date(p.due_date).toLocaleDateString('it-IT',{day:'numeric',month:'short'}):'—';
+    const catBadge=p.task_type_category?`<span class="ph-cat-badge" style="background:${col}20;color:${col}">${p.task_type_category}</span>`:'';
+    return`<div class="ph-item">
+      <div class="ph-track">
+        <div class="ph-dot ${dotCls}" style="${dotCls==='done'?'':'border-color:'+col}"></div>
+        ${!isLast?'<div class="ph-line"></div>':''}
+      </div>
+      <div class="ph-card">
+        <div class="ph-card-head">
+          <div>
+            <div class="ph-name">${p.name}</div>
+            ${p.task_type_name?`<div style="font-size:.58rem;color:var(--ink-m);margin-top:1px">${p.task_type_name}</div>`:''}
+          </div>
+          <div class="ph-actions">
+            ${catBadge}
+            <button class="ph-act-btn" title="${p.completed?'Riapri':'Completa'}" onclick="togglePh('${DETAIL_JOB.id}','${p.id}',${!p.completed})">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="${p.completed?'#22c55e':'none'}" stroke="${p.completed?'#22c55e':'currentColor'}" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </button>
+            <button class="ph-act-btn" title="Modifica" onclick="editPhase(${i})">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+            </button>
+            <button class="ph-act-btn" title="Elimina" onclick="deletePh('${DETAIL_JOB.id}','${p.id}')">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="ph-dates">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          ${sTxt} → ${dTxt}
+        </div>
+        ${p.assigned_name?`<div class="ph-assignee"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ${p.assigned_name}</div>`:''}
+        ${(p.start_date&&p.due_date)?`<div class="ph-bar-track"><div class="ph-bar-fill" style="width:${pct}%;background:${p.completed?'#22c55e':col}"></div></div>`:''}
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function editPhase(idx){
+  const p=DETAIL_PHASES[idx];
+  if(p&&DETAIL_JOB) openPhForm(DETAIL_JOB.id,p);
+}
+
+async function loadCalTaskTypes(){
+  if(CAL_TASK_TYPES.length)return;
+  try{CAL_TASK_TYPES=await fetch('/api/task-types').then(r=>r.json())}catch(e){}
+}
+
+function openPhForm(jobId,phase){
+  loadCalTaskTypes().then(()=>{
+    const catSel=document.getElementById('phf-category');
+    const cats=[...new Set(CAL_TASK_TYPES.map(t=>t.category))].sort();
+    catSel.innerHTML='<option value="">— Tutte —</option>';
+    cats.forEach(c=>catSel.innerHTML+=`<option value="${c}">${c}</option>`);
+    const assignSel=document.getElementById('phf-assigned');
+    assignSel.innerHTML='<option value="">— Nessuno —</option>';
+    TEAM.forEach(c=>assignSel.innerHTML+=`<option value="${c.id}">${c.name}</option>`);
+    if(phase){
+      document.getElementById('ph-form-title').textContent='Modifica Fase';
+      document.getElementById('phf-submit-btn').textContent='Aggiorna';
+      document.getElementById('phf-id').value=phase.id;
+      document.getElementById('phf-job-id').value=jobId;
+      document.getElementById('phf-name').value=phase.name||'';
+      document.getElementById('phf-category').value=phase.task_type_category||'';
+      filterPhTasks();
+      document.getElementById('phf-task-type').value=phase.task_type_id||'';
+      document.getElementById('phf-start').value=phase.start_date||'';
+      document.getElementById('phf-due').value=phase.due_date||'';
+      document.getElementById('phf-assigned').value=phase.assigned_to||'';
+      document.getElementById('phf-color').value=phase.color||'#6366f1';
+      document.getElementById('phf-notes').value=phase.notes||'';
+    }else{
+      document.getElementById('ph-form-title').textContent='Aggiungi Fase';
+      document.getElementById('phf-submit-btn').textContent='Salva';
+      document.getElementById('ph-form').reset();
+      document.getElementById('phf-id').value='';
+      document.getElementById('phf-job-id').value=jobId;
+      document.getElementById('phf-color').value=PH_COLORS[DETAIL_PHASES.length%PH_COLORS.length];
+      filterPhTasks();
+    }
+    document.getElementById('ph-form-modal').style.display='flex';
+  });
+}
+
+function closePhForm(){document.getElementById('ph-form-modal').style.display='none'}
+
+function filterPhTasks(){
+  const cat=document.getElementById('phf-category').value;
+  const sel=document.getElementById('phf-task-type');
+  const prev=sel.value;
+  sel.innerHTML='<option value="">— Nessuna —</option>';
+  const f=cat?CAL_TASK_TYPES.filter(t=>t.category===cat):CAL_TASK_TYPES;
+  f.forEach(t=>sel.innerHTML+=`<option value="${t.id}">${t.name}</option>`);
+  if(f.find(t=>t.id===prev))sel.value=prev;
+}
+
+async function submitPhForm(e){
+  e.preventDefault();
+  const jobId=document.getElementById('phf-job-id').value;
+  const phaseId=document.getElementById('phf-id').value;
+  const payload={
+    name:document.getElementById('phf-name').value.trim(),
+    task_type_id:document.getElementById('phf-task-type').value||null,
+    start_date:document.getElementById('phf-start').value||null,
+    due_date:document.getElementById('phf-due').value||null,
+    assigned_to:document.getElementById('phf-assigned').value||null,
+    color:document.getElementById('phf-color').value||'#6366f1',
+    notes:document.getElementById('phf-notes').value.trim()||null,
+    order_index:phaseId?undefined:DETAIL_PHASES.length
+  };
+  if(!payload.name)return;
+  try{
+    if(phaseId) await fetch(`/api/jobs/${jobId}/phases/${phaseId}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    else await fetch(`/api/jobs/${jobId}/phases`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    closePhForm();
+    if(DETAIL_JOB) await showDetail(DETAIL_JOB);
+  }catch(err){alert('Errore nel salvataggio')}
+}
+
+async function deletePh(jobId,phaseId){
+  if(!confirm('Eliminare questa fase?'))return;
+  try{
+    await fetch(`/api/jobs/${jobId}/phases/${phaseId}`,{method:'DELETE'});
+    if(DETAIL_JOB) await showDetail(DETAIL_JOB);
+  }catch(e){}
+}
+
+async function togglePh(jobId,phaseId,completed){
+  try{
+    await fetch(`/api/jobs/${jobId}/phases/${phaseId}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({completed})});
+    if(DETAIL_JOB) await showDetail(DETAIL_JOB);
+  }catch(e){}
 }
 
 function initials(name){

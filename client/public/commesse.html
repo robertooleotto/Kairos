@@ -483,6 +483,80 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
 .progress-message.ahead{background:rgba(34,197,94,.08);border-color:#4ade80;color:#86efac}
 .progress-message.ontime{background:rgba(59,130,246,.08);border-color:#93c5fd;color:#bfdbfe}
 .progress-message.behind{background:rgba(239,68,68,.08);border-color:#f87171;color:#fca5a5}
+
+/* Phase Timeline */
+.phases-section{margin-top:20px}
+.phases-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.phases-title{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--paper-m)}
+.btn-add-phase{
+  padding:5px 12px;border-radius:7px;background:#6366f1;color:#fff;border:none;
+  font-size:.68rem;font-weight:600;cursor:pointer;font-family:'Sora',sans-serif;
+  display:inline-flex;align-items:center;gap:4px;transition:background .15s
+}
+.btn-add-phase:hover{background:#5558e3}
+.phase-list{display:flex;flex-direction:column;gap:0}
+.phase-item{
+  display:flex;align-items:stretch;gap:0;position:relative;
+}
+.phase-track{
+  width:32px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;
+  position:relative;
+}
+.phase-dot{
+  width:12px;height:12px;border-radius:50%;border:2px solid var(--paper-l);
+  background:var(--paper-h);z-index:2;flex-shrink:0;margin-top:14px;
+}
+.phase-dot.completed{background:#22c55e;border-color:#22c55e}
+.phase-dot.active{background:#6366f1;border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.25)}
+.phase-line{
+  width:2px;flex:1;background:var(--paper-l);
+}
+.phase-card{
+  flex:1;background:var(--paper);border:1px solid var(--paper-l);border-radius:10px;
+  padding:14px 16px;margin:6px 0;transition:all .15s;cursor:pointer;
+}
+.phase-card:hover{border-color:rgba(99,102,241,.3);background:rgba(99,102,241,.03)}
+.phase-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+.phase-name{font-size:.8rem;font-weight:600;color:var(--paper-t)}
+.phase-badge{
+  padding:2px 8px;border-radius:5px;font-size:.6rem;font-weight:600;
+  white-space:nowrap;
+}
+.phase-dates{display:flex;gap:12px;font-size:.68rem;color:var(--paper-m);margin-bottom:6px;align-items:center}
+.phase-dates svg{flex-shrink:0}
+.phase-bar-track{height:4px;background:var(--paper-l);border-radius:2px;overflow:hidden;margin-top:8px}
+.phase-bar-fill{height:100%;border-radius:2px;transition:width .3s}
+.phase-assignee{font-size:.68rem;color:var(--paper-m);display:flex;align-items:center;gap:4px;margin-top:6px}
+.phase-notes{font-size:.68rem;color:var(--paper-m);font-style:italic;margin-top:4px}
+.phase-actions{display:flex;gap:4px;align-items:center}
+.phase-action-btn{
+  background:none;border:none;color:var(--paper-m);cursor:pointer;padding:3px;
+  border-radius:4px;transition:all .15s;display:inline-flex;
+}
+.phase-action-btn:hover{background:var(--paper-l);color:var(--paper-t)}
+.phase-empty{
+  text-align:center;padding:30px 20px;color:var(--paper-m);font-size:.78rem;
+  border:1px dashed var(--paper-l);border-radius:10px;
+}
+
+/* Phase Form Modal */
+.phase-form-overlay{
+  display:none;position:fixed;inset:0;z-index:1100;
+  background:rgba(0,0,0,.6);backdrop-filter:blur(4px);
+  align-items:center;justify-content:center;
+}
+.phase-form-box{
+  background:var(--paper-h);border:1px solid var(--paper-l);border-radius:14px;
+  width:480px;max-width:92vw;padding:24px 28px;
+}
+.pf-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.pf-full{grid-column:span 2}
+.pf-label{font-size:.7rem;font-weight:600;color:var(--paper-s);display:block;margin-bottom:4px}
+.pf-input{
+  width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--paper-l);
+  background:var(--paper);color:var(--paper-t);font-family:'Sora',sans-serif;font-size:.78rem;outline:none;
+}
+.pf-input:focus{border-color:#6366f1}
 </style>
 </head>
 <body>
@@ -726,6 +800,72 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
   </div>
 </div>
 
+<!-- Phase Form Modal -->
+<div class="phase-form-overlay" id="phase-form-modal">
+  <div class="phase-form-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+      <h3 id="phase-form-title" style="font-family:'Fraunces',serif;font-size:1.05rem;font-weight:600">Aggiungi Fase</h3>
+      <button onclick="closePhaseForm()" style="background:none;border:none;color:var(--paper-m);cursor:pointer;padding:4px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form id="phase-form" onsubmit="submitPhaseForm(event)">
+      <input type="hidden" id="pf-id">
+      <input type="hidden" id="pf-job-id">
+      <div class="pf-row">
+        <div class="pf-full">
+          <label class="pf-label">Nome fase *</label>
+          <input type="text" id="pf-name" class="pf-input" required data-testid="input-phase-name" placeholder="es. Post-produzione immagini">
+        </div>
+      </div>
+      <div class="pf-row">
+        <div>
+          <label class="pf-label">Categoria / Reparto</label>
+          <select id="pf-category" class="pf-input" data-testid="select-phase-category" onchange="filterPhaseTasks()">
+            <option value="">— Tutte —</option>
+          </select>
+        </div>
+        <div>
+          <label class="pf-label">Mansione specifica</label>
+          <select id="pf-task-type" class="pf-input" data-testid="select-phase-task">
+            <option value="">— Nessuna —</option>
+          </select>
+        </div>
+      </div>
+      <div class="pf-row">
+        <div>
+          <label class="pf-label">Data inizio</label>
+          <input type="date" id="pf-start" class="pf-input" data-testid="input-phase-start">
+        </div>
+        <div>
+          <label class="pf-label">Data fine / Scadenza</label>
+          <input type="date" id="pf-due" class="pf-input" data-testid="input-phase-due">
+        </div>
+      </div>
+      <div class="pf-row">
+        <div>
+          <label class="pf-label">Assegnato a</label>
+          <select id="pf-assigned" class="pf-input" data-testid="select-phase-assigned">
+            <option value="">— Nessuno —</option>
+          </select>
+        </div>
+        <div>
+          <label class="pf-label">Colore</label>
+          <input type="color" id="pf-color" class="pf-input" value="#6366f1" style="height:38px;padding:4px" data-testid="input-phase-color">
+        </div>
+      </div>
+      <div style="margin-bottom:12px">
+        <label class="pf-label">Note</label>
+        <textarea id="pf-notes" class="pf-input" rows="2" data-testid="input-phase-notes" style="resize:vertical" placeholder="Note sulla fase..."></textarea>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button type="button" onclick="closePhaseForm()" style="padding:8px 18px;border-radius:8px;background:var(--paper);border:1px solid var(--paper-l);color:var(--paper-s);font-family:'Sora',sans-serif;font-size:.74rem;font-weight:600;cursor:pointer">Annulla</button>
+        <button type="submit" class="btn-add-phase" style="padding:8px 18px" data-testid="button-save-phase" id="pf-submit-btn">Salva Fase</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Detail Panel -->
 <div class="detail-panel" id="job-detail-panel">
   <div class="detail-overlay" onclick="closeJobDetail()"></div>
@@ -913,9 +1053,13 @@ function updateStats(){
   document.getElementById('stat-images').textContent=dueThisWeek;
 }
 
-function openJobDetail(jobId){
+let CURRENT_JOB_PHASES=[];
+let CURRENT_DETAIL_JOB_ID=null;
+
+async function openJobDetail(jobId){
   const job=JOBS.find(j=>j.id===jobId);
   if(!job)return;
+  CURRENT_DETAIL_JOB_ID=jobId;
   document.getElementById('detail-code').textContent=job.code;
   document.getElementById('detail-client').textContent=job.client;
   const teamChips=(job.team||[]).map(p=>`<span class="detail-team-chip">${p}</span>`).join('');
@@ -923,6 +1067,15 @@ function openJobDetail(jobId){
   const prioLabels={URGENT:'🔴 Urgente',HIGH:'🟠 Alta',MEDIUM:'🟡 Media',LOW:'🟢 Bassa'};
   const daysLeft=job.dueDate?getDaysLeft(job.dueDate):null;
   const deadlineText=daysLeft===null?'—':daysLeft>0?daysLeft+' giorni rimanenti':daysLeft===0?'Scade oggi':'Scaduta';
+
+  let phases=[];
+  try{
+    phases=await fetch(`/api/jobs/${jobId}/phases`).then(r=>r.json());
+  }catch(e){console.error('Errore caricamento fasi:',e)}
+  CURRENT_JOB_PHASES=phases;
+
+  const phasesHtml=renderPhasesTimeline(phases,job);
+
   const html=`
     <div class="detail-section">
       <div class="detail-section-title">Informazioni base</div>
@@ -935,11 +1088,19 @@ function openJobDetail(jobId){
         <div class="detail-info-item"><div class="detail-info-label">Scadenza</div><div class="detail-info-value">${job.dueDate?new Date(job.dueDate).toLocaleDateString('it-IT'):'—'}<br><span style="font-size:.68rem;color:var(--paper-m)">${deadlineText}</span></div></div>
       </div>
     </div>
+    ${renderProgressWidget(job)}
     <div class="detail-section">
       <div class="detail-section-title">Team assegnato</div>
       <div class="detail-team-list">${teamChips||'<span style="color:var(--paper-m);font-size:.72rem">Nessuno assegnato</span>'}</div>
     </div>
-    <div class="detail-actions" style="display:flex;gap:8px;flex-wrap:wrap">
+    <div class="phases-section">
+      <div class="phases-header">
+        <div class="phases-title">Fasi di lavorazione (${phases.length})</div>
+        <button class="btn-add-phase" data-testid="button-add-phase" onclick="openPhaseForm('${jobId}')">+ Aggiungi Fase</button>
+      </div>
+      <div id="phases-timeline">${phasesHtml}</div>
+    </div>
+    <div class="detail-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:20px">
       <button class="detail-btn detail-btn-secondary" data-testid="button-edit-job" onclick="closeJobDetail();openJobForm(JOBS.find(j=>j.id==='${job.id}'))">Modifica</button>
       <button class="detail-btn detail-btn-secondary" onclick="changeJobStatus('${job.id}')">Cambia stato</button>
       <button class="detail-btn" data-testid="button-delete-job" style="background:#ef444520;color:#ef4444;border:1px solid #ef444440" onclick="deleteJob('${job.id}')">Elimina</button>
@@ -947,6 +1108,69 @@ function openJobDetail(jobId){
   `;
   document.getElementById('detail-body').innerHTML=html;
   document.getElementById('job-detail-panel').classList.add('open');
+}
+
+function renderPhasesTimeline(phases,job){
+  if(phases.length===0){
+    return`<div class="phase-empty">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--paper-m)" stroke-width="1.5" style="margin-bottom:8px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div>Nessuna fase di lavorazione definita</div>
+      <div style="font-size:.68rem;margin-top:4px">Clicca "+ Aggiungi Fase" per iniziare</div>
+    </div>`;
+  }
+  const today=new Date();today.setHours(0,0,0,0);
+  return`<div class="phase-list">${phases.map((p,i)=>{
+    const isLast=i===phases.length-1;
+    const dotClass=p.completed?'completed':(!p.completed&&p.start_date&&new Date(p.start_date)<=today)?'active':'';
+    const color=p.color||'#6366f1';
+    let progressPct=0;
+    let durationText='';
+    if(p.start_date&&p.due_date){
+      const s=new Date(p.start_date);
+      const d=new Date(p.due_date);
+      const totalD=Math.max(1,Math.ceil((d-s)/(86400000)));
+      const elapsedD=Math.max(0,Math.ceil((today-s)/(86400000)));
+      progressPct=p.completed?100:Math.min(100,Math.round((elapsedD/totalD)*100));
+      durationText=totalD+' giorni';
+    }
+    const startTxt=p.start_date?new Date(p.start_date).toLocaleDateString('it-IT',{day:'numeric',month:'short'}):'—';
+    const dueTxt=p.due_date?new Date(p.due_date).toLocaleDateString('it-IT',{day:'numeric',month:'short'}):'—';
+    const catBadge=p.task_type_category?`<span class="phase-badge" style="background:${color}18;color:${color}">${p.task_type_category}</span>`:'';
+    return`<div class="phase-item" data-testid="phase-item-${p.id}">
+      <div class="phase-track">
+        <div class="phase-dot ${dotClass}" style="${dotClass==='completed'?'':'border-color:'+color}"></div>
+        ${!isLast?'<div class="phase-line"></div>':''}
+      </div>
+      <div class="phase-card" onclick="event.stopPropagation()">
+        <div class="phase-card-header">
+          <div>
+            <div class="phase-name">${p.name}</div>
+            ${p.task_type_name?`<div style="font-size:.65rem;color:var(--paper-m);margin-top:2px">${p.task_type_name}</div>`:''}
+          </div>
+          <div class="phase-actions">
+            ${catBadge}
+            <button class="phase-action-btn" title="Segna ${p.completed?'incompleta':'completata'}" onclick="togglePhaseComplete('${job.id}','${p.id}',${!p.completed})" data-testid="button-toggle-phase-${p.id}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="${p.completed?'#22c55e':'none'}" stroke="${p.completed?'#22c55e':'currentColor'}" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </button>
+            <button class="phase-action-btn" title="Modifica" onclick="openPhaseForm('${job.id}',${JSON.stringify(p).replace(/"/g,'&quot;')})" data-testid="button-edit-phase-${p.id}">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+            </button>
+            <button class="phase-action-btn" title="Elimina" onclick="deletePhase('${job.id}','${p.id}')" data-testid="button-delete-phase-${p.id}">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="phase-dates">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          ${startTxt} → ${dueTxt}
+          ${durationText?`<span style="color:var(--paper-m);font-size:.62rem">(${durationText})</span>`:''}
+        </div>
+        ${p.assigned_name?`<div class="phase-assignee"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ${p.assigned_name}</div>`:''}
+        ${p.notes?`<div class="phase-notes">${p.notes}</div>`:''}
+        ${(p.start_date&&p.due_date)?`<div class="phase-bar-track"><div class="phase-bar-fill" style="width:${progressPct}%;background:${p.completed?'#22c55e':color}"></div></div>`:''}
+      </div>
+    </div>`;
+  }).join('')}</div>`;
 }
 
 function closeJobDetail(){
@@ -1047,6 +1271,118 @@ function bulkChangePrio(){
   });
   alert(`Priorità cambiata a ${prio} per ${selectedJobs.length} commesse`);
   select.value='';deselectAll();renderJobs();
+}
+
+let ALL_TASK_TYPES=[];
+const PHASE_COLORS=['#6366f1','#8b5cf6','#ec4899','#f43f5e','#f97316','#eab308','#22c55e','#14b8a6','#06b6d4','#3b82f6'];
+
+async function loadTaskTypes(){
+  if(ALL_TASK_TYPES.length>0)return;
+  try{
+    ALL_TASK_TYPES=await fetch('/api/task-types').then(r=>r.json());
+  }catch(e){console.error('Errore caricamento task types:',e)}
+}
+
+function openPhaseForm(jobId,phase){
+  Promise.all([loadTaskTypes(),loadFormData()]).then(()=>{
+    const catSel=document.getElementById('pf-category');
+    const cats=[...new Set(ALL_TASK_TYPES.map(t=>t.category))].sort();
+    catSel.innerHTML='<option value="">— Tutte —</option>';
+    cats.forEach(c=>catSel.innerHTML+=`<option value="${c}">${c}</option>`);
+
+    const assignSel=document.getElementById('pf-assigned');
+    assignSel.innerHTML='<option value="">— Nessuno —</option>';
+    COLLABS_LIST.forEach(c=>assignSel.innerHTML+=`<option value="${c.id}">${c.name}</option>`);
+
+    if(phase){
+      document.getElementById('phase-form-title').textContent='Modifica Fase';
+      document.getElementById('pf-submit-btn').textContent='Aggiorna Fase';
+      document.getElementById('pf-id').value=phase.id;
+      document.getElementById('pf-job-id').value=jobId;
+      document.getElementById('pf-name').value=phase.name||'';
+      document.getElementById('pf-category').value=phase.task_type_category||'';
+      filterPhaseTasks();
+      document.getElementById('pf-task-type').value=phase.task_type_id||'';
+      document.getElementById('pf-start').value=phase.start_date||'';
+      document.getElementById('pf-due').value=phase.due_date||'';
+      document.getElementById('pf-assigned').value=phase.assigned_to||'';
+      document.getElementById('pf-color').value=phase.color||'#6366f1';
+      document.getElementById('pf-notes').value=phase.notes||'';
+    }else{
+      document.getElementById('phase-form-title').textContent='Aggiungi Fase';
+      document.getElementById('pf-submit-btn').textContent='Salva Fase';
+      document.getElementById('phase-form').reset();
+      document.getElementById('pf-id').value='';
+      document.getElementById('pf-job-id').value=jobId;
+      document.getElementById('pf-color').value=PHASE_COLORS[CURRENT_JOB_PHASES.length%PHASE_COLORS.length];
+      filterPhaseTasks();
+    }
+    document.getElementById('phase-form-modal').style.display='flex';
+  });
+}
+
+function closePhaseForm(){
+  document.getElementById('phase-form-modal').style.display='none';
+}
+
+function filterPhaseTasks(){
+  const cat=document.getElementById('pf-category').value;
+  const ttSel=document.getElementById('pf-task-type');
+  const prev=ttSel.value;
+  ttSel.innerHTML='<option value="">— Nessuna —</option>';
+  const filtered=cat?ALL_TASK_TYPES.filter(t=>t.category===cat):ALL_TASK_TYPES;
+  filtered.forEach(t=>ttSel.innerHTML+=`<option value="${t.id}">${t.name}</option>`);
+  if(filtered.find(t=>t.id===prev)) ttSel.value=prev;
+}
+
+async function submitPhaseForm(e){
+  e.preventDefault();
+  const jobId=document.getElementById('pf-job-id').value;
+  const phaseId=document.getElementById('pf-id').value;
+  const taskTypeId=document.getElementById('pf-task-type').value;
+  const selectedTask=taskTypeId?ALL_TASK_TYPES.find(t=>t.id===taskTypeId):null;
+  const payload={
+    name:document.getElementById('pf-name').value.trim(),
+    task_type_id:taskTypeId||null,
+    start_date:document.getElementById('pf-start').value||null,
+    due_date:document.getElementById('pf-due').value||null,
+    assigned_to:document.getElementById('pf-assigned').value||null,
+    color:document.getElementById('pf-color').value||'#6366f1',
+    notes:document.getElementById('pf-notes').value.trim()||null,
+    order_index:phaseId?undefined:CURRENT_JOB_PHASES.length
+  };
+  if(!payload.name){alert('Il nome della fase è obbligatorio');return}
+  try{
+    if(phaseId){
+      await fetch(`/api/jobs/${jobId}/phases/${phaseId}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    }else{
+      await fetch(`/api/jobs/${jobId}/phases`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    }
+    closePhaseForm();
+    await openJobDetail(jobId);
+  }catch(err){
+    console.error('Errore salvataggio fase:',err);
+    alert('Errore nel salvataggio della fase');
+  }
+}
+
+async function deletePhase(jobId,phaseId){
+  if(!confirm('Eliminare questa fase di lavorazione?'))return;
+  try{
+    await fetch(`/api/jobs/${jobId}/phases/${phaseId}`,{method:'DELETE'});
+    await openJobDetail(jobId);
+  }catch(err){
+    console.error('Errore eliminazione fase:',err);
+  }
+}
+
+async function togglePhaseComplete(jobId,phaseId,completed){
+  try{
+    await fetch(`/api/jobs/${jobId}/phases/${phaseId}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({completed})});
+    await openJobDetail(jobId);
+  }catch(err){
+    console.error('Errore aggiornamento fase:',err);
+  }
 }
 
 let CLIENTS_LIST=[];

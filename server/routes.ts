@@ -396,31 +396,36 @@ export async function registerRoutes(
   // ─── JOB PHASES ───────────────────────────────────────────
   app.get("/api/jobs/:id/phases", async (req, res) => {
     const rows = await query(
-      `SELECT p.*, c.name AS assigned_name
-       FROM job_phases p LEFT JOIN collaborators c ON c.id = p.assigned_to
-       WHERE p.job_id=$1 ORDER BY p.order_index, p.id`,
+      `SELECT p.*, c.name AS assigned_name, tt.name AS task_type_name, tt.category AS task_type_category
+       FROM job_phases p
+       LEFT JOIN collaborators c ON c.id = p.assigned_to
+       LEFT JOIN task_types tt ON tt.id = p.task_type_id
+       WHERE p.job_id=$1 ORDER BY p.order_index, p.start_date, p.id`,
       [req.params.id]
     );
     res.json(rows);
   });
 
   app.post("/api/jobs/:id/phases", async (req, res) => {
-    const { name, order_index, assigned_to, due_date } = req.body;
+    const { name, order_index, assigned_to, start_date, due_date, task_type_id, color, notes } = req.body;
     const rows = await query(
-      `INSERT INTO job_phases (job_id, name, order_index, assigned_to, due_date)
-       VALUES ($1,$2,$3,$4,$5) RETURNING *`,
-      [req.params.id, name || "Nuova fase", order_index || 0, assigned_to || null, due_date || null]
+      `INSERT INTO job_phases (job_id, name, order_index, assigned_to, start_date, due_date, task_type_id, color, notes)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+      [req.params.id, name || "Nuova fase", order_index || 0, assigned_to || null,
+       start_date || null, due_date || null, task_type_id || null, color || '#6366f1', notes || null]
     );
     res.json(rows[0]);
   });
 
   app.put("/api/jobs/:jobId/phases/:id", async (req, res) => {
-    const { name, assigned_to, due_date, completed, order_index } = req.body;
+    const { name, assigned_to, start_date, due_date, completed, order_index, task_type_id, color, notes } = req.body;
     const rows = await query(
-      `UPDATE job_phases SET name=COALESCE($1,name), assigned_to=$2, due_date=$3,
-       completed=COALESCE($4,completed), order_index=COALESCE($5,order_index)
-       WHERE id=$6 RETURNING *`,
-      [name || null, assigned_to || null, due_date || null, completed ?? null, order_index ?? null, req.params.id]
+      `UPDATE job_phases SET name=COALESCE($1,name), assigned_to=$2, start_date=$3, due_date=$4,
+       completed=COALESCE($5,completed), order_index=COALESCE($6,order_index),
+       task_type_id=$7, color=COALESCE($8,color), notes=$9
+       WHERE id=$10 RETURNING *`,
+      [name || null, assigned_to || null, start_date || null, due_date || null,
+       completed ?? null, order_index ?? null, task_type_id || null, color || null, notes || null, req.params.id]
     );
     res.json(rows[0]);
   });

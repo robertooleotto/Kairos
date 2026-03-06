@@ -500,7 +500,7 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
     <button class="nav-pill" onclick="location.href='clienti.html'">Clienti</button>
   </div>
   <div class="header-actions">
-    <button class="btn-primary" onclick="alert('Nuova commessa')">+ Nuova Commessa</button>
+    <button class="btn-primary" data-testid="button-new-job" onclick="openJobForm()">+ Nuova Commessa</button>
   </div>
 </div>
 
@@ -639,6 +639,93 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
   </div>
 </div>
 
+<!-- New/Edit Job Modal -->
+<div id="job-form-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center">
+  <div style="background:var(--paper-h);border:1px solid var(--paper-l);border-radius:14px;width:560px;max-width:92vw;max-height:88vh;overflow-y:auto;padding:28px 32px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <h3 id="job-form-title" style="font-family:'Fraunces',serif;font-size:1.15rem;font-weight:600">Nuova Commessa</h3>
+      <button onclick="closeJobForm()" style="background:none;border:none;color:var(--paper-m);cursor:pointer;padding:4px" data-testid="button-close-job-form">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form id="job-form" onsubmit="submitJobForm(event)">
+      <input type="hidden" id="jf-id">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div style="grid-column:span 2">
+          <label style="font-size:.7rem;font-weight:600;color:var(--paper-s);display:block;margin-bottom:4px">Titolo *</label>
+          <input type="text" id="jf-title" required data-testid="input-job-title" style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--paper-l);background:var(--paper);color:var(--paper-t);font-family:'Sora',sans-serif;font-size:.78rem;outline:none" placeholder="Nome della commessa">
+        </div>
+        <div>
+          <label style="font-size:.7rem;font-weight:600;color:var(--paper-s);display:block;margin-bottom:4px">Codice</label>
+          <input type="text" id="jf-code" data-testid="input-job-code" style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--paper-l);background:var(--paper);color:var(--paper-t);font-family:'Sora',sans-serif;font-size:.78rem;outline:none" placeholder="es. ND-2026-001">
+        </div>
+        <div>
+          <label style="font-size:.7rem;font-weight:600;color:var(--paper-s);display:block;margin-bottom:4px">Cliente</label>
+          <select id="jf-client" data-testid="select-job-client" style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--paper-l);background:var(--paper);color:var(--paper-t);font-family:'Sora',sans-serif;font-size:.78rem;outline:none">
+            <option value="">— Seleziona cliente —</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:.7rem;font-weight:600;color:var(--paper-s);display:block;margin-bottom:4px">Tipo</label>
+          <select id="jf-type" data-testid="select-job-type" style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--paper-l);background:var(--paper);color:var(--paper-t);font-family:'Sora',sans-serif;font-size:.78rem;outline:none">
+            <option value="C">Commessa (C)</option>
+            <option value="I">Post Produzione (I)</option>
+            <option value="F">Fotolito (F)</option>
+            <option value="A">Audio/Video (A)</option>
+            <option value="V">Video (V)</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:.7rem;font-weight:600;color:var(--paper-s);display:block;margin-bottom:4px">Stato</label>
+          <select id="jf-status" data-testid="select-job-status" style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--paper-l);background:var(--paper);color:var(--paper-t);font-family:'Sora',sans-serif;font-size:.78rem;outline:none">
+            <option value="nuova">Nuova</option>
+            <option value="in_produzione">In produzione</option>
+            <option value="in_attesa">In attesa</option>
+            <option value="completata">Completata</option>
+            <option value="annullata">Annullata</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:.7rem;font-weight:600;color:var(--paper-s);display:block;margin-bottom:4px">Data inizio</label>
+          <input type="date" id="jf-started" data-testid="input-job-started" style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--paper-l);background:var(--paper);color:var(--paper-t);font-family:'Sora',sans-serif;font-size:.78rem;outline:none">
+        </div>
+        <div>
+          <label style="font-size:.7rem;font-weight:600;color:var(--paper-s);display:block;margin-bottom:4px">Scadenza</label>
+          <input type="date" id="jf-due" data-testid="input-job-due" style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--paper-l);background:var(--paper);color:var(--paper-t);font-family:'Sora',sans-serif;font-size:.78rem;outline:none">
+        </div>
+        <div>
+          <label style="font-size:.7rem;font-weight:600;color:var(--paper-s);display:block;margin-bottom:4px">Anno competenza</label>
+          <input type="number" id="jf-year" value="2026" data-testid="input-job-year" style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--paper-l);background:var(--paper);color:var(--paper-t);font-family:'Sora',sans-serif;font-size:.78rem;outline:none">
+        </div>
+        <div>
+          <label style="font-size:.7rem;font-weight:600;color:var(--paper-s);display:block;margin-bottom:4px">Categoria</label>
+          <input type="text" id="jf-category" data-testid="input-job-category" style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--paper-l);background:var(--paper);color:var(--paper-t);font-family:'Sora',sans-serif;font-size:.78rem;outline:none" placeholder="es. Moda, Automotive">
+        </div>
+        <div>
+          <label style="font-size:.7rem;font-weight:600;color:var(--paper-s);display:block;margin-bottom:4px">PM (Project Manager)</label>
+          <select id="jf-pm" data-testid="select-job-pm" style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--paper-l);background:var(--paper);color:var(--paper-t);font-family:'Sora',sans-serif;font-size:.78rem;outline:none">
+            <option value="">— Nessuno —</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:.7rem;font-weight:600;color:var(--paper-s);display:block;margin-bottom:4px">Art Director</label>
+          <select id="jf-artdir" data-testid="select-job-artdir" style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--paper-l);background:var(--paper);color:var(--paper-t);font-family:'Sora',sans-serif;font-size:.78rem;outline:none">
+            <option value="">— Nessuno —</option>
+          </select>
+        </div>
+        <div style="grid-column:span 2">
+          <label style="font-size:.7rem;font-weight:600;color:var(--paper-s);display:block;margin-bottom:4px">Note</label>
+          <textarea id="jf-notes" data-testid="input-job-notes" rows="3" style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--paper-l);background:var(--paper);color:var(--paper-t);font-family:'Sora',sans-serif;font-size:.78rem;outline:none;resize:vertical" placeholder="Note aggiuntive..."></textarea>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
+        <button type="button" onclick="closeJobForm()" style="padding:8px 18px;border-radius:8px;background:var(--paper);border:1px solid var(--paper-l);color:var(--paper-s);font-family:'Sora',sans-serif;font-size:.74rem;font-weight:600;cursor:pointer" data-testid="button-cancel-job">Annulla</button>
+        <button type="submit" class="btn-primary" data-testid="button-save-job" id="jf-submit-btn">Salva Commessa</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Detail Panel -->
 <div class="detail-panel" id="job-detail-panel">
   <div class="detail-overlay" onclick="closeJobDetail()"></div>
@@ -674,7 +761,10 @@ function normalizeJob(j){
     type:j.type||'—',client:j.client||'—',
     prio,dueDate:d,startedAt:j.started_at?j.started_at.slice(0,10):null,
     team,status:STATUS_MAP[j.status]||'TODO',apiStatus:j.status,
-    category:j.category||''
+    category:j.category||'',
+    notes:j.notes||'',competence_year:j.competence_year||2026,
+    pm_id:j.pm_id||'',art_dir_id:j.art_dir_id||'',
+    pm_name:j.pm_name||'',art_dir_name:j.art_dir_name||''
   };
 }
 
@@ -849,8 +939,10 @@ function openJobDetail(jobId){
       <div class="detail-section-title">Team assegnato</div>
       <div class="detail-team-list">${teamChips||'<span style="color:var(--paper-m);font-size:.72rem">Nessuno assegnato</span>'}</div>
     </div>
-    <div class="detail-actions">
+    <div class="detail-actions" style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="detail-btn detail-btn-secondary" data-testid="button-edit-job" onclick="closeJobDetail();openJobForm(JOBS.find(j=>j.id==='${job.id}'))">Modifica</button>
       <button class="detail-btn detail-btn-secondary" onclick="changeJobStatus('${job.id}')">Cambia stato</button>
+      <button class="detail-btn" data-testid="button-delete-job" style="background:#ef444520;color:#ef4444;border:1px solid #ef444440" onclick="deleteJob('${job.id}')">Elimina</button>
     </div>
   `;
   document.getElementById('detail-body').innerHTML=html;
@@ -955,6 +1047,127 @@ function bulkChangePrio(){
   });
   alert(`Priorità cambiata a ${prio} per ${selectedJobs.length} commesse`);
   select.value='';deselectAll();renderJobs();
+}
+
+let CLIENTS_LIST=[];
+let COLLABS_LIST=[];
+let EDITING_JOB=null;
+
+async function loadFormData(){
+  try{
+    const [clients,collabs]=await Promise.all([
+      fetch('/api/clients').then(r=>r.json()),
+      fetch('/api/collaborators').then(r=>r.json())
+    ]);
+    CLIENTS_LIST=clients||[];
+    COLLABS_LIST=collabs||[];
+  }catch(e){console.error('Errore caricamento dati form:',e)}
+}
+
+function populateFormDropdowns(){
+  const clientSel=document.getElementById('jf-client');
+  clientSel.innerHTML='<option value="">— Seleziona cliente —</option>';
+  CLIENTS_LIST.forEach(c=>{
+    clientSel.innerHTML+=`<option value="${c.name}">${c.name}</option>`;
+  });
+  ['jf-pm','jf-artdir'].forEach(id=>{
+    const sel=document.getElementById(id);
+    sel.innerHTML='<option value="">— Nessuno —</option>';
+    COLLABS_LIST.forEach(c=>{
+      sel.innerHTML+=`<option value="${c.id}">${c.name}</option>`;
+    });
+  });
+}
+
+function openJobForm(job){
+  EDITING_JOB=job||null;
+  loadFormData().then(()=>{
+    populateFormDropdowns();
+    if(job){
+      document.getElementById('job-form-title').textContent='Modifica Commessa';
+      document.getElementById('jf-submit-btn').textContent='Aggiorna Commessa';
+      document.getElementById('jf-id').value=job.id;
+      document.getElementById('jf-title').value=job.title||'';
+      document.getElementById('jf-code').value=job.code||'';
+      document.getElementById('jf-client').value=job.client||'';
+      document.getElementById('jf-type').value=job.type||'C';
+      document.getElementById('jf-status').value=job.apiStatus||'nuova';
+      document.getElementById('jf-started').value=job.startedAt||'';
+      document.getElementById('jf-due').value=job.dueDate||'';
+      document.getElementById('jf-year').value=job.competence_year||2026;
+      document.getElementById('jf-category').value=job.category||'';
+      document.getElementById('jf-notes').value=job.notes||'';
+      document.getElementById('jf-pm').value=job.pm_id||'';
+      document.getElementById('jf-artdir').value=job.art_dir_id||'';
+    }else{
+      document.getElementById('job-form-title').textContent='Nuova Commessa';
+      document.getElementById('jf-submit-btn').textContent='Salva Commessa';
+      document.getElementById('job-form').reset();
+      document.getElementById('jf-year').value=new Date().getFullYear();
+    }
+    document.getElementById('job-form-modal').style.display='flex';
+  });
+}
+
+function closeJobForm(){
+  document.getElementById('job-form-modal').style.display='none';
+  EDITING_JOB=null;
+}
+
+async function deleteJob(jobId){
+  const job=JOBS.find(j=>j.id===jobId);
+  if(!job)return;
+  if(!confirm(`Eliminare la commessa "${job.code}"?`))return;
+  try{
+    await fetch(`/api/jobs/${jobId}`,{method:'DELETE'});
+    closeJobDetail();
+    await loadData();
+    filteredJobs=[...JOBS];
+    applyFilters();
+    updateStats();
+    renderJobs();
+    if(currentView==='kanban') renderKanban();
+  }catch(err){
+    console.error('Errore eliminazione commessa:',err);
+    alert('Errore nella eliminazione');
+  }
+}
+
+async function submitJobForm(e){
+  e.preventDefault();
+  const payload={
+    title:document.getElementById('jf-title').value.trim(),
+    code:document.getElementById('jf-code').value.trim()||document.getElementById('jf-title').value.trim(),
+    client:document.getElementById('jf-client').value||null,
+    type:document.getElementById('jf-type').value,
+    status:document.getElementById('jf-status').value,
+    started_at:document.getElementById('jf-started').value||null,
+    due_date:document.getElementById('jf-due').value||null,
+    competence_year:parseInt(document.getElementById('jf-year').value)||2026,
+    category:document.getElementById('jf-category').value.trim()||null,
+    notes:document.getElementById('jf-notes').value.trim()||null,
+    pm_id:document.getElementById('jf-pm').value||null,
+    art_dir_id:document.getElementById('jf-artdir').value||null
+  };
+  if(!payload.title){alert('Il titolo è obbligatorio');return}
+  try{
+    const id=document.getElementById('jf-id').value;
+    if(id){
+      await fetch(`/api/jobs/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    }else{
+      await fetch('/api/jobs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    }
+    closeJobForm();
+    await loadData();
+    filteredJobs=[...JOBS];
+    applyFilters();
+    updateStats();
+    renderJobs();
+    if(currentView==='kanban') renderKanban();
+  }catch(err){
+    console.error('Errore salvataggio commessa:',err);
+    alert('Errore nel salvataggio della commessa');
+  }
 }
 
 async function init(){

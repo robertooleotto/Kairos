@@ -341,14 +341,14 @@ export async function registerRoutes(
     } = req.body;
 
     const rows = await query(`
-      INSERT INTO jobs (code, title, type, areas_csv, status, category, account, client,
+      INSERT INTO jobs (code, name, title, type, areas_csv, status, category, account, client,
         linked_job_id, notes, started_at, due_date, competence_year, is_recurring,
         pm_id, rp_id, art_dir_id, photography_id, external_ref_id, agency_id, sales_rep_id,
         link_db, link_sheet)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24)
       RETURNING *
     `, [
-      code, title, type || "C", areas_csv || "", status || "nuova",
+      code, title || code, title, type || "C", areas_csv || "", status || "nuova",
       category || null, account || null, client || null,
       linked_job_id || null, notes || null,
       started_at || null, due_date || null,
@@ -370,13 +370,13 @@ export async function registerRoutes(
 
     const rows = await query(`
       UPDATE jobs SET
-        code=$1, title=$2, type=$3, areas_csv=$4, status=$5, category=$6, account=$7, client=$8,
-        linked_job_id=$9, notes=$10, started_at=$11, due_date=$12, competence_year=$13, is_recurring=$14,
-        pm_id=$15, rp_id=$16, art_dir_id=$17, photography_id=$18, external_ref_id=$19,
-        agency_id=$20, sales_rep_id=$21, link_db=$22, link_sheet=$23
-      WHERE id=$24 RETURNING *
+        code=$1, name=$2, title=$3, type=$4, areas_csv=$5, status=$6, category=$7, account=$8, client=$9,
+        linked_job_id=$10, notes=$11, started_at=$12, due_date=$13, competence_year=$14, is_recurring=$15,
+        pm_id=$16, rp_id=$17, art_dir_id=$18, photography_id=$19, external_ref_id=$20,
+        agency_id=$21, sales_rep_id=$22, link_db=$23, link_sheet=$24
+      WHERE id=$25 RETURNING *
     `, [
-      code, title, type || "C", areas_csv || "", status || "nuova",
+      code, title || code, title, type || "C", areas_csv || "", status || "nuova",
       category || null, account || null, client || null,
       linked_job_id || null, notes || null,
       started_at || null, due_date || null,

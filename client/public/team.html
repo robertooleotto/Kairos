@@ -872,7 +872,7 @@ async function savePerson(event){
     if(personId){savedPerson=await api.collaborators.update(personId,personData)}
     else{savedPerson=await api.collaborators.create(personData)}
     for(const[taskId,cap]of Object.entries(SELECTED_CAPACITIES)){
-      await api.collaborators.addCapacity(savedPerson.id,{task_type_id:parseInt(taskId),capacity_per_day:cap.capacity});
+      await api.collaborators.addCapacity(savedPerson.id,{task_type_id:taskId,capacity_per_day:cap.capacity});
     }
     closePersonForm();
     await loadAllData();

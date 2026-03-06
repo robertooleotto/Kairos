@@ -123,19 +123,6 @@ html,body{font-family:'Sora',system-ui,sans-serif;background:var(--ink);color:va
 .seg.active-sel.mid   .seg-inner{box-shadow:inset 0 2px 0 0 rgba(255,255,255,.5),inset 0 -2px 0 0 rgba(255,255,255,.5)}
 .seg.active-sel.solo  .seg-inner{box-shadow:inset 0 0 0 2px rgba(255,255,255,.5)}
 
-/* DRAG HANDLES */
-.seg-handle{position:absolute;top:0;bottom:0;width:10px;cursor:col-resize;z-index:3;opacity:0;transition:opacity .15s}
-.seg.drag-phase:hover .seg-handle{opacity:1}
-.seg-handle-left{left:0;border-radius:var(--bar-r) 0 0 var(--bar-r)}
-.seg-handle-right{right:0;border-radius:0 var(--bar-r) var(--bar-r) 0}
-.seg-handle::after{content:'';position:absolute;top:50%;transform:translateY(-50%);width:2px;height:12px;background:rgba(255,255,255,.6);border-radius:1px}
-.seg-handle-left::after{left:3px}
-.seg-handle-right::after{right:3px}
-.seg.dragging .seg-inner{filter:brightness(1.25)!important;opacity:.85}
-body.gantt-dragging,body.gantt-dragging *{cursor:grabbing!important;-webkit-user-select:none;user-select:none}
-body.gantt-resizing,body.gantt-resizing *{cursor:col-resize!important;-webkit-user-select:none;user-select:none}
-.seg.drag-phase .seg-inner{cursor:grab}
-.cal-cell.drag-highlight{background:rgba(99,102,241,.18)!important}
 
 .seg-body{display:flex;align-items:center;gap:6px;padding:0 8px;height:100%;overflow:hidden}
 .seg-client{font-size:.64rem;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -816,17 +803,9 @@ function renderWeekEvents(days,gantt){
       }
 
       const barId=r.phase?r.phase.id:(r.job.id+'_job');
-      const phaseId=r.phase?r.phase.id:'';
-      const jobId=r.job.id;
-      const dateStr=`${day.getFullYear()}-${String(day.getMonth()+1).padStart(2,'0')}-${String(day.getDate()).padStart(2,'0')}`;
-      const isDraggable=!!r.phase;
-      const leftHandle=(type==='start'||type==='solo')&&isDraggable?'<div class="seg-handle seg-handle-left" data-resize="left"></div>':'';
-      const rightHandle=(type==='end'||type==='solo')&&isDraggable?'<div class="seg-handle seg-handle-right" data-resize="right"></div>':'';
-      rowHTML+=`<div class="seg ${type}${useInline?'':' jc-'+ci}${isSelected?' active-sel':''}${isDraggable?' drag-phase':''}" data-bar="${barId}" data-date="${dateStr}" data-phase-id="${phaseId}" data-job-id="${jobId}" onclick='showDetail(${jStr})'>
+      rowHTML+=`<div class="seg ${type}${useInline?'':' jc-'+ci}${isSelected?' active-sel':''}" data-bar="${barId}" onclick='showDetail(${jStr})'>
         <div class="seg-inner"${useInline?` style="${bgStyle}"`:''}>
-          ${leftHandle}
           ${showLabel?`<div class="seg-body">${labelParts.join('')}</div>`:''}
-          ${rightHandle}
         </div>
       </div>`;
     }
@@ -853,9 +832,7 @@ let DETAIL_JOB=null;
 let CAL_TASK_TYPES=[];
 const PH_COLORS=['#6366f1','#8b5cf6','#ec4899','#f43f5e','#f97316','#eab308','#22c55e','#14b8a6','#06b6d4','#3b82f6'];
 
-let _dragJustEnded=false;
 async function showDetail(j){
-  if(_dragJustEnded){_dragJustEnded=false;return;}
   SELECTED_JOB_ID=j.id;
   DETAIL_JOB=j;
   const pm=TEAM.find(t=>t.id===j.pm_id);
@@ -1176,187 +1153,6 @@ document.addEventListener('mouseleave',()=>{
   }
 },true);
 
-/* ════════════════════════════════════════════════
-   DRAG & RESIZE BARS (like audio clips)
-════════════════════════════════════════════════ */
-let _drag=null;
-
-function getAllCalDates(){
-  const cells=document.querySelectorAll('.cal-cell');
-  const dates=[];
-  const first=new Date(CURRENT_YEAR,CURRENT_MONTH,1);
-  const startDay=first.getDay()===0?6:first.getDay()-1;
-  const d=new Date(first);
-  d.setDate(d.getDate()-startDay);
-  for(let i=0;i<cells.length;i++){
-    dates.push({el:cells[i],date:new Date(d)});
-    d.setDate(d.getDate()+1);
-  }
-  return dates;
-}
-
-function dateToStr(d){
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-}
-
-function findPhaseInAll(phaseId){
-  for(const jobId in ALL_PHASES){
-    const p=ALL_PHASES[jobId].find(ph=>ph.id===phaseId);
-    if(p)return p;
-  }
-  return null;
-}
-
-function getSegDateFromMouse(x,y){
-  const allSegs=document.querySelectorAll('.seg[data-date]');
-  let best=null,bestDist=Infinity;
-  for(const seg of allSegs){
-    const r=seg.getBoundingClientRect();
-    const cx=r.left+r.width/2;
-    const dist=Math.abs(x-cx);
-    if(y>=r.top-30&&y<=r.bottom+30&&dist<bestDist){
-      bestDist=dist;best=seg;
-    }
-  }
-  return best;
-}
-
-function getDateFromMouseX(x){
-  const calDates=getAllCalDates();
-  let best=null,bestDist=Infinity;
-  for(const cd of calDates){
-    const r=cd.el.getBoundingClientRect();
-    const cx=r.left+r.width/2;
-    const dist=Math.abs(x-cx);
-    if(dist<bestDist){bestDist=dist;best=cd;}
-  }
-  return best?best.date:null;
-}
-
-function initDragOnSeg(seg, handle){
-  const phaseId=seg.dataset.phaseId;
-  const jobId=seg.dataset.jobId;
-  if(!phaseId)return null;
-  const phase=findPhaseInAll(phaseId);
-  if(!phase||!phase.start_date||!phase.due_date)return null;
-  return {phaseId,jobId,origStart:parseDate(phase.start_date),origEnd:parseDate(phase.due_date)};
-}
-
-document.addEventListener('mousedown',e=>{
-  if(!e.target.closest('#cal-weeks'))return;
-  const handle=e.target.closest('.seg-handle[data-resize]');
-  const inner=e.target.closest('.seg-inner');
-  if(!inner&&!handle)return;
-  const seg=e.target.closest('.seg.drag-phase[data-phase-id]');
-  if(!seg)return;
-  const info=initDragOnSeg(seg,handle);
-  if(!info)return;
-
-  if(handle){
-    e.preventDefault();
-    e.stopPropagation();
-    _drag={mode:'resize',side:handle.dataset.resize,...info,startX:e.clientX,startY:e.clientY,moved:false,activated:true};
-    document.body.classList.add('gantt-resizing');
-  }else{
-    _drag={mode:'move',...info,startX:e.clientX,startY:e.clientY,moved:false,activated:false};
-  }
-});
-
-document.addEventListener('selectstart',e=>{if(_drag)e.preventDefault();});
-
-document.addEventListener('mousemove',e=>{
-  if(!_drag)return;
-  const dx=Math.abs(e.clientX-_drag.startX);
-  const dy=Math.abs(e.clientY-_drag.startY);
-  if(!_drag.moved&&dx<8&&dy<8)return;
-
-  if(!_drag.moved){
-    _drag.moved=true;
-    window.getSelection()?.removeAllRanges();
-  }
-
-  if(!_drag.activated){
-    _drag.activated=true;
-    document.body.classList.add(_drag.mode==='resize'?'gantt-resizing':'gantt-dragging');
-    document.querySelectorAll(`.seg[data-bar="${_drag.phaseId}"]`).forEach(el=>el.classList.add('dragging'));
-  }
-
-  e.preventDefault();
-  const targetDate=getDateFromMouseX(e.clientX);
-  if(!targetDate)return;
-
-  if(_drag.mode==='move'){
-    const anchorDate=getDateFromMouseX(_drag.startX);
-    if(!anchorDate)return;
-    const dayDiff=Math.round((targetDate-anchorDate)/(1000*60*60*24));
-    const newStart=new Date(_drag.origStart);newStart.setDate(newStart.getDate()+dayDiff);
-    const newEnd=new Date(_drag.origEnd);newEnd.setDate(newEnd.getDate()+dayDiff);
-    _drag.newStart=newStart;
-    _drag.newEnd=newEnd;
-    updateDragPreview(newStart,newEnd);
-  }else{
-    if(_drag.side==='left'){
-      const ns=new Date(Math.min(targetDate.getTime(),_drag.origEnd.getTime()));
-      _drag.newStart=ns;_drag.newEnd=_drag.origEnd;
-      updateDragPreview(ns,_drag.origEnd);
-    }else{
-      const ne=new Date(Math.max(targetDate.getTime(),_drag.origStart.getTime()));
-      _drag.newStart=_drag.origStart;_drag.newEnd=ne;
-      updateDragPreview(_drag.origStart,ne);
-    }
-  }
-});
-
-function updateDragPreview(newStart,newEnd){
-  document.querySelectorAll('.cal-cell.drag-highlight').forEach(el=>el.classList.remove('drag-highlight'));
-  const calDates=getAllCalDates();
-  for(const cd of calDates){
-    if(cd.date>=newStart&&cd.date<=newEnd) cd.el.classList.add('drag-highlight');
-  }
-}
-
-function cleanupDrag(){
-  document.body.classList.remove('gantt-dragging','gantt-resizing');
-  document.querySelectorAll('.seg.dragging').forEach(el=>el.classList.remove('dragging'));
-  document.querySelectorAll('.cal-cell.drag-highlight').forEach(el=>el.classList.remove('drag-highlight'));
-  window.getSelection()?.removeAllRanges();
-}
-document.addEventListener('mouseleave',e=>{if(e.target===document.documentElement&&_drag){_drag=null;cleanupDrag();}});
-
-document.addEventListener('mouseup',async e=>{
-  if(!_drag)return;
-  const drag={..._drag};
-  _drag=null;
-  cleanupDrag();
-
-  if(!drag.moved||!drag.activated){return;}
-  _dragJustEnded=true;setTimeout(()=>{_dragJustEnded=false;},100);
-
-  if(!drag.newStart||!drag.newEnd)return;
-  const startStr=dateToStr(drag.newStart);
-  const endStr=dateToStr(drag.newEnd);
-  if(startStr===dateToStr(drag.origStart)&&endStr===dateToStr(drag.origEnd))return;
-
-  try{
-    const resp=await fetch(`/api/jobs/${drag.jobId}/phases/${drag.phaseId}/dates`,{
-      method:'PATCH',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({start_date:startStr,due_date:endStr})
-    });
-    if(!resp.ok)throw new Error('PATCH failed: '+resp.status);
-    const rawPhases=await fetch('/api/all-phases').then(r=>r.json());
-    ALL_PHASES={};
-    rawPhases.forEach(p=>{
-      if(!ALL_PHASES[p.job_id])ALL_PHASES[p.job_id]=[];
-      ALL_PHASES[p.job_id].push(p);
-    });
-    render();
-    if(DETAIL_JOB)showDetail(DETAIL_JOB);
-  }catch(err){
-    console.error('Failed to update phase dates:',err);
-    render();
-  }
-});
 
 /* ════════════════════════════════════════════════
    AUTO-ASSIGN

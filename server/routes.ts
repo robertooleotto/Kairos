@@ -449,17 +449,6 @@ export async function registerRoutes(
     res.json(rows[0]);
   });
 
-  app.patch("/api/jobs/:jobId/phases/:id/dates", async (req, res) => {
-    const { start_date, due_date } = req.body;
-    if(!start_date||!due_date) return res.status(400).json({error:'start_date and due_date required'});
-    const rows = await query(
-      `UPDATE job_phases SET start_date=$1, due_date=$2 WHERE id=$3 AND job_id=$4 RETURNING *`,
-      [start_date, due_date, req.params.id, req.params.jobId]
-    );
-    if(!rows.length) return res.status(404).json({error:'Phase not found'});
-    res.json(rows[0]);
-  });
-
   app.delete("/api/jobs/:jobId/phases/:id", async (req, res) => {
     await query("DELETE FROM job_phases WHERE id=$1", [req.params.id]);
     res.json({ ok: true });

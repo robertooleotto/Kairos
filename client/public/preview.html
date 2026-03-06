@@ -124,21 +124,17 @@ html,body{font-family:'Sora',system-ui,sans-serif;background:var(--ink);color:va
 .seg.active-sel.solo  .seg-inner{box-shadow:inset 0 0 0 2px rgba(255,255,255,.5)}
 
 /* DRAG HANDLES */
-.seg-handle{position:absolute;top:0;bottom:0;width:8px;cursor:col-resize;z-index:3;opacity:0;transition:opacity .15s}
-.seg:hover .seg-handle{opacity:1}
+.seg-handle{position:absolute;top:0;bottom:0;width:10px;cursor:col-resize;z-index:3;opacity:0;transition:opacity .15s}
+.seg.drag-phase:hover .seg-handle{opacity:1}
 .seg-handle-left{left:0;border-radius:var(--bar-r) 0 0 var(--bar-r)}
 .seg-handle-right{right:0;border-radius:0 var(--bar-r) var(--bar-r) 0}
 .seg-handle::after{content:'';position:absolute;top:50%;transform:translateY(-50%);width:2px;height:12px;background:rgba(255,255,255,.6);border-radius:1px}
 .seg-handle-left::after{left:3px}
 .seg-handle-right::after{right:3px}
 .seg.dragging .seg-inner{filter:brightness(1.25)!important;opacity:.85}
-.seg.drag-ghost .seg-inner{outline:2px dashed rgba(255,255,255,.4);outline-offset:-2px}
-body.gantt-dragging{cursor:grabbing!important}
-body.gantt-dragging *{cursor:grabbing!important}
-body.gantt-resizing{cursor:col-resize!important}
-body.gantt-resizing *{cursor:col-resize!important}
-.seg.drag-phase{cursor:grab}
-.seg.drag-phase:active{cursor:grabbing}
+body.gantt-dragging,body.gantt-dragging *{cursor:grabbing!important;-webkit-user-select:none;user-select:none}
+body.gantt-resizing,body.gantt-resizing *{cursor:col-resize!important;-webkit-user-select:none;user-select:none}
+.seg.drag-phase .seg-inner{cursor:grab}
 .cal-cell.drag-highlight{background:rgba(99,102,241,.18)!important}
 
 .seg-body{display:flex;align-items:center;gap:6px;padding:0 8px;height:100%;overflow:hidden}
@@ -1237,49 +1233,51 @@ function getDateFromMouseX(x){
   return best?best.date:null;
 }
 
-document.addEventListener('mousedown',e=>{
-  const handle=e.target.closest('[data-resize]');
-  const seg=e.target.closest('.seg.drag-phase[data-phase-id]');
-  if(!seg)return;
-
+function initDragOnSeg(seg, handle){
   const phaseId=seg.dataset.phaseId;
   const jobId=seg.dataset.jobId;
-  if(!phaseId)return;
-
+  if(!phaseId)return null;
   const phase=findPhaseInAll(phaseId);
-  if(!phase)return;
+  if(!phase||!phase.start_date||!phase.due_date)return null;
+  return {phaseId,jobId,origStart:parseDate(phase.start_date),origEnd:parseDate(phase.due_date)};
+}
 
-  const origStart=parseDate(phase.start_date);
-  const origEnd=parseDate(phase.due_date);
+document.addEventListener('mousedown',e=>{
+  if(!e.target.closest('#cal-weeks'))return;
+  const handle=e.target.closest('.seg-handle[data-resize]');
+  const inner=e.target.closest('.seg-inner');
+  if(!inner&&!handle)return;
+  const seg=e.target.closest('.seg.drag-phase[data-phase-id]');
+  if(!seg)return;
+  const info=initDragOnSeg(seg,handle);
+  if(!info)return;
 
   if(handle){
-    e.preventDefault();e.stopPropagation();
-    const side=handle.dataset.resize;
-    _drag={mode:'resize',side,phaseId,jobId,origStart,origEnd,startX:e.clientX,startY:e.clientY,moved:false};
+    e.preventDefault();
+    e.stopPropagation();
+    _drag={mode:'resize',side:handle.dataset.resize,...info,startX:e.clientX,startY:e.clientY,moved:false,activated:true};
     document.body.classList.add('gantt-resizing');
   }else{
-    _drag={mode:'move',phaseId,jobId,origStart,origEnd,startX:e.clientX,startY:e.clientY,moved:false,clickTimer:null};
-    _drag.clickTimer=setTimeout(()=>{
-      if(_drag&&!_drag.moved){
-        _drag.activated=true;
-        document.body.classList.add('gantt-dragging');
-        document.querySelectorAll(`.seg[data-bar="${phaseId}"]`).forEach(el=>el.classList.add('dragging'));
-      }
-    },150);
+    _drag={mode:'move',...info,startX:e.clientX,startY:e.clientY,moved:false,activated:false};
   }
 });
+
+document.addEventListener('selectstart',e=>{if(_drag)e.preventDefault();});
 
 document.addEventListener('mousemove',e=>{
   if(!_drag)return;
   const dx=Math.abs(e.clientX-_drag.startX);
   const dy=Math.abs(e.clientY-_drag.startY);
-  if(!_drag.moved&&dx<4&&dy<4)return;
-  _drag.moved=true;
+  if(!_drag.moved&&dx<8&&dy<8)return;
 
-  if(_drag.mode==='move'&&!_drag.activated){
-    if(_drag.clickTimer)clearTimeout(_drag.clickTimer);
+  if(!_drag.moved){
+    _drag.moved=true;
+    window.getSelection()?.removeAllRanges();
+  }
+
+  if(!_drag.activated){
     _drag.activated=true;
-    document.body.classList.add('gantt-dragging');
+    document.body.classList.add(_drag.mode==='resize'?'gantt-resizing':'gantt-dragging');
     document.querySelectorAll(`.seg[data-bar="${_drag.phaseId}"]`).forEach(el=>el.classList.add('dragging'));
   }
 
@@ -1288,7 +1286,6 @@ document.addEventListener('mousemove',e=>{
   if(!targetDate)return;
 
   if(_drag.mode==='move'){
-    const duration=Math.round(((_drag.origEnd-_drag.origStart)/(1000*60*60*24)));
     const anchorDate=getDateFromMouseX(_drag.startX);
     if(!anchorDate)return;
     const dayDiff=Math.round((targetDate-anchorDate)/(1000*60*60*24));
@@ -1296,51 +1293,49 @@ document.addEventListener('mousemove',e=>{
     const newEnd=new Date(_drag.origEnd);newEnd.setDate(newEnd.getDate()+dayDiff);
     _drag.newStart=newStart;
     _drag.newEnd=newEnd;
-    updateDragPreview(_drag.phaseId,newStart,newEnd);
-  }else if(_drag.mode==='resize'){
+    updateDragPreview(newStart,newEnd);
+  }else{
     if(_drag.side==='left'){
-      const newStart=new Date(Math.min(targetDate.getTime(),_drag.origEnd.getTime()));
-      _drag.newStart=newStart;
-      _drag.newEnd=_drag.origEnd;
-      updateDragPreview(_drag.phaseId,newStart,_drag.origEnd);
+      const ns=new Date(Math.min(targetDate.getTime(),_drag.origEnd.getTime()));
+      _drag.newStart=ns;_drag.newEnd=_drag.origEnd;
+      updateDragPreview(ns,_drag.origEnd);
     }else{
-      const newEnd=new Date(Math.max(targetDate.getTime(),_drag.origStart.getTime()));
-      _drag.newStart=_drag.origStart;
-      _drag.newEnd=newEnd;
-      updateDragPreview(_drag.phaseId,_drag.origStart,newEnd);
+      const ne=new Date(Math.max(targetDate.getTime(),_drag.origStart.getTime()));
+      _drag.newStart=_drag.origStart;_drag.newEnd=ne;
+      updateDragPreview(_drag.origStart,ne);
     }
   }
 });
 
-function updateDragPreview(phaseId,newStart,newEnd){
+function updateDragPreview(newStart,newEnd){
   document.querySelectorAll('.cal-cell.drag-highlight').forEach(el=>el.classList.remove('drag-highlight'));
   const calDates=getAllCalDates();
   for(const cd of calDates){
-    if(cd.date>=newStart&&cd.date<=newEnd){
-      cd.el.classList.add('drag-highlight');
-    }
+    if(cd.date>=newStart&&cd.date<=newEnd) cd.el.classList.add('drag-highlight');
   }
 }
+
+function cleanupDrag(){
+  document.body.classList.remove('gantt-dragging','gantt-resizing');
+  document.querySelectorAll('.seg.dragging').forEach(el=>el.classList.remove('dragging'));
+  document.querySelectorAll('.cal-cell.drag-highlight').forEach(el=>el.classList.remove('drag-highlight'));
+  window.getSelection()?.removeAllRanges();
+}
+document.addEventListener('mouseleave',e=>{if(e.target===document.documentElement&&_drag){_drag=null;cleanupDrag();}});
 
 document.addEventListener('mouseup',async e=>{
   if(!_drag)return;
   const drag={..._drag};
   _drag=null;
+  cleanupDrag();
 
-  if(drag.clickTimer)clearTimeout(drag.clickTimer);
-  document.body.classList.remove('gantt-dragging','gantt-resizing');
-  document.querySelectorAll('.seg.dragging').forEach(el=>el.classList.remove('dragging'));
-  document.querySelectorAll('.cal-cell.drag-highlight').forEach(el=>el.classList.remove('drag-highlight'));
+  if(!drag.moved||!drag.activated){return;}
+  _dragJustEnded=true;setTimeout(()=>{_dragJustEnded=false;},100);
 
-  if(drag.moved){_dragJustEnded=true;setTimeout(()=>{_dragJustEnded=false;},50);}
-  if(!drag.moved||!drag.newStart||!drag.newEnd)return;
-
+  if(!drag.newStart||!drag.newEnd)return;
   const startStr=dateToStr(drag.newStart);
   const endStr=dateToStr(drag.newEnd);
-  const origStartStr=dateToStr(drag.origStart);
-  const origEndStr=dateToStr(drag.origEnd);
-
-  if(startStr===origStartStr&&endStr===origEndStr)return;
+  if(startStr===dateToStr(drag.origStart)&&endStr===dateToStr(drag.origEnd))return;
 
   try{
     const resp=await fetch(`/api/jobs/${drag.jobId}/phases/${drag.phaseId}/dates`,{
@@ -1362,12 +1357,6 @@ document.addEventListener('mouseup',async e=>{
     render();
   }
 });
-
-document.addEventListener('click',e=>{
-  if(e.target.closest('[data-resize]')){
-    e.stopPropagation();e.preventDefault();
-  }
-},true);
 
 /* ════════════════════════════════════════════════
    AUTO-ASSIGN

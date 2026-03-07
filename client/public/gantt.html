@@ -160,6 +160,41 @@ div.gantt_ver_scroll>div,div.gantt_hor_scroll>div{background:#ccd0dc!important;b
 
 .gantt_task_drag{cursor:ew-resize}
 .gantt_task_line .gantt_task_drag{background:transparent!important}
+
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:900;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.modal-box{background:#fff;border-radius:14px;width:520px;max-width:94vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);padding:24px 28px}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.modal-title{font-family:'Fraunces',serif;font-size:1.05rem;font-weight:600;color:var(--g-text)}
+.modal-close{background:none;border:none;color:var(--g-text-muted);cursor:pointer;padding:4px;border-radius:6px;transition:color .15s}
+.modal-close:hover{color:var(--g-text)}
+.mf-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.mf-full{grid-column:1/-1}
+.mf-label{display:block;font-size:.68rem;font-weight:600;color:var(--g-text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.mf-input{width:100%;background:var(--g-surface);border:1px solid var(--g-border);border-radius:8px;padding:8px 11px;color:var(--g-text);font-family:'Sora',sans-serif;font-size:.78rem;outline:none;transition:border-color .15s}
+.mf-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.mf-input::placeholder{color:var(--g-text-muted)}
+select.mf-input{cursor:pointer;-webkit-appearance:auto}
+textarea.mf-input{resize:vertical;min-height:50px}
+.mf-parent-info{display:none;margin-bottom:12px;padding:8px 12px;border-radius:8px;background:#eef2ff;border:1px solid #c7d2fe;font-size:.72rem;color:var(--g-text-secondary)}
+.mf-parent-info strong{color:var(--g-text);font-weight:600}
+.mf-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.mf-btn{padding:8px 18px;border-radius:8px;font-family:'Sora',sans-serif;font-size:.74rem;font-weight:600;cursor:pointer;transition:all .15s;border:none}
+.mf-btn-cancel{background:var(--g-surface);border:1px solid var(--g-border);color:var(--g-text-secondary)}
+.mf-btn-cancel:hover{background:#e8eaef;color:var(--g-text)}
+.mf-btn-save{background:var(--accent);color:#fff}
+.mf-btn-save:hover{background:#4338ca}
+.mf-btn-delete{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}
+.mf-btn-delete:hover{background:#fee2e2}
+
+.ctx-menu{display:none;position:fixed;z-index:800;background:#fff;border:1px solid var(--g-border);border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.15);min-width:200px;padding:4px;font-family:'Sora',sans-serif}
+.ctx-item{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:6px;font-size:.76rem;font-weight:500;color:var(--g-text);cursor:pointer;transition:background .1s}
+.ctx-item:hover{background:var(--g-surface)}
+.ctx-item svg{width:15px;height:15px;color:var(--g-text-muted)}
+.ctx-divider{height:1px;background:var(--g-border);margin:3px 8px}
+.ctx-item.danger{color:#dc2626}
+.ctx-item.danger svg{color:#dc2626}
+
+.gantt_grid_data .gantt_row.gantt_row_project .gantt_cell:first-child{cursor:pointer}
 </style>
 </head>
 <body>
@@ -231,6 +266,96 @@ div.gantt_ver_scroll>div,div.gantt_hor_scroll>div{background:#ccd0dc!important;b
   </div>
 </div>
 
+<div class="modal-overlay" id="phase-modal" data-testid="modal-phase">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 class="modal-title" id="modal-title">Aggiungi Fase</h3>
+      <button class="modal-close" onclick="closeModal()" data-testid="btn-close-modal">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form id="phase-form" onsubmit="submitPhaseForm(event)">
+      <input type="hidden" id="mf-id">
+      <input type="hidden" id="mf-job-id">
+      <input type="hidden" id="mf-parent-id">
+      <div class="mf-parent-info" id="mf-parent-info">
+        <strong>Sottolavorazione di:</strong> <span id="mf-parent-label"></span>
+      </div>
+      <div class="mf-row">
+        <div class="mf-full">
+          <label class="mf-label">Nome fase *</label>
+          <input type="text" id="mf-name" class="mf-input" required data-testid="input-phase-name" placeholder="es. Post-produzione immagini">
+        </div>
+      </div>
+      <div class="mf-row">
+        <div>
+          <label class="mf-label">Reparto</label>
+          <select id="mf-area" class="mf-input" data-testid="select-phase-area" onchange="onGanttAreaChange()">
+            <option value="">-- Seleziona reparto --</option>
+          </select>
+        </div>
+        <div>
+          <label class="mf-label">Lavorazione</label>
+          <select id="mf-task-type" class="mf-input" data-testid="select-phase-task-type">
+            <option value="">-- Seleziona lavorazione --</option>
+          </select>
+        </div>
+      </div>
+      <div class="mf-row">
+        <div>
+          <label class="mf-label">Data inizio</label>
+          <input type="date" id="mf-start" class="mf-input" data-testid="input-phase-start">
+        </div>
+        <div>
+          <label class="mf-label">Data fine</label>
+          <input type="date" id="mf-due" class="mf-input" data-testid="input-phase-due">
+        </div>
+      </div>
+      <div class="mf-row">
+        <div>
+          <label class="mf-label">Assegnato a</label>
+          <select id="mf-assigned" class="mf-input" data-testid="select-phase-assigned">
+            <option value="">-- Nessuno --</option>
+          </select>
+        </div>
+        <div>
+          <label class="mf-label">Colore</label>
+          <input type="color" id="mf-color" class="mf-input" value="#4ecdc4" style="height:38px;padding:3px" data-testid="input-phase-color">
+        </div>
+      </div>
+      <div style="margin-bottom:4px">
+        <label class="mf-label">Note</label>
+        <textarea id="mf-notes" class="mf-input" rows="2" data-testid="input-phase-notes" placeholder="Note opzionali..."></textarea>
+      </div>
+      <div class="mf-actions">
+        <button type="button" id="mf-delete-btn" class="mf-btn mf-btn-delete" style="display:none;margin-right:auto" data-testid="btn-delete-phase" onclick="deletePhase()">Elimina</button>
+        <button type="button" class="mf-btn mf-btn-cancel" onclick="closeModal()">Annulla</button>
+        <button type="submit" class="mf-btn mf-btn-save" id="mf-submit-btn" data-testid="btn-save-phase">Salva</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="ctx-menu" id="ctx-menu">
+  <div class="ctx-item" data-testid="ctx-add-phase" onclick="ctxAddPhase()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+    Aggiungi fase
+  </div>
+  <div class="ctx-item" id="ctx-add-sub" data-testid="ctx-add-subphase" onclick="ctxAddSubPhase()" style="display:none">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/><path d="M3 18h4"/></svg>
+    Aggiungi sotto-fase
+  </div>
+  <div class="ctx-item" id="ctx-edit" data-testid="ctx-edit-phase" onclick="ctxEditPhase()" style="display:none">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+    Modifica fase
+  </div>
+  <div class="ctx-divider" id="ctx-divider-del" style="display:none"></div>
+  <div class="ctx-item danger" id="ctx-delete" data-testid="ctx-delete-phase" onclick="ctxDeletePhase()" style="display:none">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+    Elimina fase
+  </div>
+</div>
+
 <div id="gantt_here" data-testid="gantt-container"></div>
 
 <script>
@@ -257,12 +382,30 @@ const STATUS_LABELS={
   'completata':'Completata','annullata':'Annullata','preventivo':'Preventivo'
 };
 
+const AREA_TO_CATEGORIES={
+  'area_artdirection':['ART DIRECTION'],
+  'area_creativita':['CONCEPT'],
+  'area_grafica':['GRAFICA'],
+  'area_modelli':['MODELLAZIONE'],
+  'area_immagini':['PRODUZIONE 3D'],
+  'area_fotografia':['SHOOTING'],
+  'area_ai':['PRODUZIONE AI'],
+  'area_video':['SHOOTING'],
+  'area_montaggio':['POST-PRODUZIONE'],
+  'area_color':['POST-PRODUZIONE'],
+  'area_configuratore':['SET DESIGN']
+};
+
 let ALL_JOBS=[];
 let ALL_PHASES_RAW=[];
 let ALL_COLLABORATORS={};
+let ALL_COLLABS_LIST=[];
+let ALL_AREAS=[];
+let ALL_TASK_TYPES=[];
 let currentScale='week';
 let allExpanded=true;
 let ganttInitialized=false;
+let ctxTaskId=null;
 
 function configGantt(){
   gantt.config.date_format="%Y-%m-%d";
@@ -401,9 +544,32 @@ function configGantt(){
 
   gantt.attachEvent("onTaskDblClick",function(id,e){
     const task=gantt.getTask(id);
-    if(task.job_id){
-      window.open('commesse.html?highlight='+task.job_id,'_self');
+    if(task.phase_id){
+      openPhaseModal(task.job_id,task.phase_id,null);
+    }else if(task.type===gantt.config.types.project){
+      openPhaseModal(task.job_id,null,null);
     }
+    return false;
+  });
+
+  gantt.attachEvent("onContextMenu",function(taskId,linkId,e){
+    if(!taskId)return true;
+    e.preventDefault();
+    ctxTaskId=taskId;
+    const task=gantt.getTask(taskId);
+    const isProject=task.type===gantt.config.types.project;
+    const isPhase=!!task.phase_id;
+    const isSubPhase=!!task.parent_phase_id;
+
+    document.getElementById('ctx-add-sub').style.display=(isPhase&&!isSubPhase)?'flex':'none';
+    document.getElementById('ctx-edit').style.display=isPhase?'flex':'none';
+    document.getElementById('ctx-divider-del').style.display=isPhase?'block':'none';
+    document.getElementById('ctx-delete').style.display=isPhase?'flex':'none';
+
+    const menu=document.getElementById('ctx-menu');
+    menu.style.display='block';
+    menu.style.left=Math.min(e.clientX,window.innerWidth-220)+'px';
+    menu.style.top=Math.min(e.clientY,window.innerHeight-200)+'px';
     return false;
   });
 }
@@ -417,7 +583,9 @@ function escHtml(s){
 
 function safeColor(c){
   if(!c)return '#4f46e5';
-  return /^#[0-9a-fA-F]{3,8}$/.test(c)||/^rgb/.test(c)?c:'#4f46e5';
+  if(/^#[0-9a-fA-F]{3,8}$/.test(c))return c;
+  if(/^rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*(,\s*[\d.]+\s*)?\)$/.test(c))return c;
+  return '#4f46e5';
 }
 
 function safeStatus(s){
@@ -504,6 +672,226 @@ function toggleExpandAll(){
   }else{
     gantt.eachTask(function(t){gantt.close(t.id);});
     document.getElementById('expand-label').textContent='Espandi';
+  }
+}
+
+document.addEventListener('click',function(e){
+  const ctx=document.getElementById('ctx-menu');
+  if(!ctx.contains(e.target)) ctx.style.display='none';
+});
+
+function hideCtx(){document.getElementById('ctx-menu').style.display='none'}
+
+function ctxAddPhase(){
+  hideCtx();
+  if(!ctxTaskId)return;
+  const task=gantt.getTask(ctxTaskId);
+  const jobId=task.job_id||(ctxTaskId.startsWith('job_')?parseInt(ctxTaskId.replace('job_','')):null);
+  if(jobId) openPhaseModal(jobId,null,null);
+}
+
+function ctxAddSubPhase(){
+  hideCtx();
+  if(!ctxTaskId)return;
+  const task=gantt.getTask(ctxTaskId);
+  if(task.phase_id) openPhaseModal(task.job_id,null,task.phase_id);
+}
+
+function ctxEditPhase(){
+  hideCtx();
+  if(!ctxTaskId)return;
+  const task=gantt.getTask(ctxTaskId);
+  if(task.phase_id) openPhaseModal(task.job_id,task.phase_id,null);
+}
+
+function ctxDeletePhase(){
+  hideCtx();
+  if(!ctxTaskId)return;
+  const task=gantt.getTask(ctxTaskId);
+  if(!task.phase_id)return;
+  if(!confirm('Eliminare questa fase?'))return;
+  fetch('/api/jobs/'+task.job_id+'/phases/'+task.phase_id,{method:'DELETE'})
+    .then(()=>refreshGanttData())
+    .catch(err=>console.error('Delete failed:',err));
+}
+
+async function loadFormData(){
+  if(!ALL_AREAS.length){
+    try{ALL_AREAS=await fetch('/api/areas').then(r=>r.json())}catch(e){ALL_AREAS=[]}
+  }
+  if(!ALL_TASK_TYPES.length){
+    try{ALL_TASK_TYPES=await fetch('/api/task-types').then(r=>r.json())}catch(e){ALL_TASK_TYPES=[]}
+  }
+}
+
+function openPhaseModal(jobId,phaseId,parentPhaseId){
+  loadFormData().then(()=>{
+    const areaSel=document.getElementById('mf-area');
+    areaSel.innerHTML='<option value="">-- Seleziona reparto --</option>';
+    ALL_AREAS.forEach(a=>{
+      const opt=document.createElement('option');
+      opt.value=a.id;opt.textContent=(a.icon||'')+' '+a.name;
+      areaSel.appendChild(opt);
+    });
+
+    const assignSel=document.getElementById('mf-assigned');
+    assignSel.innerHTML='<option value="">-- Nessuno --</option>';
+    ALL_COLLABS_LIST.forEach(c=>{
+      const opt=document.createElement('option');
+      opt.value=c.id;opt.textContent=c.name;
+      assignSel.appendChild(opt);
+    });
+
+    document.getElementById('mf-parent-id').value=parentPhaseId||'';
+    const parentInfo=document.getElementById('mf-parent-info');
+    if(parentPhaseId){
+      const parent=ALL_PHASES_RAW.find(p=>p.id==parentPhaseId);
+      document.getElementById('mf-parent-label').textContent=parent?(parent.task_type_name||parent.name):'';
+      parentInfo.style.display='block';
+    }else{
+      parentInfo.style.display='none';
+    }
+
+    if(phaseId){
+      const phase=ALL_PHASES_RAW.find(p=>p.id==phaseId);
+      if(!phase)return;
+      document.getElementById('modal-title').textContent=phase.parent_phase_id?'Modifica Sottolavorazione':'Modifica Fase';
+      document.getElementById('mf-submit-btn').textContent='Aggiorna';
+      document.getElementById('mf-delete-btn').style.display='block';
+      document.getElementById('mf-id').value=phase.id;
+      document.getElementById('mf-job-id').value=jobId;
+      document.getElementById('mf-name').value=phase.name||'';
+      const phCat=phase.task_type_category||'';
+      const matchArea=Object.entries(AREA_TO_CATEGORIES).find(([,cats])=>cats.includes(phCat));
+      areaSel.value=matchArea?matchArea[0]:'';
+      onGanttAreaChange();
+      document.getElementById('mf-task-type').value=phase.task_type_id||'';
+      document.getElementById('mf-start').value=phase.start_date||'';
+      document.getElementById('mf-due').value=phase.due_date||'';
+      document.getElementById('mf-assigned').value=phase.assigned_to||'';
+      document.getElementById('mf-color').value=phase.color||'#4ecdc4';
+      document.getElementById('mf-notes').value=phase.notes||'';
+      document.getElementById('mf-parent-id').value=phase.parent_phase_id||'';
+      if(phase.parent_phase_id){
+        const par=ALL_PHASES_RAW.find(p=>p.id==phase.parent_phase_id);
+        document.getElementById('mf-parent-label').textContent=par?(par.task_type_name||par.name):'';
+        parentInfo.style.display='block';
+      }
+    }else{
+      document.getElementById('modal-title').textContent=parentPhaseId?'Aggiungi Sottolavorazione':'Aggiungi Fase';
+      document.getElementById('mf-submit-btn').textContent='Salva';
+      document.getElementById('mf-delete-btn').style.display='none';
+      document.getElementById('phase-form').reset();
+      document.getElementById('mf-id').value='';
+      document.getElementById('mf-job-id').value=jobId;
+      document.getElementById('mf-parent-id').value=parentPhaseId||'';
+      document.getElementById('mf-color').value=WRIKE_COLORS[ALL_PHASES_RAW.length%WRIKE_COLORS.length];
+      onGanttAreaChange();
+    }
+    document.getElementById('phase-modal').style.display='flex';
+  });
+}
+
+function closeModal(){document.getElementById('phase-modal').style.display='none'}
+
+function onGanttAreaChange(){
+  const areaId=document.getElementById('mf-area').value;
+  const sel=document.getElementById('mf-task-type');
+  const prev=sel.value;
+  sel.innerHTML='<option value="">-- Seleziona lavorazione --</option>';
+  const cats=AREA_TO_CATEGORIES[areaId]||[];
+  const filtered=cats.length?ALL_TASK_TYPES.filter(t=>cats.includes(t.category)):ALL_TASK_TYPES;
+  filtered.forEach(t=>{
+    const opt=document.createElement('option');
+    opt.value=t.id;opt.textContent=t.name;
+    sel.appendChild(opt);
+  });
+  if(filtered.find(t=>t.id===prev))sel.value=prev;
+
+  const area=ALL_AREAS.find(a=>a.id===areaId);
+  if(area&&area.color){
+    document.getElementById('mf-color').value=area.color;
+  }
+}
+
+async function submitPhaseForm(e){
+  e.preventDefault();
+  const jobId=document.getElementById('mf-job-id').value;
+  const phaseId=document.getElementById('mf-id').value;
+  const parentId=document.getElementById('mf-parent-id').value||null;
+  let startDate=document.getElementById('mf-start').value||null;
+  let dueDate=document.getElementById('mf-due').value||null;
+  if(!startDate){
+    startDate=formatDate(new Date());
+    document.getElementById('mf-start').value=startDate;
+  }
+  if(!dueDate){
+    const d=new Date(startDate);d.setDate(d.getDate()+7);
+    dueDate=formatDate(d);
+    document.getElementById('mf-due').value=dueDate;
+  }
+  if(dueDate<startDate){
+    alert('La data fine deve essere uguale o successiva alla data inizio.');
+    return;
+  }
+  const payload={
+    name:document.getElementById('mf-name').value.trim(),
+    task_type_id:document.getElementById('mf-task-type').value||null,
+    start_date:startDate,
+    due_date:dueDate,
+    assigned_to:document.getElementById('mf-assigned').value||null,
+    color:document.getElementById('mf-color').value||'#4ecdc4',
+    notes:document.getElementById('mf-notes').value.trim()||null,
+    order_index:phaseId?undefined:ALL_PHASES_RAW.length,
+    parent_phase_id:parentId
+  };
+  if(!payload.name)return;
+  try{
+    let res;
+    if(phaseId){
+      res=await fetch('/api/jobs/'+jobId+'/phases/'+phaseId,{
+        method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)
+      });
+    }else{
+      res=await fetch('/api/jobs/'+jobId+'/phases',{
+        method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)
+      });
+    }
+    if(!res.ok) throw new Error('Server error: '+res.status);
+    closeModal();
+    await refreshGanttData();
+  }catch(err){
+    console.error('Save phase error:',err);
+    alert('Errore nel salvataggio: '+err.message);
+  }
+}
+
+async function deletePhase(){
+  const jobId=document.getElementById('mf-job-id').value;
+  const phaseId=document.getElementById('mf-id').value;
+  if(!phaseId||!confirm('Eliminare questa fase?'))return;
+  try{
+    const res=await fetch('/api/jobs/'+jobId+'/phases/'+phaseId,{method:'DELETE'});
+    if(!res.ok) throw new Error('Server error: '+res.status);
+    closeModal();
+    await refreshGanttData();
+  }catch(err){
+    console.error('Delete phase error:',err);
+    alert('Errore nella cancellazione: '+err.message);
+  }
+}
+
+async function refreshGanttData(){
+  try{
+    const [jobs,phases]=await Promise.all([
+      fetch('/api/jobs').then(r=>r.json()),
+      fetch('/api/all-phases').then(r=>r.json())
+    ]);
+    ALL_JOBS=jobs;
+    ALL_PHASES_RAW=phases;
+    applyFilters();
+  }catch(err){
+    console.error('Refresh error:',err);
   }
 }
 
@@ -684,6 +1072,7 @@ async function init(){
     ALL_JOBS=jobs;
     ALL_PHASES_RAW=phases;
 
+    ALL_COLLABS_LIST=collabs;
     collabs.forEach(c=>{
       ALL_COLLABORATORS[c.id]={name:c.name,avatar:c.avatar||null};
     });

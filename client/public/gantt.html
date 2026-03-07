@@ -12,79 +12,149 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --ink:#0c0e18;--ink-s:#141622;--ink-r:#1c1f30;--ink-b:#272b40;--ink-f:#3a3f58;
-  --ink-t:#dde1f0;--ink-m:#626882;
-  --paper:#fff;--paper-t:#171727;--paper-s:#5a5a80;--paper-m:#a8a8cc;
+  --bg-deep:#0a0b14;
+  --bg-main:#0f1019;
+  --bg-surface:#161825;
+  --bg-elevated:#1c1f30;
+  --bg-hover:#232640;
+  --border:#262a3e;
+  --border-subtle:rgba(255,255,255,.06);
+  --text-primary:#e8ebf6;
+  --text-secondary:#8b90a8;
+  --text-muted:#5c6180;
+  --accent:#6366f1;
+  --accent-soft:rgba(99,102,241,.15);
+  --accent-glow:rgba(99,102,241,.25);
+  --green:#22c55e;
+  --orange:#f59e0b;
+  --red:#ef4444;
+  --today-line:#6366f1;
 }
 
-html,body{font-family:'Sora',system-ui,sans-serif;background:var(--ink);color:var(--ink-t);font-size:14px;-webkit-font-smoothing:antialiased;height:100%;overflow:hidden}
-::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--ink-b);border-radius:3px}
+html,body{font-family:'Sora',system-ui,sans-serif;background:var(--bg-deep);color:var(--text-primary);font-size:14px;-webkit-font-smoothing:antialiased;height:100%;overflow:hidden}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--bg-hover)}
 
-#toolbar{display:flex;align-items:center;gap:10px;padding:0 28px;height:58px;background:var(--ink-s);border-bottom:1px solid var(--ink-b);position:sticky;top:0;z-index:600}
+#toolbar{display:flex;align-items:center;gap:10px;padding:0 28px;height:58px;background:var(--bg-surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:600}
 .brand{display:flex;align-items:center;gap:11px}
-.nav-buttons{display:flex;gap:2px;position:absolute;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.05);border-radius:10px;padding:3px}
-.nav-btn{padding:5px 16px;border-radius:8px;font-size:.74rem;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--ink-m);font-family:'Sora',sans-serif;transition:all .15s}
-.nav-btn.active{background:#1c1f30;color:var(--ink-t)}
-.nav-btn:hover:not(.active){color:var(--ink-t);background:rgba(255,255,255,.04)}
+.nav-buttons{display:flex;gap:2px;position:absolute;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.04);border-radius:10px;padding:3px}
+.nav-btn{padding:5px 16px;border-radius:8px;font-size:.74rem;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--text-muted);font-family:'Sora',sans-serif;transition:all .18s}
+.nav-btn.active{background:var(--bg-elevated);color:var(--text-primary)}
+.nav-btn:hover:not(.active){color:var(--text-secondary);background:rgba(255,255,255,.04)}
 
-#gantt-toolbar{display:flex;align-items:center;gap:12px;padding:10px 28px;background:var(--ink-s);border-bottom:1px solid var(--ink-b)}
-.gantt-filter{display:flex;align-items:center;gap:6px}
-.gantt-filter label{font-size:.68rem;font-weight:600;color:var(--ink-m);text-transform:uppercase;letter-spacing:.05em}
-.gantt-filter select{background:var(--ink-r);border:1px solid var(--ink-b);border-radius:6px;padding:5px 10px;color:var(--ink-t);font-family:'Sora',sans-serif;font-size:.72rem;outline:none}
-.gantt-filter select:focus{border-color:#6366f1}
-.gantt-scale-btns{display:flex;gap:2px;background:rgba(255,255,255,.05);border-radius:8px;padding:2px;margin-left:auto}
-.gantt-scale-btn{padding:4px 14px;border-radius:6px;font-size:.68rem;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--ink-m);font-family:'Sora',sans-serif;transition:all .15s}
-.gantt-scale-btn.active{background:#1c1f30;color:var(--ink-t)}
-.gantt-scale-btn:hover:not(.active){color:var(--ink-t)}
+#gantt-toolbar{display:flex;align-items:center;gap:16px;padding:8px 24px;background:var(--bg-surface);border-bottom:1px solid var(--border)}
 
-#gantt_here{width:100%;height:calc(100vh - 58px - 46px)}
+.toolbar-search{position:relative;flex:0 0 220px}
+.toolbar-search input{width:100%;background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:7px 12px 7px 34px;color:var(--text-primary);font-family:'Sora',sans-serif;font-size:.75rem;outline:none;transition:border-color .15s}
+.toolbar-search input:focus{border-color:var(--accent)}
+.toolbar-search input::placeholder{color:var(--text-muted)}
+.toolbar-search svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);width:16px;height:16px}
 
-.gantt_tree_content{font-family:'Sora',sans-serif!important;font-size:12px!important}
-.gantt_task_line{border-radius:4px}
-.gantt_task_progress{border-radius:4px}
-.gantt_grid_head_cell{font-family:'Sora',sans-serif!important;font-size:11px!important;font-weight:600!important;text-transform:uppercase!important;letter-spacing:.04em!important}
-.gantt_scale_cell{font-family:'Sora',sans-serif!important;font-size:11px!important}
+.toolbar-divider{width:1px;height:28px;background:var(--border);flex-shrink:0}
 
-.gantt_container{border:none!important;background:var(--ink)!important}
-.gantt_grid{background:var(--ink-s)!important}
-.gantt_grid_scale{background:var(--ink-r)!important;border-bottom:1px solid var(--ink-b)!important}
-.gantt_grid_scale .gantt_grid_head_cell{color:var(--ink-m)!important;border-right:1px solid var(--ink-b)!important}
-.gantt_grid_data .gantt_row{background:var(--ink-s)!important;border-bottom:1px solid var(--ink-b)!important}
-.gantt_grid_data .gantt_row.odd{background:var(--ink)!important}
-.gantt_grid_data .gantt_cell{color:var(--ink-t)!important;border-right:1px solid var(--ink-b)!important}
-.gantt_task_scale{background:var(--ink-r)!important}
-.gantt_scale_cell{background:var(--ink-r)!important;color:var(--ink-m)!important;border-right:1px solid var(--ink-b)!important;border-bottom:1px solid var(--ink-b)!important}
-.gantt_task_bg{background:var(--ink)!important}
-.gantt_task_row{border-bottom:1px solid var(--ink-b)!important}
-.gantt_task_row.odd{background:rgba(255,255,255,.02)!important}
-.gantt_task_cell{border-right:1px solid rgba(255,255,255,.04)!important}
-.gantt_row.gantt_selected, .gantt_task_row.gantt_selected{background:rgba(99,102,241,.12)!important}
-.gantt_tree_icon.gantt_open,.gantt_tree_icon.gantt_close{filter:invert(1) brightness(0.7)}
-.gantt_tree_content{color:var(--ink-t)!important}
-.gantt_task_content{font-family:'Sora',sans-serif!important;font-size:11px!important;font-weight:500}
-.gantt_row_project .gantt_tree_content{font-weight:700!important}
-.gantt_task_line.gantt_project{background:rgba(99,102,241,.3)!important;border:1px solid rgba(99,102,241,.5)!important}
-.gantt_link_line_right,.gantt_link_line_left,.gantt_link_line_up,.gantt_link_line_down{border-color:rgba(99,102,241,.5)!important}
-.gantt_link_arrow_right,.gantt_link_arrow_left{border-left-color:rgba(99,102,241,.5)!important;border-right-color:rgba(99,102,241,.5)!important}
+.filter-group{display:flex;align-items:center;gap:8px}
+.filter-chip{display:flex;align-items:center;gap:5px;background:var(--bg-main);border:1px solid var(--border);border-radius:8px;padding:5px 12px;cursor:pointer;transition:all .15s}
+.filter-chip:hover{border-color:var(--accent);background:var(--accent-soft)}
+.filter-chip svg{width:14px;height:14px;color:var(--text-muted)}
+.filter-chip select{background:transparent;border:none;color:var(--text-primary);font-family:'Sora',sans-serif;font-size:.72rem;font-weight:500;outline:none;cursor:pointer;-webkit-appearance:none;padding-right:2px}
+.filter-chip select option{background:var(--bg-elevated);color:var(--text-primary)}
+
+.toolbar-right{display:flex;align-items:center;gap:8px;margin-left:auto}
+.scale-group{display:flex;background:var(--bg-main);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.scale-btn{padding:6px 14px;font-size:.68rem;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--text-muted);font-family:'Sora',sans-serif;transition:all .15s;border-right:1px solid var(--border)}
+.scale-btn:last-child{border-right:none}
+.scale-btn.active{background:var(--accent);color:#fff}
+.scale-btn:hover:not(.active){color:var(--text-primary);background:rgba(255,255,255,.04)}
+
+.today-btn{display:flex;align-items:center;gap:5px;padding:6px 14px;border-radius:8px;font-size:.72rem;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg-main);color:var(--text-secondary);font-family:'Sora',sans-serif;transition:all .15s}
+.today-btn:hover{border-color:var(--accent);color:var(--text-primary);background:var(--accent-soft)}
+.today-btn svg{width:14px;height:14px}
+
+.expand-btn{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:8px;font-size:.72rem;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg-main);color:var(--text-secondary);font-family:'Sora',sans-serif;transition:all .15s}
+.expand-btn:hover{border-color:var(--accent);color:var(--text-primary)}
+.expand-btn svg{width:14px;height:14px}
+
+.counter-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;border-radius:10px;background:var(--accent-soft);color:var(--accent);font-size:.65rem;font-weight:700;padding:0 6px;margin-left:4px}
+
+#gantt_here{width:100%;height:calc(100vh - 58px - 50px)}
+
+.gantt_container{border:none!important;background:var(--bg-deep)!important;font-family:'Sora',sans-serif!important}
+
+.gantt_grid{background:var(--bg-surface)!important;border-right:2px solid var(--border)!important}
+.gantt_grid_scale{background:var(--bg-elevated)!important;border-bottom:2px solid var(--border)!important;height:42px!important}
+.gantt_grid_scale .gantt_grid_head_cell{color:var(--text-muted)!important;border-right:1px solid transparent!important;font-family:'Sora',sans-serif!important;font-size:10px!important;font-weight:700!important;text-transform:uppercase!important;letter-spacing:.08em!important}
+.gantt_grid_data .gantt_row{background:var(--bg-surface)!important;border-bottom:1px solid var(--border-subtle)!important}
+.gantt_grid_data .gantt_row.odd{background:var(--bg-main)!important}
+.gantt_grid_data .gantt_cell{color:var(--text-primary)!important;border-right:none!important;font-size:12px!important}
+.gantt_tree_content{font-family:'Sora',sans-serif!important;font-size:12px!important;font-weight:400!important;color:var(--text-primary)!important}
+
+.gantt_task_scale{background:var(--bg-elevated)!important;border-bottom:2px solid var(--border)!important}
+.gantt_scale_cell{background:var(--bg-elevated)!important;color:var(--text-muted)!important;border-right:1px solid var(--border-subtle)!important;border-bottom:none!important;font-family:'Sora',sans-serif!important;font-size:10px!important;font-weight:600!important;letter-spacing:.02em!important}
+.gantt_task_bg{background:var(--bg-deep)!important}
+.gantt_task_row{border-bottom:1px solid var(--border-subtle)!important}
+.gantt_task_row.odd{background:rgba(255,255,255,.015)!important}
+.gantt_task_cell{border-right:1px solid var(--border-subtle)!important}
+
+.gantt_row.gantt_selected,.gantt_task_row.gantt_selected{background:var(--accent-soft)!important}
 .gantt_grid_data .gantt_row:hover,.gantt_task_row:hover{background:rgba(99,102,241,.06)!important}
-.gantt_hor_scroll,.gantt_ver_scroll{background:var(--ink-s)!important}
-div.gantt_ver_scroll>div,div.gantt_hor_scroll>div{background:var(--ink-b)!important;border-radius:3px}
 
-.weekend{background:rgba(255,255,255,.02)!important}
-.today-col{background:rgba(99,102,241,.08)!important}
+.gantt_tree_icon.gantt_open,.gantt_tree_icon.gantt_close{filter:invert(1) brightness(0.6);opacity:.6}
+.gantt_tree_icon.gantt_open:hover,.gantt_tree_icon.gantt_close:hover{opacity:1}
 
-.phase-color-0{background:#8b5cf6}
-.phase-color-1{background:#ec4899}
-.phase-color-2{background:#f97316}
-.phase-color-3{background:#22c55e}
-.phase-color-4{background:#3b82f6}
-.phase-color-5{background:#14b8a6}
-.phase-color-6{background:#a855f7}
-.phase-color-7{background:#ef4444}
-.phase-color-8{background:#6366f1}
-.phase-color-9{background:#84cc16}
-.phase-color-10{background:#06b6d4}
-.phase-color-11{background:#f59e0b}
+.gantt_task_line{border-radius:6px!important;box-shadow:0 2px 8px rgba(0,0,0,.25),0 0 0 1px rgba(255,255,255,.06);transition:box-shadow .15s,transform .15s}
+.gantt_task_line:hover{box-shadow:0 4px 16px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.1);transform:translateY(-1px)}
+.gantt_task_content{font-family:'Sora',sans-serif!important;font-size:11px!important;font-weight:600!important;text-shadow:0 1px 2px rgba(0,0,0,.3);padding:0 8px!important}
+.gantt_task_progress{border-radius:6px!important;background:rgba(0,0,0,.2)!important}
+.gantt_task_progress_wrapper{border-radius:6px!important}
+
+.gantt_row_project .gantt_tree_content{font-weight:700!important;color:var(--text-primary)!important;font-size:12.5px!important}
+.gantt_task_line.gantt_project{background:linear-gradient(135deg,rgba(99,102,241,.3),rgba(99,102,241,.15))!important;border:1px solid rgba(99,102,241,.35)!important;border-radius:4px!important;box-shadow:none!important}
+.gantt_task_line.gantt_project:hover{background:linear-gradient(135deg,rgba(99,102,241,.4),rgba(99,102,241,.2))!important}
+
+.gantt_link_line_right,.gantt_link_line_left,.gantt_link_line_up,.gantt_link_line_down{border-color:rgba(99,102,241,.4)!important}
+.gantt_link_arrow_right,.gantt_link_arrow_left{border-left-color:rgba(99,102,241,.4)!important;border-right-color:rgba(99,102,241,.4)!important}
+
+.gantt_hor_scroll,.gantt_ver_scroll{background:var(--bg-surface)!important;border:none!important}
+div.gantt_ver_scroll>div,div.gantt_hor_scroll>div{background:var(--border)!important;border-radius:3px}
+
+.weekend{background:rgba(255,255,255,.015)!important}
+.today-col{background:rgba(99,102,241,.06)!important}
+
+.gantt_marker{background:var(--today-line)!important;width:2px!important;opacity:.8;z-index:5}
+.gantt_marker .gantt_marker_content{background:var(--accent)!important;color:#fff!important;font-family:'Sora',sans-serif!important;font-size:10px!important;font-weight:700!important;padding:2px 8px!important;border-radius:0 0 6px 6px!important;box-shadow:0 2px 8px rgba(99,102,241,.3)}
+
+.gantt_tooltip{background:var(--bg-elevated)!important;border:1px solid var(--border)!important;border-radius:10px!important;box-shadow:0 8px 32px rgba(0,0,0,.5)!important;padding:12px 16px!important;color:var(--text-primary)!important;font-family:'Sora',sans-serif!important;font-size:12px!important;max-width:320px}
+.tt-title{font-weight:700;font-size:13px;margin-bottom:6px;line-height:1.3}
+.tt-row{display:flex;align-items:center;gap:6px;margin:3px 0;color:var(--text-secondary);font-size:11px}
+.tt-row svg{width:13px;height:13px;flex-shrink:0}
+.tt-row strong{color:var(--text-primary);font-weight:600}
+.tt-progress{margin-top:6px;height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden}
+.tt-progress-bar{height:100%;border-radius:2px;transition:width .3s}
+.tt-badge{display:inline-block;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:600;margin-left:4px}
+
+.cell-assignee{display:flex;align-items:center;gap:6px}
+.cell-avatar{width:22px;height:22px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;border:1px solid var(--border)}
+.cell-avatar img{width:100%;height:100%;border-radius:50%;object-fit:cover}
+.cell-name{font-size:11px;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.cell-status{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:.02em}
+.status-nuova{background:rgba(99,102,241,.15);color:#818cf8}
+.status-in_corso{background:rgba(34,197,94,.15);color:#4ade80}
+.status-in_pausa{background:rgba(245,158,11,.15);color:#fbbf24}
+.status-completata{background:rgba(34,197,94,.2);color:#22c55e}
+.status-annullata{background:rgba(239,68,68,.15);color:#f87171}
+.status-preventivo{background:rgba(139,92,246,.15);color:#a78bfa}
+
+.gantt_grid_data .gantt_row{height:40px!important;line-height:40px!important}
+.gantt_task_row{height:40px!important}
+.gantt_task_line{height:28px!important;margin-top:6px}
+.gantt_grid_scale,.gantt_task_scale{line-height:42px!important}
+
+.gantt_row.gantt_row_project{border-left:3px solid var(--accent)!important}
+
+@keyframes pulse{0%,100%{opacity:.8}50%{opacity:.4}}
 </style>
 </head>
 <body>
@@ -94,40 +164,65 @@ div.gantt_ver_scroll>div,div.gantt_hor_scroll>div{background:var(--ink-b)!import
     <img src="nudesign-logo.png" alt="NuDesign" style="height:56px;object-fit:contain">
   </div>
   <div class="nav-buttons">
-    <button class="nav-btn" onclick="location.href='preview.html'">Calendario</button>
-    <button class="nav-btn" onclick="location.href='status.html'">Stato</button>
-    <button class="nav-btn" onclick="location.href='report.html'">Report</button>
-    <button class="nav-btn" onclick="location.href='team.html'">Team</button>
-    <button class="nav-btn" onclick="location.href='commesse.html'">Commesse</button>
-    <button class="nav-btn" onclick="location.href='clienti.html'">Clienti</button>
-    <button class="nav-btn active" onclick="location.href='gantt.html'">Gantt</button>
+    <button class="nav-btn" data-testid="nav-calendario" onclick="location.href='preview.html'">Calendario</button>
+    <button class="nav-btn" data-testid="nav-stato" onclick="location.href='status.html'">Stato</button>
+    <button class="nav-btn" data-testid="nav-report" onclick="location.href='report.html'">Report</button>
+    <button class="nav-btn" data-testid="nav-team" onclick="location.href='team.html'">Team</button>
+    <button class="nav-btn" data-testid="nav-commesse" onclick="location.href='commesse.html'">Commesse</button>
+    <button class="nav-btn" data-testid="nav-clienti" onclick="location.href='clienti.html'">Clienti</button>
+    <button class="nav-btn active" data-testid="nav-gantt" onclick="location.href='gantt.html'">Gantt</button>
   </div>
 </div>
 
 <div id="gantt-toolbar">
-  <div class="gantt-filter">
-    <label>Cliente</label>
-    <select id="filter-client" data-testid="select-filter-client" onchange="applyFilters()">
-      <option value="">Tutti</option>
-    </select>
+  <div class="toolbar-search">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="search-input" data-testid="input-search" placeholder="Cerca commessa o fase..." oninput="applyFilters()">
   </div>
-  <div class="gantt-filter">
-    <label>Stato</label>
-    <select id="filter-status" data-testid="select-filter-status" onchange="applyFilters()">
-      <option value="">Tutti</option>
-      <option value="preventivo">Preventivo</option>
-      <option value="nuova">Nuova</option>
-      <option value="in_corso">In corso</option>
-      <option value="in_pausa">In pausa</option>
-      <option value="completata">Completata</option>
-      <option value="annullata">Annullata</option>
-    </select>
+
+  <div class="toolbar-divider"></div>
+
+  <div class="filter-group">
+    <div class="filter-chip">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <select id="filter-client" data-testid="select-filter-client" onchange="applyFilters()">
+        <option value="">Tutti i clienti</option>
+      </select>
+    </div>
+    <div class="filter-chip">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <select id="filter-status" data-testid="select-filter-status" onchange="applyFilters()">
+        <option value="">Tutti gli stati</option>
+        <option value="preventivo">Preventivo</option>
+        <option value="nuova">Nuova</option>
+        <option value="in_corso">In corso</option>
+        <option value="in_pausa">In pausa</option>
+        <option value="completata">Completata</option>
+        <option value="annullata">Annullata</option>
+      </select>
+    </div>
+    <span id="job-count" class="counter-badge" data-testid="text-job-count">0</span>
   </div>
-  <div class="gantt-scale-btns">
-    <button class="gantt-scale-btn" data-testid="btn-scale-day" onclick="setScale('day')">Giorno</button>
-    <button class="gantt-scale-btn active" data-testid="btn-scale-week" onclick="setScale('week')">Settimana</button>
-    <button class="gantt-scale-btn" data-testid="btn-scale-month" onclick="setScale('month')">Mese</button>
-    <button class="gantt-scale-btn" data-testid="btn-scale-quarter" onclick="setScale('quarter')">Trimestre</button>
+
+  <div class="toolbar-right">
+    <button class="expand-btn" data-testid="btn-expand-all" onclick="toggleExpandAll()" title="Espandi/Comprimi tutto">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+      <span id="expand-label">Comprimi</span>
+    </button>
+
+    <button class="today-btn" data-testid="btn-today" onclick="goToToday()">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Oggi
+    </button>
+
+    <div class="toolbar-divider"></div>
+
+    <div class="scale-group">
+      <button class="scale-btn" data-testid="btn-scale-day" onclick="setScale('day')">Giorno</button>
+      <button class="scale-btn active" data-testid="btn-scale-week" onclick="setScale('week')">Settimana</button>
+      <button class="scale-btn" data-testid="btn-scale-month" onclick="setScale('month')">Mese</button>
+      <button class="scale-btn" data-testid="btn-scale-quarter" onclick="setScale('quarter')">Trimestre</button>
+    </div>
   </div>
 </div>
 
@@ -149,9 +244,17 @@ const DEPT_COLORS={
 const CATEGORY_COLORS={};
 Object.entries(DEPT_COLORS).forEach(([cat,shades])=>{CATEGORY_COLORS[cat]=shades[0];});
 
+const STATUS_LABELS={
+  'nuova':'Nuova','in_corso':'In corso','in_pausa':'In pausa',
+  'completata':'Completata','annullata':'Annullata','preventivo':'Preventivo'
+};
+
 let ALL_JOBS=[];
 let ALL_PHASES_RAW=[];
+let ALL_COLLABORATORS={};
 let currentScale='week';
+let allExpanded=true;
+let ganttInitialized=false;
 
 function configGantt(){
   gantt.config.date_format="%Y-%m-%d";
@@ -162,25 +265,54 @@ function configGantt(){
   gantt.config.show_progress=true;
   gantt.config.fit_tasks=true;
   gantt.config.auto_scheduling=false;
-  gantt.config.row_height=36;
-  gantt.config.bar_height=26;
+  gantt.config.row_height=40;
+  gantt.config.bar_height=28;
   gantt.config.scale_height=50;
   gantt.config.min_column_width=40;
   gantt.config.open_tree_initially=true;
-  gantt.config.scroll_size=8;
+  gantt.config.scroll_size=6;
   gantt.config.show_links=false;
   gantt.config.readonly=false;
+  gantt.config.smart_rendering=true;
+  gantt.config.show_markers=true;
 
   gantt.config.columns=[
-    {name:"text",label:"Commessa / Fase",tree:true,width:280,resize:true},
-    {name:"start_date",label:"Inizio",align:"center",width:90,resize:true},
-    {name:"end_date",label:"Fine",align:"center",width:90,resize:true},
-    {name:"duration",label:"Durata",align:"center",width:55,resize:true},
-    {name:"assigned",label:"Assegnato",align:"center",width:120,resize:true,
-      template:function(t){return t.assigned||'';}
+    {name:"text",label:"Commessa / Fase",tree:true,width:300,resize:true,
+      template:function(t){
+        if(t.type===gantt.config.types.project){
+          const code=t.job_code||'';
+          const title=t.job_title||'';
+          const client=t.client_name||'';
+          let html='<div style="display:flex;flex-direction:column;line-height:1.25;padding:2px 0">';
+          html+='<span style="font-weight:700;font-size:12px;color:#e8ebf6">'+(client?'<span style="color:#818cf8">'+escHtml(client)+'</span> · ':'')+escHtml(code)+'</span>';
+          if(title) html+='<span style="font-size:10px;color:#8b90a8;margin-top:1px">'+escHtml(title)+'</span>';
+          html+='</div>';
+          return html;
+        }
+        return escHtml(t.text);
+      }
     },
-    {name:"status_label",label:"Stato",align:"center",width:80,resize:true,
-      template:function(t){return t.status_label||'';}
+    {name:"start_date",label:"Inizio",align:"center",width:85,resize:true},
+    {name:"end_date",label:"Fine",align:"center",width:85,resize:true},
+    {name:"duration",label:"GG",align:"center",width:40,resize:true},
+    {name:"assigned",label:"Assegnato",align:"center",width:140,resize:true,
+      template:function(t){
+        if(!t.assigned)return '';
+        const initials=t.assigned.split(' ').map(w=>w[0]).join('').toUpperCase().substring(0,2);
+        const avatarSrc=safeUrl(t.avatar_url);
+        const avatar=avatarSrc
+          ?'<img src="'+avatarSrc+'" alt="">'
+          :initials;
+        return '<div class="cell-assignee"><div class="cell-avatar">'+avatar+'</div><span class="cell-name">'+escHtml(t.assigned)+'</span></div>';
+      }
+    },
+    {name:"status_col",label:"Stato",align:"center",width:90,resize:true,
+      template:function(t){
+        const s=safeStatus(t.status_key||'');
+        const label=t.status_label||'';
+        if(!label)return '';
+        return '<span class="cell-status'+(s?' status-'+s:'')+'">'+escHtml(label)+'</span>';
+      }
     }
   ];
 
@@ -188,12 +320,14 @@ function configGantt(){
 
   gantt.templates.task_class=function(start,end,task){
     if(task.type===gantt.config.types.project) return 'gantt_project';
-    return task.css_class||'';
+    return '';
   };
 
   gantt.templates.task_text=function(start,end,task){
     if(task.type===gantt.config.types.project) return '';
-    return task.text;
+    const dur=gantt.calculateDuration(start,end);
+    if(dur<=2) return '';
+    return '<span style="opacity:.95">'+escHtml(task.text)+'</span>';
   };
 
   gantt.templates.scale_cell_class=function(date){
@@ -203,9 +337,23 @@ function configGantt(){
 
   gantt.templates.timeline_cell_class=function(item,date){
     if(date.getDay()===0||date.getDay()===6) return 'weekend';
-    const today=new Date();today.setHours(0,0,0,0);
-    if(date.toDateString()===today.toDateString()) return 'today-col';
     return '';
+  };
+
+  gantt.templates.tooltip_text=function(start,end,task){
+    if(task.type===gantt.config.types.project){
+      const status=task.status_label||'';
+      return '<div class="tt-title">'+escHtml(task.text)+'</div>'
+        +(status?'<div class="tt-row"><strong>Stato:</strong> '+escHtml(status)+'</div>':'')
+        +'<div class="tt-row"><strong>Periodo:</strong> '+fmtDateIt(start)+' → '+fmtDateIt(end)+'</div>';
+    }
+    const pct=Math.round((task.progress||0)*100);
+    const color=safeColor(task.color);
+    return '<div class="tt-title" style="border-left:3px solid '+color+';padding-left:8px">'+escHtml(task.text)+'</div>'
+      +'<div class="tt-row"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> '+fmtDateIt(start)+' → '+fmtDateIt(end)+'</div>'
+      +(task.assigned?'<div class="tt-row"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> <strong>'+escHtml(task.assigned)+'</strong></div>':'')
+      +'<div class="tt-progress"><div class="tt-progress-bar" style="width:'+pct+'%;background:'+color+'"></div></div>'
+      +'<div class="tt-row" style="justify-content:flex-end;margin-top:2px"><span style="font-size:10px;font-weight:700;color:'+color+'">'+pct+'%</span></div>';
   };
 
   gantt.attachEvent("onAfterTaskDrag",function(id,mode){
@@ -214,7 +362,13 @@ function configGantt(){
     const startStr=formatDate(task.start_date);
     const endDate=new Date(task.end_date);endDate.setDate(endDate.getDate()-1);
     const endStr=formatDate(endDate);
-    fetch(`/api/jobs/${task.job_id}/phases/${task.phase_id}`,{
+    const phaseIdx=ALL_PHASES_RAW.findIndex(p=>p.id===task.phase_id);
+    if(phaseIdx>=0){
+      ALL_PHASES_RAW[phaseIdx].start_date=startStr;
+      ALL_PHASES_RAW[phaseIdx].due_date=endStr;
+      ALL_PHASES_RAW[phaseIdx].completed=task.progress>=1;
+    }
+    fetch('/api/jobs/'+task.job_id+'/phases/'+task.phase_id,{
       method:'PUT',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
@@ -230,30 +384,67 @@ function configGantt(){
       })
     }).catch(err=>console.error('Failed to save phase:',err));
   });
+
+  gantt.attachEvent("onTaskDblClick",function(id,e){
+    const task=gantt.getTask(id);
+    if(task.job_id){
+      window.open('commesse.html?highlight='+task.job_id,'_self');
+    }
+    return false;
+  });
+}
+
+function escHtml(s){
+  if(!s)return '';
+  const d=document.createElement('div');
+  d.textContent=s;
+  return d.innerHTML;
+}
+
+function safeColor(c){
+  if(!c)return '#6366f1';
+  return /^#[0-9a-fA-F]{3,8}$/.test(c)||/^rgb/.test(c)?c:'#6366f1';
+}
+
+function safeStatus(s){
+  const allowed=['nuova','in_corso','in_pausa','completata','annullata','preventivo'];
+  return allowed.includes(s)?s:'';
+}
+
+function safeUrl(u){
+  if(!u)return '';
+  if(u.startsWith('/')||u.startsWith('https://')||u.startsWith('http://'))return encodeURI(u);
+  return '';
+}
+
+function fmtDateIt(d){
+  if(!d)return '';
+  const months=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  return d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear();
 }
 
 function formatDate(d){
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
 
 function setScale(scale){
   currentScale=scale;
-  document.querySelectorAll('.gantt-scale-btn').forEach(b=>b.classList.remove('active'));
-  document.querySelector(`[data-testid="btn-scale-${scale}"]`)?.classList.add('active');
+  document.querySelectorAll('.scale-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector('[data-testid="btn-scale-'+scale+'"]')?.classList.add('active');
 
   if(scale==='day'){
     gantt.config.scales=[
       {unit:"month",step:1,format:"%F %Y"},
       {unit:"day",step:1,format:"%d"}
     ];
-    gantt.config.min_column_width=30;
+    gantt.config.min_column_width=28;
   }else if(scale==='week'){
     gantt.config.scales=[
       {unit:"month",step:1,format:"%F %Y"},
       {unit:"week",step:1,format:function(date){
         const d=gantt.date.date_to_str("%d %M");
         const end=gantt.date.add(date,6,"day");
-        return d(date)+" - "+d(end);
+        return d(date)+" – "+d(end);
       }}
     ];
     gantt.config.min_column_width=80;
@@ -267,22 +458,32 @@ function setScale(scale){
     gantt.config.scales=[
       {unit:"year",step:1,format:"%Y"},
       {unit:"quarter",step:1,format:function(date){
-        const q=Math.floor(date.getMonth()/3)+1;
-        return "Q"+q;
+        return "Q"+(Math.floor(date.getMonth()/3)+1);
       }}
     ];
     gantt.config.min_column_width=80;
   }
 
-  if(gantt.$container) gantt.render();
+  if(ganttInitialized) gantt.render();
+}
+
+function goToToday(){
+  gantt.showDate(new Date());
+}
+
+function toggleExpandAll(){
+  allExpanded=!allExpanded;
+  if(allExpanded){
+    gantt.eachTask(function(t){gantt.open(t.id);});
+    document.getElementById('expand-label').textContent='Comprimi';
+  }else{
+    gantt.eachTask(function(t){gantt.close(t.id);});
+    document.getElementById('expand-label').textContent='Espandi';
+  }
 }
 
 function buildGanttData(jobs,phases){
   const tasks=[];
-  const STATUS_LABELS={
-    'nuova':'Nuova','in_corso':'In corso','in_pausa':'Pausa',
-    'completata':'Fatto','annullata':'Annullata','preventivo':'Preventivo'
-  };
 
   const phasesByJob={};
   phases.forEach(p=>{
@@ -315,12 +516,17 @@ function buildGanttData(jobs,phases){
     tasks.push({
       id:'job_'+j.id,
       text:(j.client?j.client+' · ':'')+j.code+(j.title?' — '+j.title:''),
+      job_code:j.code||'',
+      job_title:j.title||'',
+      client_name:j.client||'',
       start_date:jobStart,
       end_date:formatDate(endD),
       type:gantt.config.types.project,
       open:true,
+      status_key:j.status||'',
       status_label:STATUS_LABELS[j.status]||j.status||'',
       assigned:j.pm_name||'',
+      avatar_url:null,
       job_id:j.id,
       progress:0
     });
@@ -330,6 +536,7 @@ function buildGanttData(jobs,phases){
       const phEnd=new Date(p.due_date);phEnd.setDate(phEnd.getDate()+1);
       const cat=p.task_type_category||'';
       const color=p.color||CATEGORY_COLORS[cat]||'#6366f1';
+      const collab=ALL_COLLABORATORS[p.assigned_to];
 
       tasks.push({
         id:'phase_'+p.id,
@@ -343,7 +550,9 @@ function buildGanttData(jobs,phases){
         color:color,
         textColor:'#fff',
         assigned:p.assigned_name||'',
-        status_label:p.completed?'Fatto':'',
+        avatar_url:collab?.avatar||null,
+        status_key:p.completed?'completata':'in_corso',
+        status_label:p.completed?'Completata':'',
         phase_id:p.id,
         job_id:j.id,
         assigned_to:p.assigned_to,
@@ -359,10 +568,11 @@ function buildGanttData(jobs,phases){
         const spEnd=new Date(sp.due_date);spEnd.setDate(spEnd.getDate()+1);
         const spCat=sp.task_type_category||'';
         const spColor=sp.color||CATEGORY_COLORS[spCat]||color;
+        const spCollab=ALL_COLLABORATORS[sp.assigned_to];
 
         tasks.push({
           id:'phase_'+sp.id,
-          text:'↳ '+(sp.task_type_name||sp.name),
+          text:sp.task_type_name||sp.name,
           phase_name:sp.name,
           start_date:sp.start_date,
           end_date:formatDate(spEnd),
@@ -372,7 +582,9 @@ function buildGanttData(jobs,phases){
           color:spColor,
           textColor:'#fff',
           assigned:sp.assigned_name||'',
-          status_label:sp.completed?'Fatto':'',
+          avatar_url:spCollab?.avatar||null,
+          status_key:sp.completed?'completata':'in_corso',
+          status_label:sp.completed?'Completata':'',
           phase_id:sp.id,
           job_id:j.id,
           assigned_to:sp.assigned_to,
@@ -391,40 +603,79 @@ function buildGanttData(jobs,phases){
 function applyFilters(){
   const client=document.getElementById('filter-client').value;
   const status=document.getElementById('filter-status').value;
+  const search=document.getElementById('search-input').value.toLowerCase().trim();
 
   let jobs=[...ALL_JOBS];
   if(client) jobs=jobs.filter(j=>j.client===client);
   if(status) jobs=jobs.filter(j=>j.status===status);
+  if(search){
+    const matchingJobIds=new Set();
+    jobs.forEach(j=>{
+      const txt=(j.code+' '+j.title+' '+j.client).toLowerCase();
+      if(txt.includes(search)) matchingJobIds.add(j.id);
+    });
+    ALL_PHASES_RAW.forEach(p=>{
+      const txt=((p.name||'')+' '+(p.task_type_name||'')+' '+(p.assigned_name||'')).toLowerCase();
+      if(txt.includes(search)) matchingJobIds.add(p.job_id);
+    });
+    jobs=jobs.filter(j=>matchingJobIds.has(j.id));
+  }
+
+  document.getElementById('job-count').textContent=jobs.length;
 
   const data=buildGanttData(jobs,ALL_PHASES_RAW);
   gantt.clearAll();
   gantt.parse(data);
+  addTodayMarker();
+}
+
+let _todayMarkerId=null;
+function addTodayMarker(){
+  if(_todayMarkerId && gantt.deleteMarker){
+    gantt.deleteMarker(_todayMarkerId);
+    _todayMarkerId=null;
+  }
+  _todayMarkerId=gantt.addMarker({
+    start_date:new Date(),
+    css:"today-marker",
+    text:"Oggi",
+    title:"Oggi"
+  });
 }
 
 async function init(){
   try{
-    const [jobs,phases]=await Promise.all([
+    const [jobs,phases,collabs]=await Promise.all([
       fetch('/api/jobs').then(r=>r.json()),
-      fetch('/api/all-phases').then(r=>r.json())
+      fetch('/api/all-phases').then(r=>r.json()),
+      fetch('/api/collaborators').then(r=>r.json()).catch(()=>[])
     ]);
     ALL_JOBS=jobs;
     ALL_PHASES_RAW=phases;
 
+    collabs.forEach(c=>{
+      ALL_COLLABORATORS[c.id]={name:c.name,avatar:c.avatar||null};
+    });
+
     const clients=[...new Set(jobs.map(j=>j.client))].filter(Boolean).sort();
     const clientSel=document.getElementById('filter-client');
-    clientSel.innerHTML='<option value="">Tutti</option>';
+    clientSel.innerHTML='<option value="">Tutti i clienti</option>';
     clients.forEach(c=>{
       const opt=document.createElement('option');
       opt.value=c;opt.textContent=c;
       clientSel.appendChild(opt);
     });
 
+    document.getElementById('job-count').textContent=jobs.length;
+
     configGantt();
     gantt.init("gantt_here");
+    ganttInitialized=true;
 
     const data=buildGanttData(jobs,phases);
     gantt.parse(data);
 
+    addTodayMarker();
     gantt.showDate(new Date());
   }catch(e){
     console.error('Gantt init error:',e);

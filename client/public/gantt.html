@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Planning Studio — Gantt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Sora:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.dhtmlx.com/gantt/edge/dhtmlxgantt.js"></script>
+<link href="https://cdn.dhtmlx.com/gantt/edge/dhtmlxgantt.css" rel="stylesheet">
+<script src="api-client.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0c0e18;--ink-s:#141622;--ink-r:#1c1f30;--ink-b:#272b40;--ink-f:#3a3f58;
+  --ink-t:#dde1f0;--ink-m:#626882;
+  --paper:#fff;--paper-t:#171727;--paper-s:#5a5a80;--paper-m:#a8a8cc;
+}
+
+html,body{font-family:'Sora',system-ui,sans-serif;background:var(--ink);color:var(--ink-t);font-size:14px;-webkit-font-smoothing:antialiased;height:100%;overflow:hidden}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--ink-b);border-radius:3px}
+
+#toolbar{display:flex;align-items:center;gap:10px;padding:0 28px;height:58px;background:var(--ink-s);border-bottom:1px solid var(--ink-b);position:sticky;top:0;z-index:600}
+.brand{display:flex;align-items:center;gap:11px}
+.nav-buttons{display:flex;gap:2px;position:absolute;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.05);border-radius:10px;padding:3px}
+.nav-btn{padding:5px 16px;border-radius:8px;font-size:.74rem;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--ink-m);font-family:'Sora',sans-serif;transition:all .15s}
+.nav-btn.active{background:#1c1f30;color:var(--ink-t)}
+.nav-btn:hover:not(.active){color:var(--ink-t);background:rgba(255,255,255,.04)}
+
+#gantt-toolbar{display:flex;align-items:center;gap:12px;padding:10px 28px;background:var(--ink-s);border-bottom:1px solid var(--ink-b)}
+.gantt-filter{display:flex;align-items:center;gap:6px}
+.gantt-filter label{font-size:.68rem;font-weight:600;color:var(--ink-m);text-transform:uppercase;letter-spacing:.05em}
+.gantt-filter select{background:var(--ink-r);border:1px solid var(--ink-b);border-radius:6px;padding:5px 10px;color:var(--ink-t);font-family:'Sora',sans-serif;font-size:.72rem;outline:none}
+.gantt-filter select:focus{border-color:#6366f1}
+.gantt-scale-btns{display:flex;gap:2px;background:rgba(255,255,255,.05);border-radius:8px;padding:2px;margin-left:auto}
+.gantt-scale-btn{padding:4px 14px;border-radius:6px;font-size:.68rem;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--ink-m);font-family:'Sora',sans-serif;transition:all .15s}
+.gantt-scale-btn.active{background:#1c1f30;color:var(--ink-t)}
+.gantt-scale-btn:hover:not(.active){color:var(--ink-t)}
+
+#gantt_here{width:100%;height:calc(100vh - 58px - 46px)}
+
+.gantt_tree_content{font-family:'Sora',sans-serif!important;font-size:12px!important}
+.gantt_task_line{border-radius:4px}
+.gantt_task_progress{border-radius:4px}
+.gantt_grid_head_cell{font-family:'Sora',sans-serif!important;font-size:11px!important;font-weight:600!important;text-transform:uppercase!important;letter-spacing:.04em!important}
+.gantt_scale_cell{font-family:'Sora',sans-serif!important;font-size:11px!important}
+
+.gantt_container{border:none!important;background:var(--ink)!important}
+.gantt_grid{background:var(--ink-s)!important}
+.gantt_grid_scale{background:var(--ink-r)!important;border-bottom:1px solid var(--ink-b)!important}
+.gantt_grid_scale .gantt_grid_head_cell{color:var(--ink-m)!important;border-right:1px solid var(--ink-b)!important}
+.gantt_grid_data .gantt_row{background:var(--ink-s)!important;border-bottom:1px solid var(--ink-b)!important}
+.gantt_grid_data .gantt_row.odd{background:var(--ink)!important}
+.gantt_grid_data .gantt_cell{color:var(--ink-t)!important;border-right:1px solid var(--ink-b)!important}
+.gantt_task_scale{background:var(--ink-r)!important}
+.gantt_scale_cell{background:var(--ink-r)!important;color:var(--ink-m)!important;border-right:1px solid var(--ink-b)!important;border-bottom:1px solid var(--ink-b)!important}
+.gantt_task_bg{background:var(--ink)!important}
+.gantt_task_row{border-bottom:1px solid var(--ink-b)!important}
+.gantt_task_row.odd{background:rgba(255,255,255,.02)!important}
+.gantt_task_cell{border-right:1px solid rgba(255,255,255,.04)!important}
+.gantt_row.gantt_selected, .gantt_task_row.gantt_selected{background:rgba(99,102,241,.12)!important}
+.gantt_tree_icon.gantt_open,.gantt_tree_icon.gantt_close{filter:invert(1) brightness(0.7)}
+.gantt_tree_content{color:var(--ink-t)!important}
+.gantt_task_content{font-family:'Sora',sans-serif!important;font-size:11px!important;font-weight:500}
+.gantt_row_project .gantt_tree_content{font-weight:700!important}
+.gantt_task_line.gantt_project{background:rgba(99,102,241,.3)!important;border:1px solid rgba(99,102,241,.5)!important}
+.gantt_link_line_right,.gantt_link_line_left,.gantt_link_line_up,.gantt_link_line_down{border-color:rgba(99,102,241,.5)!important}
+.gantt_link_arrow_right,.gantt_link_arrow_left{border-left-color:rgba(99,102,241,.5)!important;border-right-color:rgba(99,102,241,.5)!important}
+.gantt_grid_data .gantt_row:hover,.gantt_task_row:hover{background:rgba(99,102,241,.06)!important}
+.gantt_hor_scroll,.gantt_ver_scroll{background:var(--ink-s)!important}
+div.gantt_ver_scroll>div,div.gantt_hor_scroll>div{background:var(--ink-b)!important;border-radius:3px}
+
+.weekend{background:rgba(255,255,255,.02)!important}
+.today-col{background:rgba(99,102,241,.08)!important}
+
+.phase-color-0{background:#8b5cf6}
+.phase-color-1{background:#ec4899}
+.phase-color-2{background:#f97316}
+.phase-color-3{background:#22c55e}
+.phase-color-4{background:#3b82f6}
+.phase-color-5{background:#14b8a6}
+.phase-color-6{background:#a855f7}
+.phase-color-7{background:#ef4444}
+.phase-color-8{background:#6366f1}
+.phase-color-9{background:#84cc16}
+.phase-color-10{background:#06b6d4}
+.phase-color-11{background:#f59e0b}
+</style>
+</head>
+<body>
+
+<div id="toolbar">
+  <div class="brand">
+    <img src="nudesign-logo.png" alt="NuDesign" style="height:56px;object-fit:contain">
+  </div>
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="location.href='preview.html'">Calendario</button>
+    <button class="nav-btn" onclick="location.href='status.html'">Stato</button>
+    <button class="nav-btn" onclick="location.href='report.html'">Report</button>
+    <button class="nav-btn" onclick="location.href='team.html'">Team</button>
+    <button class="nav-btn" onclick="location.href='commesse.html'">Commesse</button>
+    <button class="nav-btn" onclick="location.href='clienti.html'">Clienti</button>
+    <button class="nav-btn active" onclick="location.href='gantt.html'">Gantt</button>
+  </div>
+</div>
+
+<div id="gantt-toolbar">
+  <div class="gantt-filter">
+    <label>Cliente</label>
+    <select id="filter-client" data-testid="select-filter-client" onchange="applyFilters()">
+      <option value="">Tutti</option>
+    </select>
+  </div>
+  <div class="gantt-filter">
+    <label>Stato</label>
+    <select id="filter-status" data-testid="select-filter-status" onchange="applyFilters()">
+      <option value="">Tutti</option>
+      <option value="preventivo">Preventivo</option>
+      <option value="nuova">Nuova</option>
+      <option value="in_corso">In corso</option>
+      <option value="in_pausa">In pausa</option>
+      <option value="completata">Completata</option>
+      <option value="annullata">Annullata</option>
+    </select>
+  </div>
+  <div class="gantt-scale-btns">
+    <button class="gantt-scale-btn" data-testid="btn-scale-day" onclick="setScale('day')">Giorno</button>
+    <button class="gantt-scale-btn active" data-testid="btn-scale-week" onclick="setScale('week')">Settimana</button>
+    <button class="gantt-scale-btn" data-testid="btn-scale-month" onclick="setScale('month')">Mese</button>
+    <button class="gantt-scale-btn" data-testid="btn-scale-quarter" onclick="setScale('quarter')">Trimestre</button>
+  </div>
+</div>
+
+<div id="gantt_here" data-testid="gantt-container"></div>
+
+<script>
+const DEPT_COLORS={
+  'ART DIRECTION':['#8b5cf6','#a78bfa','#c4b5fd'],
+  'CONCEPT':['#ec4899','#f472b6','#f9a8d4'],
+  'GRAFICA':['#f97316','#fb923c','#fdba74'],
+  'MODELLAZIONE':['#22c55e','#4ade80','#86efac'],
+  'SET DESIGN':['#14b8a6','#2dd4bf','#5eead4'],
+  'PRODUZIONE 3D':['#3b82f6','#60a5fa','#93c5fd'],
+  'PRODUZIONE AI':['#a855f7','#c084fc','#d8b4fe'],
+  'SHOOTING':['#ef4444','#f87171','#fca5a5'],
+  'POST-PRODUZIONE':['#6366f1','#818cf8','#a5b4fc']
+};
+
+const CATEGORY_COLORS={};
+Object.entries(DEPT_COLORS).forEach(([cat,shades])=>{CATEGORY_COLORS[cat]=shades[0];});
+
+let ALL_JOBS=[];
+let ALL_PHASES_RAW=[];
+let currentScale='week';
+
+function configGantt(){
+  gantt.config.date_format="%Y-%m-%d";
+  gantt.config.drag_move=true;
+  gantt.config.drag_resize=true;
+  gantt.config.drag_progress=true;
+  gantt.config.drag_links=false;
+  gantt.config.show_progress=true;
+  gantt.config.fit_tasks=true;
+  gantt.config.auto_scheduling=false;
+  gantt.config.row_height=36;
+  gantt.config.bar_height=26;
+  gantt.config.scale_height=50;
+  gantt.config.min_column_width=40;
+  gantt.config.open_tree_initially=true;
+  gantt.config.scroll_size=8;
+  gantt.config.show_links=false;
+  gantt.config.readonly=false;
+
+  gantt.config.columns=[
+    {name:"text",label:"Commessa / Fase",tree:true,width:280,resize:true},
+    {name:"start_date",label:"Inizio",align:"center",width:90,resize:true},
+    {name:"end_date",label:"Fine",align:"center",width:90,resize:true},
+    {name:"duration",label:"Durata",align:"center",width:55,resize:true},
+    {name:"assigned",label:"Assegnato",align:"center",width:120,resize:true,
+      template:function(t){return t.assigned||'';}
+    },
+    {name:"status_label",label:"Stato",align:"center",width:80,resize:true,
+      template:function(t){return t.status_label||'';}
+    }
+  ];
+
+  setScale(currentScale);
+
+  gantt.templates.task_class=function(start,end,task){
+    if(task.type===gantt.config.types.project) return 'gantt_project';
+    return task.css_class||'';
+  };
+
+  gantt.templates.task_text=function(start,end,task){
+    if(task.type===gantt.config.types.project) return '';
+    return task.text;
+  };
+
+  gantt.templates.scale_cell_class=function(date){
+    if(date.getDay()===0||date.getDay()===6) return 'weekend';
+    return '';
+  };
+
+  gantt.templates.timeline_cell_class=function(item,date){
+    if(date.getDay()===0||date.getDay()===6) return 'weekend';
+    const today=new Date();today.setHours(0,0,0,0);
+    if(date.toDateString()===today.toDateString()) return 'today-col';
+    return '';
+  };
+
+  gantt.attachEvent("onAfterTaskDrag",function(id,mode){
+    const task=gantt.getTask(id);
+    if(!task.phase_id)return;
+    const startStr=formatDate(task.start_date);
+    const endDate=new Date(task.end_date);endDate.setDate(endDate.getDate()-1);
+    const endStr=formatDate(endDate);
+    fetch(`/api/jobs/${task.job_id}/phases/${task.phase_id}`,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        name:task.phase_name||null,
+        start_date:startStr,
+        due_date:endStr,
+        assigned_to:task.assigned_to||null,
+        completed:task.progress>=1,
+        task_type_id:task.task_type_id||null,
+        color:task.color_raw||null,
+        notes:task.notes||null,
+        parent_phase_id:task.parent_phase_id||null
+      })
+    }).catch(err=>console.error('Failed to save phase:',err));
+  });
+}
+
+function formatDate(d){
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function setScale(scale){
+  currentScale=scale;
+  document.querySelectorAll('.gantt-scale-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector(`[data-testid="btn-scale-${scale}"]`)?.classList.add('active');
+
+  if(scale==='day'){
+    gantt.config.scales=[
+      {unit:"month",step:1,format:"%F %Y"},
+      {unit:"day",step:1,format:"%d"}
+    ];
+    gantt.config.min_column_width=30;
+  }else if(scale==='week'){
+    gantt.config.scales=[
+      {unit:"month",step:1,format:"%F %Y"},
+      {unit:"week",step:1,format:function(date){
+        const d=gantt.date.date_to_str("%d %M");
+        const end=gantt.date.add(date,6,"day");
+        return d(date)+" - "+d(end);
+      }}
+    ];
+    gantt.config.min_column_width=80;
+  }else if(scale==='month'){
+    gantt.config.scales=[
+      {unit:"year",step:1,format:"%Y"},
+      {unit:"month",step:1,format:"%M"}
+    ];
+    gantt.config.min_column_width=60;
+  }else if(scale==='quarter'){
+    gantt.config.scales=[
+      {unit:"year",step:1,format:"%Y"},
+      {unit:"quarter",step:1,format:function(date){
+        const q=Math.floor(date.getMonth()/3)+1;
+        return "Q"+q;
+      }}
+    ];
+    gantt.config.min_column_width=80;
+  }
+
+  if(gantt.$container) gantt.render();
+}
+
+function buildGanttData(jobs,phases){
+  const tasks=[];
+  const STATUS_LABELS={
+    'nuova':'Nuova','in_corso':'In corso','in_pausa':'Pausa',
+    'completata':'Fatto','annullata':'Annullata','preventivo':'Preventivo'
+  };
+
+  const phasesByJob={};
+  phases.forEach(p=>{
+    if(!phasesByJob[p.job_id])phasesByJob[p.job_id]=[];
+    phasesByJob[p.job_id].push(p);
+  });
+
+  jobs.forEach(j=>{
+    const jobPhases=phasesByJob[j.id]||[];
+    const topPhases=jobPhases.filter(p=>!p.parent_phase_id);
+
+    let jobStart=j.started_at||j.start_date;
+    let jobEnd=j.due_date||j.end_date;
+
+    if(topPhases.length>0){
+      const phaseStarts=topPhases.filter(p=>p.start_date).map(p=>p.start_date);
+      const phaseEnds=topPhases.filter(p=>p.due_date).map(p=>p.due_date);
+      if(phaseStarts.length) jobStart=jobStart||phaseStarts.sort()[0];
+      if(phaseEnds.length) jobEnd=jobEnd||phaseEnds.sort().reverse()[0];
+    }
+
+    if(!jobStart) jobStart=formatDate(new Date());
+    if(!jobEnd){
+      const d=new Date(jobStart);d.setDate(d.getDate()+7);
+      jobEnd=formatDate(d);
+    }
+
+    const endD=new Date(jobEnd);endD.setDate(endD.getDate()+1);
+
+    tasks.push({
+      id:'job_'+j.id,
+      text:(j.client?j.client+' · ':'')+j.code+(j.title?' — '+j.title:''),
+      start_date:jobStart,
+      end_date:formatDate(endD),
+      type:gantt.config.types.project,
+      open:true,
+      status_label:STATUS_LABELS[j.status]||j.status||'',
+      assigned:j.pm_name||'',
+      job_id:j.id,
+      progress:0
+    });
+
+    topPhases.forEach((p,pi)=>{
+      if(!p.start_date||!p.due_date)return;
+      const phEnd=new Date(p.due_date);phEnd.setDate(phEnd.getDate()+1);
+      const cat=p.task_type_category||'';
+      const color=p.color||CATEGORY_COLORS[cat]||'#6366f1';
+
+      tasks.push({
+        id:'phase_'+p.id,
+        text:p.task_type_name||p.name,
+        phase_name:p.name,
+        start_date:p.start_date,
+        end_date:formatDate(phEnd),
+        parent:'job_'+j.id,
+        type:gantt.config.types.task,
+        progress:p.completed?1:0,
+        color:color,
+        textColor:'#fff',
+        assigned:p.assigned_name||'',
+        status_label:p.completed?'Fatto':'',
+        phase_id:p.id,
+        job_id:j.id,
+        assigned_to:p.assigned_to,
+        task_type_id:p.task_type_id,
+        color_raw:p.color,
+        notes:p.notes,
+        parent_phase_id:p.parent_phase_id
+      });
+
+      const subPhases=jobPhases.filter(sp=>sp.parent_phase_id===p.id);
+      subPhases.forEach(sp=>{
+        if(!sp.start_date||!sp.due_date)return;
+        const spEnd=new Date(sp.due_date);spEnd.setDate(spEnd.getDate()+1);
+        const spCat=sp.task_type_category||'';
+        const spColor=sp.color||CATEGORY_COLORS[spCat]||color;
+
+        tasks.push({
+          id:'phase_'+sp.id,
+          text:'↳ '+(sp.task_type_name||sp.name),
+          phase_name:sp.name,
+          start_date:sp.start_date,
+          end_date:formatDate(spEnd),
+          parent:'phase_'+p.id,
+          type:gantt.config.types.task,
+          progress:sp.completed?1:0,
+          color:spColor,
+          textColor:'#fff',
+          assigned:sp.assigned_name||'',
+          status_label:sp.completed?'Fatto':'',
+          phase_id:sp.id,
+          job_id:j.id,
+          assigned_to:sp.assigned_to,
+          task_type_id:sp.task_type_id,
+          color_raw:sp.color,
+          notes:sp.notes,
+          parent_phase_id:sp.parent_phase_id
+        });
+      });
+    });
+  });
+
+  return {data:tasks,links:[]};
+}
+
+function applyFilters(){
+  const client=document.getElementById('filter-client').value;
+  const status=document.getElementById('filter-status').value;
+
+  let jobs=[...ALL_JOBS];
+  if(client) jobs=jobs.filter(j=>j.client===client);
+  if(status) jobs=jobs.filter(j=>j.status===status);
+
+  const data=buildGanttData(jobs,ALL_PHASES_RAW);
+  gantt.clearAll();
+  gantt.parse(data);
+}
+
+async function init(){
+  try{
+    const [jobs,phases]=await Promise.all([
+      fetch('/api/jobs').then(r=>r.json()),
+      fetch('/api/all-phases').then(r=>r.json())
+    ]);
+    ALL_JOBS=jobs;
+    ALL_PHASES_RAW=phases;
+
+    const clients=[...new Set(jobs.map(j=>j.client))].filter(Boolean).sort();
+    const clientSel=document.getElementById('filter-client');
+    clientSel.innerHTML='<option value="">Tutti</option>';
+    clients.forEach(c=>{
+      const opt=document.createElement('option');
+      opt.value=c;opt.textContent=c;
+      clientSel.appendChild(opt);
+    });
+
+    configGantt();
+    gantt.init("gantt_here");
+
+    const data=buildGanttData(jobs,phases);
+    gantt.parse(data);
+
+    gantt.showDate(new Date());
+  }catch(e){
+    console.error('Gantt init error:',e);
+  }
+}
+
+init();
+</script>
+</body>
+</html>

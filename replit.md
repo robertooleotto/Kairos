@@ -6,6 +6,7 @@ Project management tool for NuDesign creative studio. Manages jobs (commesse), t
 ## Architecture
 - **Frontend**: Static HTML pages served from `client/public/` (vanilla JS, no React)
   - `preview.html` - Main Gantt calendar view (default page)
+  - `gantt.html` - Interactive Gantt chart (dhtmlxGantt) with drag/resize/zoom
   - `commesse.html` - Jobs/orders management
   - `team.html` - Team management (areas, departments, collaborators)
   - `clienti.html` - Client management
@@ -50,6 +51,7 @@ Project management tool for NuDesign creative studio. Manages jobs (commesse), t
 - Google Calendar integration: each collaborator can have a `google_calendar_id` (their Google email) stored in the DB. The app uses the Replit Google Calendar connector to check freebusy/events for availability. API endpoints: `/api/calendar/events/:calendarId`, `/api/calendar/freebusy`, `/api/calendar/availability`, `/api/calendar/team-availability`.
 - Job phases / Focus view: clicking a job opens a detail panel with a timeline of work phases. Each phase has name, category/task_type, start/end dates, assigned collaborator, color, notes, completion status. Phases shown as vertical timeline with progress bars. Phases support hierarchy: Reparto (area) → Lavorazione (task_type) → Sottolavorazione (sub-phase via parent_phase_id).
 - Gantt bar rendering: each phase gets its own row in the Gantt, colored by department (DEPT_COLORS map). Bars are continuous (no day-cell gaps) with grouped hover effect.
+- dhtmlxGantt page (gantt.html): Full interactive Gantt chart using dhtmlxGantt library (CDN). Jobs as project rows, phases as draggable/resizable task bars. Dark theme. Scale: day/week/month/quarter. Drag changes auto-save to backend via PUT /api/jobs/:jobId/phases/:id. Filters by client and status.
 - AREA_TO_CATEGORIES maps area IDs to task_type categories for filtering in the phase form.
 
 ## Notes

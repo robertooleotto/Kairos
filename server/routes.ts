@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import path from "path";
 import fs from "fs";
 import multer from "multer";
-import { query } from "./db";
+import { query, pool } from "./db";
 import { getFreeBusy, getEvents, checkAvailability } from "./googleCalendar";
 
 const uploadsDir = path.resolve(process.cwd(), "uploads");
@@ -584,6 +584,142 @@ export async function registerRoutes(
       [parentId]
     );
     res.json(rows);
+  });
+
+  // ─── FOGLIO LAVORO ───────────────────────────────────────
+
+  // --- Columns per job ---
+  app.get("/api/foglio-columns/:jobId", async (req, res) => {
+    const rows = await query(
+      "SELECT * FROM foglio_columns WHERE job_id=$1 ORDER BY sort_order, id",
+      [req.params.jobId]
+    );
+    res.json(rows);
+  });
+
+  app.post("/api/foglio-columns/:jobId", async (req, res) => {
+    const { name, column_key, column_group, sort_order } = req.body;
+    if (!name) return res.status(400).json({ error: "name required" });
+    const key = column_key || name.toLowerCase().replace(/[^a-z0-9]+/g, "_");
+    const rows = await query(
+      `INSERT INTO foglio_columns (job_id, name, column_key, column_group, sort_order)
+       VALUES ($1,$2,$3,$4,$5) RETURNING *`,
+      [req.params.jobId, name, key, column_group || "Produzione", sort_order || 0]
+    );
+    res.json(rows[0]);
+  });
+
+  app.put("/api/foglio-columns/:id", async (req, res) => {
+    const { name, column_group, sort_order } = req.body;
+    const rows = await query(
+      `UPDATE foglio_columns SET name=COALESCE($1,name), column_group=COALESCE($2,column_group),
+       sort_order=COALESCE($3,sort_order) WHERE id=$4 RETURNING *`,
+      [name, column_group, sort_order, req.params.id]
+    );
+    if (!rows.length) return res.status(404).json({ error: "not found" });
+    res.json(rows[0]);
+  });
+
+  app.delete("/api/foglio-columns/:id", async (req, res) => {
+    await query("DELETE FROM foglio_columns WHERE id=$1", [req.params.id]);
+    res.json({ ok: true });
+  });
+
+  app.post("/api/foglio-columns/:jobId/init-default", async (req, res) => {
+    const existing = await query("SELECT id FROM foglio_columns WHERE job_id=$1 LIMIT 1", [req.params.jobId]);
+    if (existing.length) return res.json({ message: "already initialized" });
+    const defaults = [
+      { name: "Location Bozza", key: "location_bozza", group: "Produzione", order: 1 },
+      { name: "Location Def", key: "location_def", group: "Produzione", order: 2 },
+      { name: "Fotografia", key: "fotografia", group: "Produzione", order: 3 },
+      { name: "Styling", key: "styling", group: "Produzione", order: 4 },
+      { name: "Revisioni", key: "revisioni", group: "Produzione", order: 5 },
+      { name: "Render", key: "render", group: "Produzione", order: 6 },
+      { name: "Post", key: "post", group: "Produzione", order: 7 },
+      { name: "Finiture", key: "finiture", group: "Produzione", order: 8 },
+      { name: "Rifacimenti", key: "rifacimenti", group: "Recupero", order: 9 },
+      { name: "Render", key: "recupero_render", group: "Recupero", order: 10 },
+      { name: "Post", key: "recupero_post", group: "Recupero", order: 11 },
+      { name: "Finiture", key: "recupero_finiture", group: "Recupero", order: 12 },
+      { name: "Recupero", key: "recupero", group: "Recupero", order: 13 },
+      { name: "Fatturato", key: "fatturato", group: "Fatturato", order: 14 },
+    ];
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      for (const d of defaults) {
+        await client.query(
+          `INSERT INTO foglio_columns (job_id, name, column_key, column_group, sort_order)
+           VALUES ($1,$2,$3,$4,$5)`,
+          [req.params.jobId, d.name, d.key, d.group, d.order]
+        );
+      }
+      await client.query("COMMIT");
+    } catch(e) {
+      await client.query("ROLLBACK");
+      throw e;
+    } finally {
+      client.release();
+    }
+    const rows = await query("SELECT * FROM foglio_columns WHERE job_id=$1 ORDER BY sort_order, id", [req.params.jobId]);
+    res.json(rows);
+  });
+
+  // --- Image rows ---
+  app.get("/api/foglio-images/:jobId", async (req, res) => {
+    const rows = await query(
+      "SELECT * FROM foglio_images WHERE job_id=$1 ORDER BY sort_order, id",
+      [req.params.jobId]
+    );
+    res.json(rows);
+  });
+
+  app.post("/api/foglio-images/:jobId", async (req, res) => {
+    const { location, sub_location, frame, optional_1, optional_2, tipo, orientation, image_name, phase_values, percentuale_modifica, note, sort_order } = req.body;
+    const rows = await query(
+      `INSERT INTO foglio_images (job_id, location, sub_location, frame, optional_1, optional_2, tipo, orientation, image_name, phase_values, percentuale_modifica, note, sort_order)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`,
+      [req.params.jobId, location||'', sub_location||'', frame||'', optional_1||false, optional_2||false, tipo||'', orientation||'', image_name||'', phase_values||'{}', percentuale_modifica||0, note||'', sort_order||0]
+    );
+    res.json(rows[0]);
+  });
+
+  app.put("/api/foglio-images/:id", async (req, res) => {
+    const { location, sub_location, frame, optional_1, optional_2, tipo, orientation, image_name, phase_values, percentuale_modifica, note, sort_order } = req.body;
+    const rows = await query(
+      `UPDATE foglio_images SET
+        location=COALESCE($1,location), sub_location=COALESCE($2,sub_location),
+        frame=COALESCE($3,frame), optional_1=COALESCE($4,optional_1),
+        optional_2=COALESCE($5,optional_2), tipo=COALESCE($6,tipo),
+        orientation=COALESCE($7,orientation), image_name=COALESCE($8,image_name),
+        phase_values=COALESCE($9,phase_values), percentuale_modifica=COALESCE($10,percentuale_modifica),
+        note=COALESCE($11,note), sort_order=COALESCE($12,sort_order)
+       WHERE id=$13 RETURNING *`,
+      [location, sub_location, frame, optional_1, optional_2, tipo, orientation, image_name, phase_values, percentuale_modifica, note, sort_order, req.params.id]
+    );
+    if (!rows.length) return res.status(404).json({ error: "not found" });
+    res.json(rows[0]);
+  });
+
+  app.patch("/api/foglio-images/:id/cell", async (req, res) => {
+    const { field, value } = req.body;
+    const directFields = ['location','sub_location','frame','optional_1','optional_2','tipo','orientation','image_name','percentuale_modifica','note','sort_order'];
+    if (directFields.includes(field)) {
+      const rows = await query(`UPDATE foglio_images SET ${field}=$1 WHERE id=$2 RETURNING *`, [value, req.params.id]);
+      if (!rows.length) return res.status(404).json({ error: "not found" });
+      return res.json(rows[0]);
+    }
+    const rows = await query(
+      `UPDATE foglio_images SET phase_values = jsonb_set(COALESCE(phase_values,'{}'), $1, $2::jsonb) WHERE id=$3 RETURNING *`,
+      [`{${field}}`, JSON.stringify(value), req.params.id]
+    );
+    if (!rows.length) return res.status(404).json({ error: "not found" });
+    res.json(rows[0]);
+  });
+
+  app.delete("/api/foglio-images/:id", async (req, res) => {
+    await query("DELETE FROM foglio_images WHERE id=$1", [req.params.id]);
+    res.json({ ok: true });
   });
 
   // ─── SCHEMA PREVIEW ───────────────────────────────────────

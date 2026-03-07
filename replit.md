@@ -58,7 +58,20 @@ Project management tool for NuDesign creative studio. Manages jobs (commesse), t
 - Gantt bar rendering: each phase gets its own row in the Gantt, colored by department (DEPT_COLORS map). Bars are continuous with grouped hover effect.
 - dhtmlxGantt page (gantt.html): Full interactive Gantt chart. Dark navy blue theme. Week scale shows W1-W5 per month. Phase CRUD via modal (double-click edit, right-click context menu). Drag/resize auto-save.
 - Review/Proofing (review.html): Upload creative assets (images, PDFs, videos) linked to jobs. Pin annotations on images with comments. Approval workflow (approve/request changes/reject). Version management. 3-panel layout: asset list sidebar, central image viewer with annotation pins, right comments panel.
+- Foglio Lavoro (foglio-lavoro.html): Spreadsheet-like production tracker for images per commessa. Custom phase columns configurable per job (default: Location Bozza, Location Def, Fotografia, Styling, Revisioni, Render, Post, Finiture, Rifacimenti, Recupero, Fatturato). Inline cell editing with double-click. Phase values stored as JSONB. Columns config modal with add/delete.
 - AREA_TO_CATEGORIES maps area IDs to task_type categories for filtering in the phase form.
+
+## Foglio Lavoro API Endpoints
+- GET /api/foglio-columns/:jobId - List columns for a job
+- POST /api/foglio-columns/:jobId - Add column
+- PUT /api/foglio-columns/:id - Update column
+- DELETE /api/foglio-columns/:id - Delete column
+- POST /api/foglio-columns/:jobId/init-default - Initialize default phase columns
+- GET /api/foglio-images/:jobId - List image rows for a job
+- POST /api/foglio-images/:jobId - Add image row
+- PUT /api/foglio-images/:id - Update full image row
+- PATCH /api/foglio-images/:id/cell - Update single cell (direct field or JSONB phase value)
+- DELETE /api/foglio-images/:id - Delete image row
 
 ## Review API Endpoints
 - POST /api/review-assets/upload - Upload file (multipart, max 20MB, JPG/PNG/GIF/WebP/PDF/MP4)

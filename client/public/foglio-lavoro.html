@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Kairos — Foglio Lavoro</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Sora:wght@400;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#0f0f17;--paper-h:#16161f;--paper-l:#24242d;
+  --paper-s:#cdd0de;--paper-m:#737889;--paper-t:#f9fafb;
+  --accent:#6366f1;--accent-h:#5558e3;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);min-height:100vh;overflow:hidden}
+
+.header{padding:14px 24px;border-bottom:1px solid var(--paper-l);display:flex;align-items:center;gap:16px;position:sticky;top:0;background:var(--paper);z-index:100}
+.brand{flex-shrink:0;display:flex;align-items:center;gap:10px}
+.nav-pills{display:flex;gap:2px;background:rgba(255,255,255,.05);border-radius:10px;padding:3px;position:absolute;left:50%;transform:translateX(-50%)}
+.nav-pill{padding:5px 16px;border-radius:8px;font-size:.72rem;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--paper-m);font-family:'Sora',sans-serif;transition:all .15s}
+.nav-pill.active{background:#1c1f30;color:var(--paper-t)}
+.nav-pill:hover:not(.active){color:var(--paper-s)}
+
+.toolbar{padding:12px 24px;border-bottom:1px solid var(--paper-l);display:flex;align-items:center;gap:12px;background:var(--paper-h)}
+.toolbar select{background:var(--paper-l);color:var(--paper-t);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:6px 12px;font-size:.72rem;font-family:'Sora',sans-serif;cursor:pointer;min-width:200px}
+.toolbar select:focus{outline:none;border-color:var(--accent)}
+
+.btn{padding:6px 14px;border-radius:6px;font-size:.68rem;font-weight:600;border:none;cursor:pointer;font-family:'Sora',sans-serif;transition:all .15s;display:inline-flex;align-items:center;gap:5px}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent-h)}
+.btn-ghost{background:transparent;color:var(--paper-m);border:1px solid rgba(255,255,255,.08)}
+.btn-ghost:hover{color:var(--paper-s);border-color:rgba(255,255,255,.15)}
+.btn-danger{background:#ef4444;color:#fff}
+.btn-danger:hover{background:#dc2626}
+.btn-sm{padding:4px 10px;font-size:.62rem}
+
+.sheet-wrap{height:calc(100vh - 110px);overflow:auto;position:relative}
+
+table.sheet{border-collapse:collapse;font-size:.68rem;width:max-content;min-width:100%}
+table.sheet thead{position:sticky;top:0;z-index:10}
+table.sheet th{background:var(--paper-h);color:var(--paper-m);padding:0;font-weight:600;text-transform:uppercase;letter-spacing:.04em;border:1px solid var(--paper-l);white-space:nowrap;position:relative}
+table.sheet th .th-inner{padding:6px 10px;display:flex;align-items:center;gap:4px}
+table.sheet th.group-header{background:#1a1a2e;color:var(--accent);text-align:center;font-size:.6rem;border-bottom:2px solid var(--accent)}
+
+table.sheet td{padding:0;border:1px solid var(--paper-l);background:var(--paper);white-space:nowrap;min-width:50px}
+table.sheet td .cell{padding:4px 8px;min-height:28px;display:flex;align-items:center;cursor:default}
+table.sheet td.editable .cell{cursor:text}
+table.sheet td.editable:hover{background:rgba(99,102,241,.06)}
+table.sheet td.editing{background:rgba(99,102,241,.1);box-shadow:inset 0 0 0 1.5px var(--accent)}
+table.sheet td.editing .cell{display:none}
+table.sheet td input.cell-input{width:100%;padding:4px 8px;min-height:28px;background:transparent;color:var(--paper-t);border:none;font-family:'Sora',sans-serif;font-size:.68rem;outline:none}
+table.sheet td input.cell-input[type=number]{text-align:center}
+
+table.sheet td.col-location .cell,
+table.sheet td.col-sub-location .cell{font-weight:600;color:var(--paper-s)}
+table.sheet td.col-frame .cell{text-align:center;font-family:'JetBrains Mono',monospace;font-size:.65rem}
+table.sheet td.col-tipo .cell,
+table.sheet td.col-orient .cell{text-align:center;font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--paper-m)}
+table.sheet td.col-image-name .cell{font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--accent);max-width:350px;overflow:hidden;text-overflow:ellipsis}
+table.sheet td.col-phase .cell{text-align:center;font-family:'JetBrains Mono',monospace;font-size:.65rem}
+table.sheet td.col-phase .cell.val-0{color:var(--paper-l)}
+table.sheet td.col-phase .cell.val-pos{color:#22c55e}
+table.sheet td.col-note .cell{max-width:250px;overflow:hidden;text-overflow:ellipsis;color:var(--paper-m);font-size:.62rem}
+table.sheet td.col-pct .cell{text-align:center;font-family:'JetBrains Mono',monospace;font-size:.62rem}
+table.sheet td.col-checkbox .cell{justify-content:center}
+
+table.sheet td.col-checkbox input[type=checkbox]{accent-color:var(--accent);width:14px;height:14px;cursor:pointer}
+
+table.sheet tr:hover td{background:rgba(255,255,255,.02)}
+table.sheet tr.location-break td{border-top:2px solid var(--accent)}
+
+.row-actions{display:flex;gap:2px;opacity:0;transition:opacity .15s}
+table.sheet tr:hover .row-actions{opacity:1}
+.row-actions button{background:transparent;border:none;color:var(--paper-m);cursor:pointer;padding:2px 4px;font-size:.7rem;border-radius:3px}
+.row-actions button:hover{color:#ef4444;background:rgba(239,68,68,.1)}
+
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;color:var(--paper-m);gap:12px}
+.empty-state svg{width:48px;height:48px;opacity:.3}
+.empty-state h3{font-family:'Fraunces',serif;font-size:1.1rem;color:var(--paper-s)}
+
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.active{display:flex}
+.modal{background:var(--paper-h);border:1px solid var(--paper-l);border-radius:12px;padding:24px;width:480px;max-width:90vw;max-height:85vh;overflow-y:auto}
+.modal h3{font-family:'Fraunces',serif;font-size:1rem;margin-bottom:16px}
+.modal label{display:block;font-size:.68rem;font-weight:600;color:var(--paper-m);margin-bottom:4px;margin-top:12px}
+.modal input,.modal select,.modal textarea{width:100%;padding:8px 12px;background:var(--paper);border:1px solid var(--paper-l);border-radius:6px;color:var(--paper-t);font-family:'Sora',sans-serif;font-size:.72rem}
+.modal input:focus,.modal select:focus,.modal textarea:focus{outline:none;border-color:var(--accent)}
+.modal textarea{min-height:60px;resize:vertical}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+
+.col-list{margin-top:8px}
+.col-item{display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--paper);border-radius:6px;margin-bottom:4px;font-size:.68rem}
+.col-item .col-name{flex:1}
+.col-item .col-group{font-size:.58rem;color:var(--paper-m);background:var(--paper-l);padding:2px 6px;border-radius:4px}
+.col-item button{background:transparent;border:none;color:var(--paper-m);cursor:pointer;font-size:.7rem}
+.col-item button:hover{color:#ef4444}
+
+.stats-bar{padding:8px 24px;border-top:1px solid var(--paper-l);background:var(--paper-h);display:flex;align-items:center;gap:20px;font-size:.65rem;color:var(--paper-m);position:sticky;bottom:0}
+.stats-bar .stat-val{color:var(--paper-s);font-weight:600;font-family:'JetBrains Mono',monospace}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="brand">
+    <img src="nudesign-logo.png" alt="NuDesign" style="height:56px;object-fit:contain">
+    <span style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:1.15rem;font-weight:500;letter-spacing:.04em;color:#fff;opacity:.92">Kairos</span>
+  </div>
+  <div class="nav-pills">
+    <button class="nav-pill" onclick="location.href='preview.html'" data-testid="nav-calendario">Calendario</button>
+    <button class="nav-pill" onclick="location.href='status.html'" data-testid="nav-stato">Stato</button>
+    <button class="nav-pill" onclick="location.href='commesse.html'" data-testid="nav-commesse">Commesse</button>
+    <button class="nav-pill active" data-testid="nav-foglio">Foglio Lavoro</button>
+    <button class="nav-pill" onclick="location.href='gantt.html'" data-testid="nav-gantt">Gantt</button>
+    <button class="nav-pill" onclick="location.href='team.html'" data-testid="nav-team">Team</button>
+    <button class="nav-pill" onclick="location.href='clienti.html'" data-testid="nav-clienti">Clienti</button>
+    <button class="nav-pill" onclick="location.href='report.html'" data-testid="nav-report">Report</button>
+    <button class="nav-pill" onclick="location.href='review.html'" data-testid="nav-review">Review</button>
+  </div>
+  <div style="margin-left:auto"></div>
+</div>
+
+<div class="toolbar" id="toolbar">
+  <select id="job-select" data-testid="select-job" onchange="onJobChange()">
+    <option value="">— Seleziona commessa —</option>
+  </select>
+  <button class="btn btn-primary" id="btn-add-row" onclick="openAddRowModal()" data-testid="button-add-row" style="display:none">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Aggiungi riga
+  </button>
+  <button class="btn btn-ghost" id="btn-columns" onclick="openColumnsModal()" data-testid="button-columns" style="display:none">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    Colonne
+  </button>
+  <span id="toolbar-info" style="font-size:.62rem;color:var(--paper-m);margin-left:auto"></span>
+</div>
+
+<div class="sheet-wrap" id="sheet-wrap">
+  <div class="empty-state" id="empty-state">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 17H7A5 5 0 0 1 7 7h2"/><path d="M15 7h2a5 5 0 1 1 0 10h-2"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    <h3>Foglio Lavoro</h3>
+    <p style="font-size:.72rem">Seleziona una commessa per visualizzare o creare il foglio lavoro</p>
+  </div>
+  <table class="sheet" id="sheet-table" style="display:none">
+    <thead id="sheet-thead"></thead>
+    <tbody id="sheet-tbody"></tbody>
+  </table>
+</div>
+
+<div class="stats-bar" id="stats-bar" style="display:none">
+  <span>Righe: <span class="stat-val" id="stat-rows">0</span></span>
+  <span>Location: <span class="stat-val" id="stat-locations">0</span></span>
+</div>
+
+<!-- Add/Edit Row Modal -->
+<div class="modal-overlay" id="row-modal">
+  <div class="modal">
+    <h3 id="row-modal-title">Aggiungi immagine</h3>
+    <input type="hidden" id="rm-id">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px">
+      <div><label>Location</label><input id="rm-location" data-testid="input-location" placeholder="es. Metropolitan"></div>
+      <div><label>Sub-location</label><input id="rm-sub-location" data-testid="input-sub-location" placeholder="es. Entrance"></div>
+      <div><label>Frame</label><input id="rm-frame" data-testid="input-frame" placeholder="es. 01"></div>
+      <div><label>Tipo</label>
+        <select id="rm-tipo" data-testid="select-tipo">
+          <option value="">—</option>
+          <option value="co">co (composito)</option>
+          <option value="sc">sc (scena)</option>
+          <option value="de">de (dettaglio)</option>
+        </select>
+      </div>
+      <div><label>Orientamento</label>
+        <select id="rm-orientation" data-testid="select-orientation">
+          <option value="">—</option>
+          <option value="v">v (verticale)</option>
+          <option value="o">o (orizzontale)</option>
+        </select>
+      </div>
+      <div><label>% Modifica</label><input id="rm-pct" type="number" data-testid="input-pct" step="0.1" min="0" max="100" value="0"></div>
+    </div>
+    <label>Nome immagine</label>
+    <input id="rm-image-name" data-testid="input-image-name" placeholder="es. 25331-LEM-3CS-Metropolitan-Entrance-01-co-v">
+    <label>Note</label>
+    <textarea id="rm-note" data-testid="input-note"></textarea>
+    <div style="display:flex;gap:12px;margin-top:12px">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="rm-opt1" data-testid="checkbox-opt1"> Facoltativo 1</label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="rm-opt2" data-testid="checkbox-opt2"> Facoltativo 2</label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeRowModal()" data-testid="button-cancel-row">Annulla</button>
+      <button class="btn btn-primary" onclick="submitRow()" data-testid="button-submit-row">Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- Columns Config Modal -->
+<div class="modal-overlay" id="columns-modal">
+  <div class="modal">
+    <h3>Configura colonne fasi</h3>
+    <p style="font-size:.65rem;color:var(--paper-m);margin-bottom:12px">Queste colonne rappresentano le fasi produttive del progetto. Puoi aggiungere, rimuovere o riordinare le fasi.</p>
+    <div class="col-list" id="col-list"></div>
+    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--paper-l)">
+      <label>Aggiungi nuova colonna</label>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <input id="new-col-name" placeholder="Nome fase" data-testid="input-col-name" style="flex:1">
+        <select id="new-col-group" data-testid="select-col-group" style="width:120px">
+          <option value="Produzione">Produzione</option>
+          <option value="Recupero">Recupero</option>
+          <option value="Fatturato">Fatturato</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="addColumn()" data-testid="button-add-column">Aggiungi</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeColumnsModal()" data-testid="button-close-columns">Chiudi</button>
+      <button class="btn btn-primary" onclick="initDefaultColumns()" data-testid="button-init-defaults" id="btn-init-defaults">Carica predefinite</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentJobId = null;
+let columns = [];
+let images = [];
+let editingCell = null;
+
+async function loadJobs() {
+  try {
+    const res = await fetch('/api/jobs');
+    if (!res.ok) return;
+    const jobs = await res.json();
+    const sel = document.getElementById('job-select');
+    jobs.sort((a,b) => (a.title||'').localeCompare(b.title||''));
+    jobs.forEach(j => {
+      const o = document.createElement('option');
+      o.value = j.id;
+      o.textContent = `${j.code ? j.code+' — ' : ''}${j.title||j.name}`;
+      sel.appendChild(o);
+    });
+    const saved = sessionStorage.getItem('foglio_job_id');
+    if (saved && jobs.find(j => j.id === saved)) {
+      sel.value = saved;
+      onJobChange();
+    }
+  } catch(e) { console.error(e); }
+}
+
+async function onJobChange() {
+  currentJobId = document.getElementById('job-select').value;
+  if (!currentJobId) {
+    document.getElementById('empty-state').style.display = 'flex';
+    document.getElementById('sheet-table').style.display = 'none';
+    document.getElementById('stats-bar').style.display = 'none';
+    document.getElementById('btn-add-row').style.display = 'none';
+    document.getElementById('btn-columns').style.display = 'none';
+    document.getElementById('toolbar-info').textContent = '';
+    return;
+  }
+  sessionStorage.setItem('foglio_job_id', currentJobId);
+  document.getElementById('btn-add-row').style.display = '';
+  document.getElementById('btn-columns').style.display = '';
+  await loadSheet();
+}
+
+async function loadSheet() {
+  if (!currentJobId) return;
+  try {
+    const [colRes, imgRes] = await Promise.all([
+      fetch(`/api/foglio-columns/${currentJobId}`),
+      fetch(`/api/foglio-images/${currentJobId}`)
+    ]);
+    if (!colRes.ok || !imgRes.ok) { console.error('Failed to load sheet data'); return; }
+    columns = await colRes.json();
+    images = await imgRes.json();
+    if (!Array.isArray(columns)) columns = [];
+    if (!Array.isArray(images)) images = [];
+    renderSheet();
+  } catch(e) { console.error(e); }
+}
+
+function renderSheet() {
+  const thead = document.getElementById('sheet-thead');
+  const tbody = document.getElementById('sheet-tbody');
+  const table = document.getElementById('sheet-table');
+  const empty = document.getElementById('empty-state');
+  const stats = document.getElementById('stats-bar');
+
+  table.style.display = '';
+  empty.style.display = 'none';
+  stats.style.display = 'flex';
+
+  const groups = {};
+  columns.forEach(c => {
+    if (!groups[c.column_group]) groups[c.column_group] = [];
+    groups[c.column_group].push(c);
+  });
+
+  let gh = '<tr>';
+  gh += '<th colspan="2"></th>';
+  gh += '<th colspan="5"></th>';
+  gh += '<th></th>';
+  Object.keys(groups).forEach(g => {
+    gh += `<th class="group-header" colspan="${groups[g].length}">${g}</th>`;
+  });
+  gh += '<th colspan="2"></th>';
+  gh += '<th></th>';
+  gh += '</tr>';
+
+  let h = '<tr>';
+  h += '<th><div class="th-inner">#</div></th>';
+  h += '<th><div class="th-inner"></div></th>';
+  h += '<th><div class="th-inner">Location</div></th>';
+  h += '<th><div class="th-inner">Sub-loc.</div></th>';
+  h += '<th><div class="th-inner">Frame</div></th>';
+  h += '<th><div class="th-inner">Tipo</div></th>';
+  h += '<th><div class="th-inner">Or.</div></th>';
+  h += '<th><div class="th-inner">Immagini</div></th>';
+  columns.forEach(c => {
+    h += `<th><div class="th-inner" title="${c.column_group}: ${c.name}">${c.name}</div></th>`;
+  });
+  h += '<th><div class="th-inner">% Mod.</div></th>';
+  h += '<th><div class="th-inner">Note</div></th>';
+  h += '<th><div class="th-inner"></div></th>';
+  h += '</tr>';
+
+  thead.innerHTML = gh + h;
+
+  let b = '';
+  let prevLoc = '';
+  images.forEach((img, idx) => {
+    const locBreak = img.location && img.location !== prevLoc;
+    prevLoc = img.location;
+    const pv = img.phase_values || {};
+
+    b += `<tr class="${locBreak && idx > 0 ? 'location-break' : ''}" data-id="${img.id}">`;
+    b += `<td><div class="cell" style="color:var(--paper-m);font-size:.6rem;text-align:center">${idx+1}</div></td>`;
+    b += `<td><div class="row-actions"><button onclick="deleteRow(${img.id})" title="Elimina" data-testid="button-delete-row-${img.id}">✕</button></div></td>`;
+    b += `<td class="col-location editable" data-field="location" data-id="${img.id}"><div class="cell">${esc(img.location)}</div></td>`;
+    b += `<td class="col-sub-location editable" data-field="sub_location" data-id="${img.id}"><div class="cell">${esc(img.sub_location)}</div></td>`;
+    b += `<td class="col-frame editable" data-field="frame" data-id="${img.id}"><div class="cell">${esc(img.frame)}</div></td>`;
+    b += `<td class="col-tipo editable" data-field="tipo" data-id="${img.id}"><div class="cell">${esc(img.tipo)}</div></td>`;
+    b += `<td class="col-orient editable" data-field="orientation" data-id="${img.id}"><div class="cell">${esc(img.orientation)}</div></td>`;
+    b += `<td class="col-image-name editable" data-field="image_name" data-id="${img.id}"><div class="cell">${esc(img.image_name)}</div></td>`;
+
+    columns.forEach(c => {
+      const val = pv[c.column_key] !== undefined ? pv[c.column_key] : 0;
+      b += `<td class="col-phase editable" data-field="${esc(c.column_key)}" data-id="${img.id}" data-type="phase"><div class="cell ${val == 0 ? 'val-0' : 'val-pos'}">${val}</div></td>`;
+    });
+
+    b += `<td class="col-pct editable" data-field="percentuale_modifica" data-id="${img.id}" data-type="number"><div class="cell">${img.percentuale_modifica || ''}</div></td>`;
+    b += `<td class="col-note editable" data-field="note" data-id="${img.id}"><div class="cell">${esc(img.note)}</div></td>`;
+    b += `<td></td>`;
+    b += '</tr>';
+  });
+  tbody.innerHTML = b;
+
+  document.getElementById('stat-rows').textContent = images.length;
+  const locs = new Set(images.map(i => i.location).filter(Boolean));
+  document.getElementById('stat-locations').textContent = locs.size;
+  document.getElementById('toolbar-info').textContent = images.length ? `${images.length} immagini` : 'Nessuna immagine';
+}
+
+function esc(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+document.getElementById('sheet-tbody').addEventListener('dblclick', function(e) {
+  const td = e.target.closest('td.editable');
+  if (!td || td.classList.contains('editing')) return;
+  startEditing(td);
+});
+
+function startEditing(td) {
+  if (editingCell) stopEditing(editingCell);
+  editingCell = td;
+  td.classList.add('editing');
+  const field = td.dataset.field;
+  const id = td.dataset.id;
+  const isPhase = td.dataset.type === 'phase';
+  const isNumber = td.dataset.type === 'number' || isPhase;
+  const currentVal = td.querySelector('.cell').textContent.trim();
+
+  const input = document.createElement('input');
+  input.className = 'cell-input';
+  input.type = isNumber ? 'number' : 'text';
+  input.value = currentVal === '0' && isPhase ? '' : currentVal;
+  if (isNumber) { input.step = isPhase ? '1' : '0.1'; input.min = '0'; }
+  td.appendChild(input);
+  input.focus();
+  input.select();
+
+  input.addEventListener('keydown', function(ev) {
+    if (ev.key === 'Enter') { stopEditing(td); }
+    if (ev.key === 'Escape') { cancelEditing(td); }
+    if (ev.key === 'Tab') {
+      ev.preventDefault();
+      stopEditing(td);
+      const next = ev.shiftKey ? td.previousElementSibling : td.nextElementSibling;
+      if (next && next.classList.contains('editable')) startEditing(next);
+    }
+  });
+  input.addEventListener('blur', function() {
+    setTimeout(() => { if (editingCell === td) stopEditing(td); }, 100);
+  });
+}
+
+async function stopEditing(td) {
+  if (!td.classList.contains('editing')) return;
+  const input = td.querySelector('.cell-input');
+  if (!input) return;
+  const newVal = input.value;
+  const field = td.dataset.field;
+  const id = td.dataset.id;
+  const isPhase = td.dataset.type === 'phase';
+  const isNumber = td.dataset.type === 'number' || isPhase;
+  const val = isNumber ? (parseFloat(newVal) || 0) : newVal;
+
+  td.classList.remove('editing');
+  input.remove();
+  const cellDiv = td.querySelector('.cell');
+  cellDiv.textContent = isNumber ? val : newVal;
+  if (isPhase) {
+    cellDiv.className = 'cell ' + (val == 0 ? 'val-0' : 'val-pos');
+  }
+  editingCell = null;
+
+  try {
+    const res = await fetch(`/api/foglio-images/${id}/cell`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ field, value: val })
+    });
+    if (!res.ok) {
+      console.error('Cell save failed');
+      await loadSheet();
+    }
+  } catch(e) {
+    console.error(e);
+    await loadSheet();
+  }
+}
+
+function cancelEditing(td) {
+  td.classList.remove('editing');
+  const input = td.querySelector('.cell-input');
+  if (input) input.remove();
+  editingCell = null;
+}
+
+function openAddRowModal() {
+  document.getElementById('row-modal-title').textContent = 'Aggiungi immagine';
+  document.getElementById('rm-id').value = '';
+  document.getElementById('rm-location').value = '';
+  document.getElementById('rm-sub-location').value = '';
+  document.getElementById('rm-frame').value = '';
+  document.getElementById('rm-tipo').value = '';
+  document.getElementById('rm-orientation').value = '';
+  document.getElementById('rm-image-name').value = '';
+  document.getElementById('rm-note').value = '';
+  document.getElementById('rm-pct').value = '0';
+  document.getElementById('rm-opt1').checked = false;
+  document.getElementById('rm-opt2').checked = false;
+
+  if (images.length) {
+    const last = images[images.length - 1];
+    document.getElementById('rm-location').value = last.location || '';
+    document.getElementById('rm-sub-location').value = last.sub_location || '';
+  }
+  document.getElementById('row-modal').classList.add('active');
+}
+
+function closeRowModal() {
+  document.getElementById('row-modal').classList.remove('active');
+}
+
+async function submitRow() {
+  const data = {
+    location: document.getElementById('rm-location').value,
+    sub_location: document.getElementById('rm-sub-location').value,
+    frame: document.getElementById('rm-frame').value,
+    tipo: document.getElementById('rm-tipo').value,
+    orientation: document.getElementById('rm-orientation').value,
+    image_name: document.getElementById('rm-image-name').value,
+    note: document.getElementById('rm-note').value,
+    percentuale_modifica: parseFloat(document.getElementById('rm-pct').value) || 0,
+    optional_1: document.getElementById('rm-opt1').checked,
+    optional_2: document.getElementById('rm-opt2').checked,
+    sort_order: images.length
+  };
+
+  try {
+    const res = await fetch(`/api/foglio-images/${currentJobId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) { alert('Errore nel salvataggio'); return; }
+    closeRowModal();
+    await loadSheet();
+  } catch(e) { alert('Errore: ' + e.message); }
+}
+
+async function deleteRow(id) {
+  if (!confirm('Eliminare questa riga?')) return;
+  try {
+    await fetch(`/api/foglio-images/${id}`, { method: 'DELETE' });
+    await loadSheet();
+  } catch(e) { console.error(e); }
+}
+
+async function openColumnsModal() {
+  document.getElementById('columns-modal').classList.add('active');
+  renderColumnsList();
+  document.getElementById('btn-init-defaults').style.display = columns.length ? 'none' : '';
+}
+
+function closeColumnsModal() {
+  document.getElementById('columns-modal').classList.remove('active');
+}
+
+function renderColumnsList() {
+  const list = document.getElementById('col-list');
+  if (!columns.length) {
+    list.innerHTML = '<p style="font-size:.65rem;color:var(--paper-m);text-align:center;padding:12px">Nessuna colonna configurata. Clicca "Carica predefinite" per iniziare.</p>';
+    return;
+  }
+  list.innerHTML = columns.map(c => `
+    <div class="col-item">
+      <span class="col-name">${esc(c.name)}</span>
+      <span class="col-group">${esc(c.column_group)}</span>
+      <button onclick="deleteColumn(${c.id})" title="Rimuovi" data-testid="button-delete-col-${c.id}">✕</button>
+    </div>
+  `).join('');
+}
+
+async function addColumn() {
+  const name = document.getElementById('new-col-name').value.trim();
+  if (!name) return;
+  const group = document.getElementById('new-col-group').value;
+  try {
+    const res = await fetch(`/api/foglio-columns/${currentJobId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, column_group: group, sort_order: columns.length })
+    });
+    if (!res.ok) { alert('Errore'); return; }
+    document.getElementById('new-col-name').value = '';
+    await loadSheet();
+    renderColumnsList();
+  } catch(e) { console.error(e); }
+}
+
+async function deleteColumn(id) {
+  if (!confirm('Rimuovere questa colonna?')) return;
+  try {
+    await fetch(`/api/foglio-columns/${id}`, { method: 'DELETE' });
+    await loadSheet();
+    renderColumnsList();
+  } catch(e) { console.error(e); }
+}
+
+async function initDefaultColumns() {
+  try {
+    const res = await fetch(`/api/foglio-columns/${currentJobId}/init-default`, { method: 'POST' });
+    if (!res.ok) { alert('Errore'); return; }
+    await loadSheet();
+    renderColumnsList();
+    document.getElementById('btn-init-defaults').style.display = 'none';
+  } catch(e) { console.error(e); }
+}
+
+loadJobs();
+</script>
+</body>
+</html>

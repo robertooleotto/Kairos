@@ -454,6 +454,138 @@ export async function registerRoutes(
     res.json({ ok: true });
   });
 
+  // ─── REVIEW / PROOFING ──────────────────────────────────
+  const reviewStorage = multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, uploadsDir),
+    filename: (_req, file, cb) => {
+      let ext = path.extname(file.originalname).toLowerCase();
+      const safeExts = [".jpg",".jpeg",".png",".gif",".webp",".mp4",".pdf"];
+      if (!safeExts.includes(ext)) ext = ".jpg";
+      cb(null, `review_${Date.now()}${ext}`);
+    },
+  });
+  const REVIEW_ALLOWED_EXTS = [".jpg",".jpeg",".png",".gif",".webp",".mp4",".pdf"];
+  const reviewUpload = multer({
+    storage: reviewStorage,
+    limits: { fileSize: 20 * 1024 * 1024 },
+    fileFilter: (_req, file, cb) => {
+      const ext = path.extname(file.originalname).toLowerCase();
+      const allowedMimes = ["image/jpeg","image/png","image/gif","image/webp","application/pdf","video/mp4","video/quicktime"];
+      if (allowedMimes.includes(file.mimetype) && REVIEW_ALLOWED_EXTS.includes(ext)) cb(null, true);
+      else cb(new Error("Formato file non supportato. Consentiti: JPG, PNG, GIF, WebP, PDF, MP4."));
+    },
+  });
+
+  app.post("/api/review-assets/upload", (req, res) => {
+    reviewUpload.single("file")(req, res, async (err) => {
+      if (err) return res.status(400).json({ error: err.message });
+      if (!req.file) return res.status(400).json({ error: "Nessun file caricato" });
+      const { job_id, phase_id, title, uploaded_by, parent_asset_id } = req.body;
+      if (!job_id || !title) return res.status(400).json({ error: "job_id e title obbligatori" });
+      let version = 1;
+      if (parent_asset_id) {
+        const prev = await query("SELECT COALESCE(MAX(version),0) as maxv FROM review_assets WHERE parent_asset_id=$1 OR id=$1", [parent_asset_id]);
+        version = (prev[0]?.maxv || 0) + 1;
+      }
+      const fileType = req.file.mimetype.startsWith("image/") ? "image" : req.file.mimetype.startsWith("video/") ? "video" : "document";
+      const rows = await query(
+        `INSERT INTO review_assets (job_id, phase_id, title, file_url, file_type, version, parent_asset_id, uploaded_by)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
+        [job_id, phase_id || null, title, `/uploads/${req.file.filename}`, fileType, version, parent_asset_id || null, uploaded_by || null]
+      );
+      res.json(rows[0]);
+    });
+  });
+
+  app.get("/api/review-assets", async (req, res) => {
+    const { job_id, status } = req.query;
+    let sql = `SELECT ra.*, j.code as job_code, j.title as job_title, j.client as job_client
+               FROM review_assets ra LEFT JOIN jobs j ON j.id = ra.job_id WHERE 1=1`;
+    const params: any[] = [];
+    if (job_id) { params.push(job_id); sql += ` AND ra.job_id=$${params.length}`; }
+    if (status) { params.push(status); sql += ` AND ra.status=$${params.length}`; }
+    sql += ` ORDER BY ra.created_at DESC`;
+    const rows = await query(sql, params);
+    res.json(rows);
+  });
+
+  app.get("/api/review-assets/:id", async (req, res) => {
+    const rows = await query(
+      `SELECT ra.*, j.code as job_code, j.title as job_title, j.client as job_client
+       FROM review_assets ra LEFT JOIN jobs j ON j.id = ra.job_id WHERE ra.id=$1`, [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: "Asset not found" });
+    res.json(rows[0]);
+  });
+
+  app.put("/api/review-assets/:id/status", async (req, res) => {
+    const { status } = req.body;
+    const allowed = ["pending","in_review","approved","changes_requested","rejected"];
+    if (!allowed.includes(status)) return res.status(400).json({ error: "Stato non valido" });
+    const rows = await query("UPDATE review_assets SET status=$1 WHERE id=$2 RETURNING *", [status, req.params.id]);
+    res.json(rows[0]);
+  });
+
+  app.delete("/api/review-assets/:id", async (req, res) => {
+    await query("DELETE FROM review_assets WHERE id=$1", [req.params.id]);
+    res.json({ ok: true });
+  });
+
+  app.get("/api/review-assets/:id/comments", async (req, res) => {
+    const rows = await query("SELECT * FROM review_comments WHERE asset_id=$1 ORDER BY created_at ASC", [req.params.id]);
+    res.json(rows);
+  });
+
+  app.post("/api/review-assets/:id/comments", async (req, res) => {
+    const { author_id, author_name, content, pin_x, pin_y, parent_comment_id } = req.body;
+    if (!content) return res.status(400).json({ error: "content obbligatorio" });
+    const rows = await query(
+      `INSERT INTO review_comments (asset_id, author_id, author_name, content, pin_x, pin_y, parent_comment_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+      [req.params.id, author_id || null, author_name || 'Anonimo', content, pin_x ?? null, pin_y ?? null, parent_comment_id || null]
+    );
+    res.json(rows[0]);
+  });
+
+  app.put("/api/review-comments/:id/resolve", async (req, res) => {
+    const rows = await query("UPDATE review_comments SET resolved=$1 WHERE id=$2 RETURNING *", [req.body.resolved ?? true, req.params.id]);
+    res.json(rows[0]);
+  });
+
+  app.delete("/api/review-comments/:id", async (req, res) => {
+    await query("DELETE FROM review_comments WHERE id=$1", [req.params.id]);
+    res.json({ ok: true });
+  });
+
+  app.get("/api/review-assets/:id/approvals", async (req, res) => {
+    const rows = await query("SELECT * FROM review_approvals WHERE asset_id=$1 ORDER BY created_at DESC", [req.params.id]);
+    res.json(rows);
+  });
+
+  app.post("/api/review-assets/:id/approvals", async (req, res) => {
+    const { reviewer_id, reviewer_name, decision, note } = req.body;
+    const allowed = ["approved","changes_requested","rejected"];
+    if (!allowed.includes(decision)) return res.status(400).json({ error: "Decisione non valida" });
+    const rows = await query(
+      `INSERT INTO review_approvals (asset_id, reviewer_id, reviewer_name, decision, note)
+       VALUES ($1,$2,$3,$4,$5) RETURNING *`,
+      [req.params.id, reviewer_id || null, reviewer_name || 'Anonimo', decision, note || null]
+    );
+    const statusMap: Record<string, string> = { approved: "approved", changes_requested: "changes_requested", rejected: "rejected" };
+    await query("UPDATE review_assets SET status=$1 WHERE id=$2", [statusMap[decision], req.params.id]);
+    res.json(rows[0]);
+  });
+
+  app.get("/api/review-assets/:id/versions", async (req, res) => {
+    const asset = await query("SELECT * FROM review_assets WHERE id=$1", [req.params.id]);
+    if (!asset.length) return res.status(404).json({ error: "Asset not found" });
+    const parentId = asset[0].parent_asset_id || asset[0].id;
+    const rows = await query(
+      "SELECT * FROM review_assets WHERE id=$1 OR parent_asset_id=$1 ORDER BY version ASC",
+      [parentId]
+    );
+    res.json(rows);
+  });
+
   // ─── SCHEMA PREVIEW ───────────────────────────────────────
   app.get("/api/schema", async (req, res) => {
     const tables = await query(`

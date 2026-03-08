@@ -125,8 +125,20 @@ tr.expand-row .expand-content::-webkit-scrollbar-thumb{background:var(--paper-l)
 .phase-thumb-placeholder:hover{border-color:var(--accent);background:rgba(99,102,241,.06);color:var(--accent)}
 .phase-thumb-version{font-size:.46rem;color:var(--paper-m);font-family:'JetBrains Mono',monospace}
 
-.thumb-mini{width:28px;height:28px;border-radius:3px;object-fit:cover;border:1px solid var(--paper-l);cursor:pointer;transition:border-color .15s}
-.thumb-mini:hover{border-color:var(--accent)}
+.thumb-mini{width:44px;height:44px;border-radius:4px;object-fit:cover;border:1px solid var(--paper-l);cursor:pointer;transition:border-color .15s,transform .15s;flex-shrink:0}
+.thumb-mini:hover{border-color:var(--accent);transform:scale(1.06)}
+
+.col-image-name .cell{font-size:.76rem;font-weight:600;gap:8px}
+
+.col-detail{transition:width .2s,padding .2s,opacity .2s,max-width .2s}
+.col-detail.collapsed{width:0!important;min-width:0!important;max-width:0!important;padding:0!important;overflow:hidden;border-left:none;border-right:none;opacity:0}
+.col-detail.collapsed .cell,.col-detail.collapsed .th-inner{padding:0;width:0;overflow:hidden}
+th.col-detail.collapsed{border-left:none;border-right:none}
+th.col-detail.collapsed .th-inner{display:none}
+
+.toggle-details-btn{background:transparent;border:1px solid rgba(255,255,255,.08);color:var(--paper-m);cursor:pointer;font-size:.58rem;padding:3px 8px;border-radius:5px;font-family:'Sora',sans-serif;transition:all .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
+.toggle-details-btn:hover{color:var(--paper-s);border-color:rgba(255,255,255,.15)}
+.toggle-details-btn.active{color:var(--accent);border-color:var(--accent)}
 
 .lightbox-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:300;align-items:center;justify-content:center;flex-direction:column;gap:12px}
 .lightbox-overlay.active{display:flex}
@@ -190,6 +202,10 @@ tr.expand-row .expand-content::-webkit-scrollbar-thumb{background:var(--paper-l)
     <button class="btn btn-primary" id="btn-add-row" onclick="addRowForTab()" data-testid="button-add-row">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       Aggiungi riga
+    </button>
+    <button class="toggle-details-btn" id="btn-toggle-details" onclick="toggleDetailColumns()" data-testid="button-toggle-details" style="display:none" title="Mostra/nascondi colonne dettaglio">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      Dettagli
     </button>
     <button class="btn btn-ghost" id="btn-batch-upload" onclick="openBatchUploadModal()" data-testid="button-batch-upload" style="display:none">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -375,6 +391,7 @@ let editingCell = null;
 let lbImages = [];
 let lbIndex = 0;
 let pendingUpload = null;
+let detailsCollapsed = false;
 
 const TIPOLOGIE = [
   "Location classica","Location moderna","Location ESISTENTE","Location classica VARIANTE",
@@ -429,6 +446,7 @@ function switchTab(tab) {
   document.querySelectorAll('.sheet-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
   document.getElementById('btn-columns').style.display = tab === 'elenco_immagini' ? '' : 'none';
   document.getElementById('btn-batch-upload').style.display = tab === 'elenco_immagini' ? '' : 'none';
+  document.getElementById('btn-toggle-details').style.display = tab === 'elenco_immagini' ? '' : 'none';
   loadCurrentTab();
 }
 
@@ -483,6 +501,7 @@ function renderElencoImmagini() {
   table.style.display = '';
   document.getElementById('stats-bar').style.display = 'flex';
 
+  const dc = detailsCollapsed ? ' collapsed' : '';
   const totalCols = 10 + columns.length + 2;
   const groups = {};
   columns.forEach(c => {
@@ -490,19 +509,25 @@ function renderElencoImmagini() {
     groups[c.column_group].push(c);
   });
 
-  let gh = '<tr><th colspan="3"></th><th colspan="5"></th><th></th>';
+  let gh = '<tr><th colspan="3"></th><th class="col-detail' + dc + '" colspan="5"></th><th></th>';
   Object.keys(groups).forEach(g => { gh += `<th class="group-header" colspan="${groups[g].length}">${g}</th>`; });
   gh += '<th colspan="2"></th><th></th></tr>';
 
   let h = '<tr>';
   h += '<th><div class="th-inner" style="width:20px"></div></th>';
   h += '<th><div class="th-inner">#</div></th><th><div class="th-inner"></div></th>';
-  h += '<th><div class="th-inner">Location</div></th><th><div class="th-inner">Sub-loc.</div></th>';
-  h += '<th><div class="th-inner">Frame</div></th><th><div class="th-inner">Tipo</div></th><th><div class="th-inner">Or.</div></th>';
+  h += `<th class="col-detail${dc}"><div class="th-inner">Location</div></th>`;
+  h += `<th class="col-detail${dc}"><div class="th-inner">Sub-loc.</div></th>`;
+  h += `<th class="col-detail${dc}"><div class="th-inner">Frame</div></th>`;
+  h += `<th class="col-detail${dc}"><div class="th-inner">Tipo</div></th>`;
+  h += `<th class="col-detail${dc}"><div class="th-inner">Or.</div></th>`;
   h += '<th><div class="th-inner">Immagini</div></th>';
   columns.forEach(c => { h += `<th><div class="th-inner" title="${c.column_group}: ${c.name}">${c.name}</div></th>`; });
   h += '<th><div class="th-inner">% Mod.</div></th><th><div class="th-inner">Note</div></th><th><div class="th-inner"></div></th></tr>';
   thead.innerHTML = gh + h;
+
+  const btn = document.getElementById('btn-toggle-details');
+  btn.classList.toggle('active', !detailsCollapsed);
 
   let b = '';
   let prevLoc = '';
@@ -519,12 +544,19 @@ function renderElencoImmagini() {
     b += `<td><div class="cell" style="justify-content:center"><button class="expand-toggle${isExpanded ? ' open' : ''}${hasRevs ? '' : ' no-revs'}" onclick="toggleExpand(${img.id})" title="${hasRevs ? imgRevs.length+' revisioni' : 'Espandi per caricare revisioni'}" data-testid="button-expand-${img.id}">&#9654;</button>${hasRevs ? '<span style="font-size:.46rem;color:var(--accent);margin-left:1px">'+imgRevs.length+'</span>' : ''}</div></td>`;
     b += `<td><div class="cell" style="color:var(--paper-m);font-size:.6rem;text-align:center">${idx+1}</div></td>`;
     b += `<td><div class="row-actions"><button onclick="deleteImageRow(${img.id})" title="Elimina" data-testid="button-delete-row-${img.id}">✕</button></div></td>`;
-    b += `<td class="col-location editable" data-field="location" data-id="${img.id}" data-api="images"><div class="cell">${esc(img.location)}</div></td>`;
-    b += `<td class="col-sub-location editable" data-field="sub_location" data-id="${img.id}" data-api="images"><div class="cell">${esc(img.sub_location)}</div></td>`;
-    b += `<td class="col-frame editable" data-field="frame" data-id="${img.id}" data-api="images"><div class="cell">${esc(img.frame)}</div></td>`;
-    b += `<td class="col-tipo editable" data-field="tipo" data-id="${img.id}" data-api="images"><div class="cell">${esc(img.tipo)}</div></td>`;
-    b += `<td class="col-orient editable" data-field="orientation" data-id="${img.id}" data-api="images"><div class="cell">${esc(img.orientation)}</div></td>`;
-    b += `<td class="col-image-name editable" data-field="image_name" data-id="${img.id}" data-api="images"><div class="cell">${latestThumb ? '<img src="'+latestThumb+'" class="thumb-mini" onclick="event.stopPropagation();openLightboxFor('+img.id+')" data-testid="thumb-latest-'+img.id+'">' : ''}${esc(img.image_name)}</div></td>`;
+    b += `<td class="col-detail col-location editable${dc}" data-field="location" data-id="${img.id}" data-api="images"><div class="cell">${esc(img.location)}</div></td>`;
+    b += `<td class="col-detail col-sub-location editable${dc}" data-field="sub_location" data-id="${img.id}" data-api="images"><div class="cell">${esc(img.sub_location)}</div></td>`;
+    b += `<td class="col-detail col-frame editable${dc}" data-field="frame" data-id="${img.id}" data-api="images"><div class="cell">${esc(img.frame)}</div></td>`;
+    b += `<td class="col-detail col-tipo editable${dc}" data-field="tipo" data-id="${img.id}" data-api="images"><div class="cell">${esc(img.tipo)}</div></td>`;
+    b += `<td class="col-detail col-orient editable${dc}" data-field="orientation" data-id="${img.id}" data-api="images"><div class="cell">${esc(img.orientation)}</div></td>`;
+
+    let thumbHtml = '';
+    if (latestThumb) {
+      thumbHtml = `<img src="${latestThumb}" class="thumb-mini" onclick="event.stopPropagation();openLightboxFor(${img.id})" data-testid="thumb-latest-${img.id}">`;
+    }
+    const nameLabel = detailsCollapsed && img.location ? `<span style="color:var(--paper-m);font-size:.56rem;font-weight:400">${esc(img.location)}${img.sub_location ? ' / '+esc(img.sub_location) : ''}${img.frame ? ' #'+esc(img.frame) : ''}</span> ` : '';
+    b += `<td class="col-image-name editable" data-field="image_name" data-id="${img.id}" data-api="images"><div class="cell">${thumbHtml}${nameLabel}${esc(img.image_name)}</div></td>`;
+
     columns.forEach(c => {
       const val = pv[c.column_key] !== undefined ? pv[c.column_key] : 0;
       b += `<td class="col-phase editable" data-field="${esc(c.column_key)}" data-id="${img.id}" data-type="phase" data-api="images"><div class="cell ${val == 0 ? 'val-0' : 'val-pos'}">${val}</div></td>`;
@@ -543,6 +575,32 @@ function renderElencoImmagini() {
   const locs = new Set(images.map(i => i.location).filter(Boolean));
   document.getElementById('stat-extra').innerHTML = `Location: <span class="stat-val">${locs.size}</span>`;
   document.getElementById('toolbar-info').textContent = images.length ? `${images.length} immagini` : 'Nessuna immagine';
+}
+
+function toggleDetailColumns() {
+  detailsCollapsed = !detailsCollapsed;
+  document.querySelectorAll('.col-detail').forEach(el => el.classList.toggle('collapsed', detailsCollapsed));
+  document.getElementById('btn-toggle-details').classList.toggle('active', !detailsCollapsed);
+
+  if (detailsCollapsed) {
+    images.forEach(img => {
+      const nameCell = document.querySelector(`td.col-image-name[data-id="${img.id}"] .cell`);
+      if (nameCell && !nameCell.querySelector('.detail-prefix')) {
+        const prefix = document.createElement('span');
+        prefix.className = 'detail-prefix';
+        prefix.style.cssText = 'color:var(--paper-m);font-size:.56rem;font-weight:400';
+        prefix.textContent = (img.location || '') + (img.sub_location ? ' / '+img.sub_location : '') + (img.frame ? ' #'+img.frame : '');
+        const firstText = nameCell.childNodes[nameCell.querySelector('.thumb-mini') ? 1 : 0];
+        nameCell.insertBefore(document.createTextNode(' '), firstText);
+        nameCell.insertBefore(prefix, firstText);
+      }
+    });
+  } else {
+    document.querySelectorAll('.detail-prefix').forEach(el => {
+      if (el.previousSibling && el.previousSibling.nodeType === 3) el.previousSibling.remove();
+      el.remove();
+    });
+  }
 }
 
 function getLatestThumb(imgRevs) {
@@ -640,19 +698,38 @@ document.getElementById('revision-file-input').addEventListener('change', async 
 
 // ──── LIGHTBOX ────────────────────────────
 
-function openLightboxSingle(url, title, revId, imageId) {
+function getSortedRevisions(imageId) {
   const imgRevs = (revisions[imageId] || []).filter(r => r.file_type === 'image');
-  lbImages = imgRevs.map(r => ({ url: r.file_url, title: r.title, id: r.id, version: r.version, phase: r.phase_key }));
+  const phaseOrder = {};
+  columns.forEach((c, i) => { phaseOrder[c.column_key] = i; });
+  phaseOrder['_finale'] = columns.length;
+  imgRevs.sort((a, b) => {
+    const pa = phaseOrder[a.phase_key] !== undefined ? phaseOrder[a.phase_key] : 999;
+    const pb = phaseOrder[b.phase_key] !== undefined ? phaseOrder[b.phase_key] : 999;
+    if (pa !== pb) return pa - pb;
+    return a.version - b.version;
+  });
+  return imgRevs.map(r => {
+    const phaseName = columns.find(c => c.column_key === r.phase_key)?.name || (r.phase_key === '_finale' ? 'Definitiva' : r.phase_key);
+    return { url: r.file_url, title: r.title, id: r.id, version: r.version, phase: r.phase_key, phaseName };
+  });
+}
+
+function openLightboxSingle(url, title, revId, imageId) {
+  lbImages = getSortedRevisions(imageId);
   lbIndex = lbImages.findIndex(r => r.id === revId);
   if (lbIndex < 0) lbIndex = 0;
   showLightbox();
 }
 
 function openLightboxFor(imageId) {
+  lbImages = getSortedRevisions(imageId);
+  if (!lbImages.length) return;
   const imgRevs = (revisions[imageId] || []).filter(r => r.file_type === 'image');
-  if (!imgRevs.length) return;
-  lbImages = imgRevs.map(r => ({ url: r.file_url, title: r.title, id: r.id, version: r.version, phase: r.phase_key }));
-  lbIndex = lbImages.length - 1;
+  let latestId = 0;
+  imgRevs.forEach(r => { if (r.id > latestId) latestId = r.id; });
+  lbIndex = lbImages.findIndex(r => r.id === latestId);
+  if (lbIndex < 0) lbIndex = lbImages.length - 1;
   showLightbox();
 }
 
@@ -666,8 +743,7 @@ function showLightbox() {
 function updateLightbox() {
   const item = lbImages[lbIndex];
   document.getElementById('lb-img').src = item.url;
-  const phaseName = columns.find(c => c.column_key === item.phase)?.name || (item.phase === '_finale' ? 'Definitiva' : item.phase);
-  document.getElementById('lb-info').textContent = `${item.title} — ${phaseName} — v${item.version} (${lbIndex+1}/${lbImages.length})`;
+  document.getElementById('lb-info').textContent = `${item.phaseName || item.phase} — v${item.version} — ${item.title} (${lbIndex+1}/${lbImages.length})`;
 }
 
 function closeLightbox() {

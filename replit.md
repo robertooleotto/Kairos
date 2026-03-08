@@ -85,6 +85,7 @@ Project management tool for NuDesign creative studio. Manages jobs (commesse), t
 - GET /api/foglio-revisions/:imageId - List revisions for an image (optional ?phase_key filter)
 - GET /api/foglio-revisions-batch/:jobId - Batch fetch all revisions for a job
 - POST /api/foglio-revisions/:imageId/upload - Upload revision file (multipart, max 20MB)
+- POST /api/foglio-revisions/batch-upload/:jobId - Batch upload multiple files with auto-matching by filename (exact match → substring → 3+ common parts)
 - DELETE /api/foglio-revisions/:id - Delete revision + file
 
 ## Review API Endpoints

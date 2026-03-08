@@ -139,6 +139,26 @@ tr.expand-row .expand-content::-webkit-scrollbar-thumb{background:var(--paper-l)
 .lightbox-overlay .lb-nav button:hover{background:rgba(255,255,255,.2)}
 
 .upload-progress{font-size:.5rem;color:var(--accent);text-align:center;margin-top:2px}
+
+.batch-dropzone{border:2px dashed var(--paper-l);border-radius:10px;padding:24px;display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:8px;cursor:pointer;transition:border-color .2s,background .2s;font-size:.68rem;color:var(--paper-s)}
+.batch-dropzone:hover,.batch-dropzone.drag-over{border-color:var(--accent);background:rgba(99,102,241,.04)}
+.batch-file-list{max-height:160px;overflow-y:auto;border:1px solid var(--paper-l);border-radius:6px;padding:6px 8px;font-size:.62rem}
+.batch-file-list .bfl-item{display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid var(--paper-l)}
+.batch-file-list .bfl-item:last-child{border-bottom:none}
+.batch-file-list .bfl-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--paper-s)}
+.batch-file-list .bfl-size{color:var(--paper-m);font-size:.56rem;flex-shrink:0}
+.batch-file-list .bfl-remove{background:none;border:none;color:var(--paper-m);cursor:pointer;font-size:.7rem;padding:0 2px}
+.batch-file-list .bfl-remove:hover{color:#ef4444}
+.batch-progress-bar{height:4px;background:var(--paper-l);border-radius:2px;overflow:hidden}
+.batch-progress-fill{height:100%;background:var(--accent);border-radius:2px;width:0%;transition:width .3s}
+.batch-results-list{max-height:200px;overflow-y:auto;font-size:.6rem}
+.batch-results-list .br-item{display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--paper-l)}
+.batch-results-list .br-item:last-child{border-bottom:none}
+.br-status-matched{color:#22c55e;font-weight:600;font-size:.56rem}
+.br-status-unmatched{color:#ef4444;font-weight:600;font-size:.56rem}
+.br-match-name{color:var(--paper-m);font-size:.56rem}
+.batch-summary{font-size:.68rem;display:flex;gap:16px;padding:8px 12px;background:var(--paper-h);border-radius:6px}
+.batch-summary .bs-num{font-weight:700;font-family:'JetBrains Mono',monospace}
 </style>
 </head>
 <body>
@@ -170,6 +190,10 @@ tr.expand-row .expand-content::-webkit-scrollbar-thumb{background:var(--paper-l)
     <button class="btn btn-primary" id="btn-add-row" onclick="addRowForTab()" data-testid="button-add-row">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       Aggiungi riga
+    </button>
+    <button class="btn btn-ghost" id="btn-batch-upload" onclick="openBatchUploadModal()" data-testid="button-batch-upload" style="display:none">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Carica revisioni
     </button>
     <button class="btn btn-ghost" id="btn-columns" onclick="openColumnsModal()" data-testid="button-columns" style="display:none">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
@@ -288,6 +312,43 @@ tr.expand-row .expand-content::-webkit-scrollbar-thumb{background:var(--paper-l)
   </div>
 </div>
 
+<!-- Batch Upload Modal -->
+<div class="modal-overlay" id="batch-modal">
+  <div class="modal" style="max-width:640px">
+    <h3>Carica revisioni in blocco</h3>
+    <p style="font-size:.65rem;color:var(--paper-m);margin-bottom:12px">Seleziona le immagini, scegli la fase e il sistema le associerà automaticamente in base al nome del file.</p>
+
+    <label>Fase di destinazione</label>
+    <select id="batch-phase" data-testid="select-batch-phase">
+      <option value="">— Seleziona fase —</option>
+    </select>
+
+    <div class="batch-dropzone" id="batch-dropzone" data-testid="batch-dropzone">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--paper-m)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <span>Trascina i file qui oppure <strong style="color:var(--accent);cursor:pointer">sfoglia</strong></span>
+      <span style="font-size:.58rem;color:var(--paper-m)">JPG, PNG, GIF, WebP, PDF, MP4 — max 20MB ciascuno</span>
+      <input type="file" id="batch-file-input" data-testid="input-batch-files" multiple accept=".jpg,.jpeg,.png,.gif,.webp,.mp4,.pdf" style="display:none">
+    </div>
+
+    <div id="batch-file-list" class="batch-file-list" style="display:none"></div>
+
+    <div id="batch-progress" style="display:none;margin-top:12px">
+      <div class="batch-progress-bar"><div class="batch-progress-fill" id="batch-progress-fill"></div></div>
+      <div id="batch-progress-text" style="font-size:.6rem;color:var(--paper-m);margin-top:4px;text-align:center"></div>
+    </div>
+
+    <div id="batch-results" style="display:none;margin-top:12px">
+      <div id="batch-results-summary" style="margin-bottom:8px"></div>
+      <div id="batch-results-list" class="batch-results-list"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeBatchUploadModal()" data-testid="button-cancel-batch">Chiudi</button>
+      <button class="btn btn-primary" id="btn-batch-submit" onclick="submitBatchUpload()" data-testid="button-submit-batch" disabled>Carica</button>
+    </div>
+  </div>
+</div>
+
 <!-- Lightbox -->
 <div class="lightbox-overlay" id="lightbox">
   <button class="lb-close" onclick="closeLightbox()" data-testid="button-close-lightbox">&times;</button>
@@ -367,6 +428,7 @@ function switchTab(tab) {
   currentTab = tab;
   document.querySelectorAll('.sheet-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
   document.getElementById('btn-columns').style.display = tab === 'elenco_immagini' ? '' : 'none';
+  document.getElementById('btn-batch-upload').style.display = tab === 'elenco_immagini' ? '' : 'none';
   loadCurrentTab();
 }
 
@@ -635,6 +697,155 @@ document.addEventListener('keydown', function(e) {
   if (e.key === 'ArrowLeft') lbPrev();
   if (e.key === 'ArrowRight') lbNext();
 });
+
+// ──── BATCH UPLOAD ────────────────────────────
+
+let batchFiles = [];
+
+function openBatchUploadModal() {
+  if (!currentJobId || !columns.length) return;
+  const sel = document.getElementById('batch-phase');
+  sel.innerHTML = '<option value="">— Seleziona fase —</option>';
+  columns.forEach(c => {
+    sel.innerHTML += `<option value="${esc(c.column_key)}">${esc(c.name)}</option>`;
+  });
+  sel.innerHTML += '<option value="_finale">Definitiva</option>';
+  batchFiles = [];
+  renderBatchFileList();
+  document.getElementById('batch-progress').style.display = 'none';
+  document.getElementById('batch-results').style.display = 'none';
+  document.getElementById('btn-batch-submit').disabled = true;
+  document.getElementById('batch-dropzone').style.display = '';
+  document.getElementById('batch-modal').classList.add('active');
+}
+
+function closeBatchUploadModal() {
+  document.getElementById('batch-modal').classList.remove('active');
+  batchFiles = [];
+}
+
+const batchDropzone = document.getElementById('batch-dropzone');
+const batchFileInput = document.getElementById('batch-file-input');
+
+batchDropzone.addEventListener('click', () => batchFileInput.click());
+batchDropzone.addEventListener('dragover', (e) => { e.preventDefault(); batchDropzone.classList.add('drag-over'); });
+batchDropzone.addEventListener('dragleave', () => batchDropzone.classList.remove('drag-over'));
+batchDropzone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  batchDropzone.classList.remove('drag-over');
+  addBatchFiles(e.dataTransfer.files);
+});
+batchFileInput.addEventListener('change', function() {
+  if (this.files.length) addBatchFiles(this.files);
+  this.value = '';
+});
+
+function addBatchFiles(fileList) {
+  for (let i = 0; i < fileList.length; i++) {
+    const f = fileList[i];
+    if (f.size > 20 * 1024 * 1024) continue;
+    if (!batchFiles.find(bf => bf.name === f.name && bf.size === f.size)) {
+      batchFiles.push(f);
+    }
+  }
+  renderBatchFileList();
+  updateBatchSubmitState();
+}
+
+function removeBatchFile(idx) {
+  batchFiles.splice(idx, 1);
+  renderBatchFileList();
+  updateBatchSubmitState();
+}
+
+function renderBatchFileList() {
+  const container = document.getElementById('batch-file-list');
+  if (!batchFiles.length) {
+    container.style.display = 'none';
+    return;
+  }
+  container.style.display = '';
+  let html = '';
+  batchFiles.forEach((f, i) => {
+    const sizeKb = (f.size / 1024).toFixed(0);
+    const sizeTxt = sizeKb > 1024 ? (f.size / 1048576).toFixed(1) + ' MB' : sizeKb + ' KB';
+    html += `<div class="bfl-item"><span class="bfl-name" title="${esc(f.name)}">${esc(f.name)}</span><span class="bfl-size">${sizeTxt}</span><button class="bfl-remove" onclick="removeBatchFile(${i})" title="Rimuovi" data-testid="button-batch-remove-${i}">✕</button></div>`;
+  });
+  container.innerHTML = html;
+}
+
+function updateBatchSubmitState() {
+  const phase = document.getElementById('batch-phase').value;
+  document.getElementById('btn-batch-submit').disabled = !batchFiles.length || !phase;
+}
+
+document.getElementById('batch-phase').addEventListener('change', updateBatchSubmitState);
+
+async function submitBatchUpload() {
+  const phase = document.getElementById('batch-phase').value;
+  if (!phase || !batchFiles.length || !currentJobId) return;
+
+  const btn = document.getElementById('btn-batch-submit');
+  btn.disabled = true;
+  btn.textContent = 'Caricamento...';
+  document.getElementById('batch-progress').style.display = '';
+  document.getElementById('batch-results').style.display = 'none';
+  document.getElementById('batch-progress-fill').style.width = '10%';
+  document.getElementById('batch-progress-text').textContent = `Caricamento di ${batchFiles.length} file...`;
+
+  const fd = new FormData();
+  fd.append('phase_key', phase);
+  batchFiles.forEach(f => fd.append('files', f));
+
+  try {
+    document.getElementById('batch-progress-fill').style.width = '50%';
+    const res = await fetch(`/api/foglio-revisions/batch-upload/${currentJobId}`, { method: 'POST', body: fd });
+    document.getElementById('batch-progress-fill').style.width = '100%';
+
+    if (!res.ok) {
+      const err = await res.json();
+      alert('Errore: ' + (err.error || 'errore sconosciuto'));
+      btn.textContent = 'Carica';
+      btn.disabled = false;
+      return;
+    }
+
+    const data = await res.json();
+    showBatchResults(data);
+    batchFiles = [];
+    renderBatchFileList();
+    document.getElementById('batch-dropzone').style.display = 'none';
+    await loadElencoImmagini();
+  } catch(e) {
+    alert('Errore: ' + e.message);
+  } finally {
+    btn.textContent = 'Carica';
+    btn.disabled = false;
+  }
+}
+
+function showBatchResults(data) {
+  document.getElementById('batch-progress').style.display = 'none';
+  document.getElementById('batch-results').style.display = '';
+
+  const summary = document.getElementById('batch-results-summary');
+  summary.innerHTML = `<div class="batch-summary">
+    <span>Totale: <span class="bs-num">${data.total}</span></span>
+    <span style="color:#22c55e">Associati: <span class="bs-num">${data.matched}</span></span>
+    <span style="color:#ef4444">Non trovati: <span class="bs-num">${data.unmatched}</span></span>
+  </div>`;
+
+  const list = document.getElementById('batch-results-list');
+  let html = '';
+  data.results.forEach(r => {
+    html += `<div class="br-item">
+      <span class="${r.status === 'matched' ? 'br-status-matched' : 'br-status-unmatched'}">${r.status === 'matched' ? '✓' : '✕'}</span>
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.file)}</span>
+      ${r.matched_to ? `<span class="br-match-name">→ ${esc(r.matched_to)}</span>` : '<span class="br-match-name" style="color:#ef4444">nessun match</span>'}
+    </div>`;
+  });
+  list.innerHTML = html;
+}
 
 // ──── LOCATIONS ────────────────────────────
 

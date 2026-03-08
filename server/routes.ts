@@ -767,13 +767,15 @@ export async function registerRoutes(
 
   // ─── FOGLIO REVISIONS ───────────────────────────────────────
 
+  let revisionCounter = 0;
   const revisionStorage = multer.diskStorage({
     destination: (_req, _file, cb) => cb(null, uploadsDir),
     filename: (_req, file, cb) => {
       let ext = path.extname(file.originalname).toLowerCase();
       const safeExts = [".jpg",".jpeg",".png",".gif",".webp",".mp4",".pdf"];
       if (!safeExts.includes(ext)) ext = ".jpg";
-      cb(null, `revision_${Date.now()}${ext}`);
+      revisionCounter++;
+      cb(null, `revision_${Date.now()}_${revisionCounter}_${Math.random().toString(36).slice(2,8)}${ext}`);
     },
   });
   const revisionUpload = multer({
@@ -825,6 +827,88 @@ export async function registerRoutes(
         [req.params.imageId, phase_key || '', `/uploads/${req.file.filename}`, fileType, title || req.file.originalname, version, notes || '', uploaded_by || '']
       );
       res.json(rows[0]);
+    });
+  });
+
+  app.post("/api/foglio-revisions/batch-upload/:jobId", (req, res) => {
+    revisionUpload.array("files", 200)(req, res, async (err) => {
+      if (err) return res.status(400).json({ error: err.message });
+      const files = req.files as Express.Multer.File[];
+      if (!files || !files.length) return res.status(400).json({ error: "Nessun file caricato" });
+      const { phase_key, uploaded_by } = req.body;
+      if (!phase_key) return res.status(400).json({ error: "phase_key richiesto" });
+      const jobId = req.params.jobId;
+
+      const imgRows = await query("SELECT id, image_name FROM foglio_images WHERE job_id=$1", [jobId]);
+      const imageMap: Record<string, { id: number; image_name: string }> = {};
+      (imgRows as any[]).forEach(r => {
+        imageMap[r.image_name.toLowerCase()] = r;
+      });
+
+      const results: any[] = [];
+      for (const file of files) {
+        try {
+          const origName = path.parse(file.originalname).name;
+          const origNameLower = origName.toLowerCase();
+
+          let matched: any = null;
+          let bestScore = 0;
+
+          if (imageMap[origNameLower]) {
+            matched = imageMap[origNameLower];
+            bestScore = 100;
+          }
+
+          if (!matched) {
+            for (const key of Object.keys(imageMap)) {
+              if (key.includes(origNameLower)) {
+                matched = imageMap[key];
+                bestScore = 90;
+                break;
+              }
+              if (origNameLower.includes(key)) {
+                matched = imageMap[key];
+                bestScore = 80;
+                break;
+              }
+            }
+          }
+
+          if (!matched) {
+            const nameParts = origNameLower.replace(/[-_\s]+/g, '-').split('-');
+            for (const key of Object.keys(imageMap)) {
+              const keyParts = key.replace(/[-_\s]+/g, '-').split('-');
+              const commonParts = nameParts.filter(p => p.length > 1 && keyParts.includes(p));
+              if (commonParts.length >= 3 && commonParts.length > bestScore) {
+                matched = imageMap[key];
+                bestScore = commonParts.length;
+              }
+            }
+          }
+
+          if (matched) {
+            const fileType = file.mimetype.startsWith("image/") ? "image" : file.mimetype.startsWith("video/") ? "video" : "document";
+            const prevVersions = await query(
+              "SELECT COALESCE(MAX(version),0) as maxv FROM foglio_revisions WHERE foglio_image_id=$1 AND phase_key=$2",
+              [matched.id, phase_key]
+            );
+            const version = ((prevVersions[0] as any)?.maxv || 0) + 1;
+            const rows = await query(
+              `INSERT INTO foglio_revisions (foglio_image_id, phase_key, file_url, file_type, title, version, notes, uploaded_by)
+               VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
+              [matched.id, phase_key, `/uploads/${file.filename}`, fileType, file.originalname, version, '', uploaded_by || '']
+            );
+            results.push({ file: file.originalname, status: 'matched', matched_to: matched.image_name, image_id: matched.id, revision: rows[0] });
+          } else {
+            try { fs.unlinkSync(path.join(uploadsDir, file.filename)); } catch {}
+            results.push({ file: file.originalname, status: 'unmatched', matched_to: null });
+          }
+        } catch (fileErr: any) {
+          try { fs.unlinkSync(path.join(uploadsDir, file.filename)); } catch {}
+          results.push({ file: file.originalname, status: 'error', matched_to: null, error: fileErr.message });
+        }
+      }
+      res.json({ total: files.length, matched: results.filter(r => r.status === 'matched').length, unmatched: results.filter(r => r.status !== 'matched').length, results });
     });
   });
 

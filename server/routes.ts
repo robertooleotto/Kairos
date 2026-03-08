@@ -722,6 +722,49 @@ export async function registerRoutes(
     res.json({ ok: true });
   });
 
+  // ─── FOGLIO LOCATIONS ───────────────────────────────────────
+
+  app.get("/api/foglio-locations/:jobId", async (req, res) => {
+    const rows = await query("SELECT * FROM foglio_locations WHERE job_id=$1 ORDER BY sort_order, id", [req.params.jobId]);
+    res.json(rows);
+  });
+
+  app.post("/api/foglio-locations/:jobId", async (req, res) => {
+    const { nome_location, tipologia, descrizione, note, sort_order } = req.body;
+    const rows = await query(
+      `INSERT INTO foglio_locations (job_id, nome_location, tipologia, descrizione, note, sort_order)
+       VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
+      [req.params.jobId, nome_location||'', tipologia||'', descrizione||'', note||'', sort_order||0]
+    );
+    res.json(rows[0]);
+  });
+
+  app.put("/api/foglio-locations/:id", async (req, res) => {
+    const { nome_location, tipologia, descrizione, note, sort_order } = req.body;
+    const rows = await query(
+      `UPDATE foglio_locations SET nome_location=COALESCE($1,nome_location), tipologia=COALESCE($2,tipologia),
+       descrizione=COALESCE($3,descrizione), note=COALESCE($4,note), sort_order=COALESCE($5,sort_order)
+       WHERE id=$6 RETURNING *`,
+      [nome_location, tipologia, descrizione, note, sort_order, req.params.id]
+    );
+    if (!rows.length) return res.status(404).json({ error: "not found" });
+    res.json(rows[0]);
+  });
+
+  app.patch("/api/foglio-locations/:id/cell", async (req, res) => {
+    const { field, value } = req.body;
+    const allowed = ['nome_location','tipologia','descrizione','note','sort_order'];
+    if (!allowed.includes(field)) return res.status(400).json({ error: "invalid field" });
+    const rows = await query(`UPDATE foglio_locations SET ${field}=$1 WHERE id=$2 RETURNING *`, [value, req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: "not found" });
+    res.json(rows[0]);
+  });
+
+  app.delete("/api/foglio-locations/:id", async (req, res) => {
+    await query("DELETE FROM foglio_locations WHERE id=$1", [req.params.id]);
+    res.json({ ok: true });
+  });
+
   // ─── SCHEMA PREVIEW ───────────────────────────────────────
   app.get("/api/schema", async (req, res) => {
     const tables = await query(`

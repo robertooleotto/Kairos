@@ -58,7 +58,10 @@ Project management tool for NuDesign creative studio. Manages jobs (commesse), t
 - Gantt bar rendering: each phase gets its own row in the Gantt, colored by department (DEPT_COLORS map). Bars are continuous with grouped hover effect.
 - dhtmlxGantt page (gantt.html): Full interactive Gantt chart. Dark navy blue theme. Week scale shows W1-W5 per month. Phase CRUD via modal (double-click edit, right-click context menu). Drag/resize auto-save.
 - Review/Proofing (review.html): Upload creative assets (images, PDFs, videos) linked to jobs. Pin annotations on images with comments. Approval workflow (approve/request changes/reject). Version management. 3-panel layout: asset list sidebar, central image viewer with annotation pins, right comments panel.
-- Foglio Lavoro (foglio-lavoro.html): Spreadsheet-like production tracker for images per commessa. Custom phase columns configurable per job (default: Location Bozza, Location Def, Fotografia, Styling, Revisioni, Render, Post, Finiture, Rifacimenti, Recupero, Fatturato). Inline cell editing with double-click. Phase values stored as JSONB. Columns config modal with add/delete.
+- Foglio Lavoro (foglio-lavoro.html): Spreadsheet-like production tracker with Google Sheets-style tab bar at bottom. Tab system includes:
+  - **Elenco Immagini** tab: Image production tracking per commessa. Custom phase columns configurable per job (default: Location Bozza, Location Def, Fotografia, Styling, Revisioni, Render, Post, Finiture, Rifacimenti, Recupero, Fatturato). Inline cell editing with double-click. Phase values stored as JSONB. Columns config modal with add/delete.
+  - **Locations** tab: Location list per commessa with Nome location, Tipologia (dropdown with 22 predefined values like "Architettura interni moderna", "Set studio complesso", "Moodboard" etc.), Descrizione, Note. Inline editing with dropdown for tipologia field.
+- `foglio_locations` table: id(serial), job_id(text), nome_location, tipologia, descrizione, note, sort_order
 - AREA_TO_CATEGORIES maps area IDs to task_type categories for filtering in the phase form.
 
 ## Foglio Lavoro API Endpoints
@@ -72,6 +75,11 @@ Project management tool for NuDesign creative studio. Manages jobs (commesse), t
 - PUT /api/foglio-images/:id - Update full image row
 - PATCH /api/foglio-images/:id/cell - Update single cell (direct field or JSONB phase value)
 - DELETE /api/foglio-images/:id - Delete image row
+- GET /api/foglio-locations/:jobId - List locations for a job
+- POST /api/foglio-locations/:jobId - Add location
+- PUT /api/foglio-locations/:id - Update location
+- PATCH /api/foglio-locations/:id/cell - Update single cell
+- DELETE /api/foglio-locations/:id - Delete location
 
 ## Review API Endpoints
 - POST /api/review-assets/upload - Upload file (multipart, max 20MB, JPG/PNG/GIF/WebP/PDF/MP4)

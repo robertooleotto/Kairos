@@ -12,7 +12,7 @@
   --accent:#6366f1;--accent-h:#5558e3;
 }
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);min-height:100vh;overflow:hidden}
+body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);min-height:100vh;overflow:hidden;display:flex;flex-direction:column}
 
 .header{padding:14px 24px;border-bottom:1px solid var(--paper-l);display:flex;align-items:center;gap:16px;position:sticky;top:0;background:var(--paper);z-index:100}
 .brand{flex-shrink:0;display:flex;align-items:center;gap:10px}
@@ -21,7 +21,7 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
 .nav-pill.active{background:#1c1f30;color:var(--paper-t)}
 .nav-pill:hover:not(.active){color:var(--paper-s)}
 
-.toolbar{padding:12px 24px;border-bottom:1px solid var(--paper-l);display:flex;align-items:center;gap:12px;background:var(--paper-h)}
+.toolbar{padding:10px 24px;border-bottom:1px solid var(--paper-l);display:flex;align-items:center;gap:12px;background:var(--paper-h);flex-shrink:0}
 .toolbar select{background:var(--paper-l);color:var(--paper-t);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:6px 12px;font-size:.72rem;font-family:'Sora',sans-serif;cursor:pointer;min-width:200px}
 .toolbar select:focus{outline:none;border-color:var(--accent)}
 
@@ -34,7 +34,7 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
 .btn-danger:hover{background:#dc2626}
 .btn-sm{padding:4px 10px;font-size:.62rem}
 
-.sheet-wrap{height:calc(100vh - 110px);overflow:auto;position:relative}
+.sheet-wrap{flex:1;overflow:auto;position:relative}
 
 table.sheet{border-collapse:collapse;font-size:.68rem;width:max-content;min-width:100%}
 table.sheet thead{position:sticky;top:0;z-index:10}
@@ -48,11 +48,14 @@ table.sheet td.editable .cell{cursor:text}
 table.sheet td.editable:hover{background:rgba(99,102,241,.06)}
 table.sheet td.editing{background:rgba(99,102,241,.1);box-shadow:inset 0 0 0 1.5px var(--accent)}
 table.sheet td.editing .cell{display:none}
-table.sheet td input.cell-input{width:100%;padding:4px 8px;min-height:28px;background:transparent;color:var(--paper-t);border:none;font-family:'Sora',sans-serif;font-size:.68rem;outline:none}
+table.sheet td input.cell-input,table.sheet td select.cell-input{width:100%;padding:4px 8px;min-height:28px;background:transparent;color:var(--paper-t);border:none;font-family:'Sora',sans-serif;font-size:.68rem;outline:none}
 table.sheet td input.cell-input[type=number]{text-align:center}
+table.sheet td select.cell-input{cursor:pointer;background:var(--paper)}
+table.sheet td select.cell-input option{background:var(--paper-h);color:var(--paper-t)}
 
 table.sheet td.col-location .cell,
-table.sheet td.col-sub-location .cell{font-weight:600;color:var(--paper-s)}
+table.sheet td.col-sub-location .cell,
+table.sheet td.col-nome .cell{font-weight:600;color:var(--paper-s)}
 table.sheet td.col-frame .cell{text-align:center;font-family:'JetBrains Mono',monospace;font-size:.65rem}
 table.sheet td.col-tipo .cell,
 table.sheet td.col-orient .cell{text-align:center;font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--paper-m)}
@@ -60,11 +63,10 @@ table.sheet td.col-image-name .cell{font-family:'JetBrains Mono',monospace;font-
 table.sheet td.col-phase .cell{text-align:center;font-family:'JetBrains Mono',monospace;font-size:.65rem}
 table.sheet td.col-phase .cell.val-0{color:var(--paper-l)}
 table.sheet td.col-phase .cell.val-pos{color:#22c55e}
-table.sheet td.col-note .cell{max-width:250px;overflow:hidden;text-overflow:ellipsis;color:var(--paper-m);font-size:.62rem}
+table.sheet td.col-note .cell,
+table.sheet td.col-desc .cell{max-width:350px;overflow:hidden;text-overflow:ellipsis;color:var(--paper-m);font-size:.62rem}
 table.sheet td.col-pct .cell{text-align:center;font-family:'JetBrains Mono',monospace;font-size:.62rem}
-table.sheet td.col-checkbox .cell{justify-content:center}
-
-table.sheet td.col-checkbox input[type=checkbox]{accent-color:var(--accent);width:14px;height:14px;cursor:pointer}
+table.sheet td.col-tipologia .cell{color:var(--accent);font-size:.64rem}
 
 table.sheet tr:hover td{background:rgba(255,255,255,.02)}
 table.sheet tr.location-break td{border-top:2px solid var(--accent)}
@@ -95,7 +97,13 @@ table.sheet tr:hover .row-actions{opacity:1}
 .col-item button{background:transparent;border:none;color:var(--paper-m);cursor:pointer;font-size:.7rem}
 .col-item button:hover{color:#ef4444}
 
-.stats-bar{padding:8px 24px;border-top:1px solid var(--paper-l);background:var(--paper-h);display:flex;align-items:center;gap:20px;font-size:.65rem;color:var(--paper-m);position:sticky;bottom:0}
+.tab-bar{padding:0 16px;border-top:1px solid var(--paper-l);background:var(--paper-h);display:flex;align-items:stretch;gap:0;flex-shrink:0;height:34px;overflow-x:auto}
+.tab-bar::-webkit-scrollbar{height:0}
+.sheet-tab{padding:0 18px;font-size:.65rem;font-weight:600;font-family:'Sora',sans-serif;cursor:pointer;border:none;background:transparent;color:var(--paper-m);border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;text-transform:uppercase;letter-spacing:.05em;display:flex;align-items:center;height:100%}
+.sheet-tab:hover{color:var(--paper-s);background:rgba(255,255,255,.02)}
+.sheet-tab.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(99,102,241,.05)}
+
+.stats-bar{padding:6px 24px;border-top:1px solid var(--paper-l);background:var(--paper-h);display:flex;align-items:center;gap:20px;font-size:.65rem;color:var(--paper-m);flex-shrink:0}
 .stats-bar .stat-val{color:var(--paper-s);font-weight:600;font-family:'JetBrains Mono',monospace}
 </style>
 </head>
@@ -124,14 +132,16 @@ table.sheet tr:hover .row-actions{opacity:1}
   <select id="job-select" data-testid="select-job" onchange="onJobChange()">
     <option value="">— Seleziona commessa —</option>
   </select>
-  <button class="btn btn-primary" id="btn-add-row" onclick="openAddRowModal()" data-testid="button-add-row" style="display:none">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-    Aggiungi riga
-  </button>
-  <button class="btn btn-ghost" id="btn-columns" onclick="openColumnsModal()" data-testid="button-columns" style="display:none">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-    Colonne
-  </button>
+  <div id="toolbar-actions" style="display:none">
+    <button class="btn btn-primary" id="btn-add-row" onclick="addRowForTab()" data-testid="button-add-row">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Aggiungi riga
+    </button>
+    <button class="btn btn-ghost" id="btn-columns" onclick="openColumnsModal()" data-testid="button-columns" style="display:none">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Colonne
+    </button>
+  </div>
   <span id="toolbar-info" style="font-size:.62rem;color:var(--paper-m);margin-left:auto"></span>
 </div>
 
@@ -149,10 +159,15 @@ table.sheet tr:hover .row-actions{opacity:1}
 
 <div class="stats-bar" id="stats-bar" style="display:none">
   <span>Righe: <span class="stat-val" id="stat-rows">0</span></span>
-  <span>Location: <span class="stat-val" id="stat-locations">0</span></span>
+  <span id="stat-extra"></span>
 </div>
 
-<!-- Add/Edit Row Modal -->
+<div class="tab-bar" id="tab-bar" style="display:none">
+  <button class="sheet-tab active" data-tab="elenco_immagini" data-testid="tab-elenco" onclick="switchTab('elenco_immagini')">Elenco Immagini</button>
+  <button class="sheet-tab" data-tab="locations" data-testid="tab-locations" onclick="switchTab('locations')">Locations</button>
+</div>
+
+<!-- Add Image Row Modal -->
 <div class="modal-overlay" id="row-modal">
   <div class="modal">
     <h3 id="row-modal-title">Aggiungi immagine</h3>
@@ -193,6 +208,27 @@ table.sheet tr:hover .row-actions{opacity:1}
   </div>
 </div>
 
+<!-- Add Location Modal -->
+<div class="modal-overlay" id="loc-modal">
+  <div class="modal">
+    <h3 id="loc-modal-title">Aggiungi location</h3>
+    <label>Nome location</label>
+    <input id="lm-nome" data-testid="input-loc-nome" placeholder="es. Metropolitan">
+    <label>Tipologia</label>
+    <select id="lm-tipologia" data-testid="select-loc-tipologia">
+      <option value="">—</option>
+    </select>
+    <label>Descrizione</label>
+    <textarea id="lm-descrizione" data-testid="input-loc-descrizione" placeholder="es. Ambiente interno costituito da due o più locali."></textarea>
+    <label>Note</label>
+    <textarea id="lm-note" data-testid="input-loc-note"></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeLocModal()" data-testid="button-cancel-loc">Annulla</button>
+      <button class="btn btn-primary" onclick="submitLocation()" data-testid="button-submit-loc">Salva</button>
+    </div>
+  </div>
+</div>
+
 <!-- Columns Config Modal -->
 <div class="modal-overlay" id="columns-modal">
   <div class="modal">
@@ -220,9 +256,21 @@ table.sheet tr:hover .row-actions{opacity:1}
 
 <script>
 let currentJobId = null;
+let currentTab = 'elenco_immagini';
 let columns = [];
 let images = [];
+let locations = [];
 let editingCell = null;
+
+const TIPOLOGIE = [
+  "Location classica","Location moderna","Location ESISTENTE","Location classica VARIANTE",
+  "Location moderna VARIANTE","Architettura interni classica","Architettura interni moderna",
+  "Architettura completa classica","Architettura completa moderna","Architettura ESISTENTE",
+  "Set studio complesso","Set studio medio","Set studio semplice","Set studio ESISTENTE",
+  "Set still life complesso","Set still life medio","Set still life semplice",
+  "Set still life tecnico","Set still life ESISTENTE",
+  "Foto-inserimento PRODOTTO","Foto-inserimento LOCATION","Moodboard"
+];
 
 async function loadJobs() {
   try {
@@ -251,19 +299,41 @@ async function onJobChange() {
     document.getElementById('empty-state').style.display = 'flex';
     document.getElementById('sheet-table').style.display = 'none';
     document.getElementById('stats-bar').style.display = 'none';
-    document.getElementById('btn-add-row').style.display = 'none';
-    document.getElementById('btn-columns').style.display = 'none';
+    document.getElementById('tab-bar').style.display = 'none';
+    document.getElementById('toolbar-actions').style.display = 'none';
     document.getElementById('toolbar-info').textContent = '';
     return;
   }
   sessionStorage.setItem('foglio_job_id', currentJobId);
-  document.getElementById('btn-add-row').style.display = '';
-  document.getElementById('btn-columns').style.display = '';
-  await loadSheet();
+  document.getElementById('toolbar-actions').style.display = '';
+  document.getElementById('tab-bar').style.display = 'flex';
+  switchTab(currentTab);
 }
 
-async function loadSheet() {
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.sheet-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.getElementById('btn-columns').style.display = tab === 'elenco_immagini' ? '' : 'none';
+  loadCurrentTab();
+}
+
+async function loadCurrentTab() {
   if (!currentJobId) return;
+  if (currentTab === 'elenco_immagini') {
+    await loadElencoImmagini();
+  } else if (currentTab === 'locations') {
+    await loadLocations();
+  }
+}
+
+function addRowForTab() {
+  if (currentTab === 'elenco_immagini') openAddRowModal();
+  else if (currentTab === 'locations') openLocModal();
+}
+
+// ──── ELENCO IMMAGINI ────────────────────────────
+
+async function loadElencoImmagini() {
   try {
     const [colRes, imgRes] = await Promise.all([
       fetch(`/api/foglio-columns/${currentJobId}`),
@@ -274,20 +344,17 @@ async function loadSheet() {
     images = await imgRes.json();
     if (!Array.isArray(columns)) columns = [];
     if (!Array.isArray(images)) images = [];
-    renderSheet();
+    renderElencoImmagini();
   } catch(e) { console.error(e); }
 }
 
-function renderSheet() {
+function renderElencoImmagini() {
   const thead = document.getElementById('sheet-thead');
   const tbody = document.getElementById('sheet-tbody');
   const table = document.getElementById('sheet-table');
-  const empty = document.getElementById('empty-state');
-  const stats = document.getElementById('stats-bar');
-
+  document.getElementById('empty-state').style.display = 'none';
   table.style.display = '';
-  empty.style.display = 'none';
-  stats.style.display = 'flex';
+  document.getElementById('stats-bar').style.display = 'flex';
 
   const groups = {};
   columns.forEach(c => {
@@ -295,34 +362,17 @@ function renderSheet() {
     groups[c.column_group].push(c);
   });
 
-  let gh = '<tr>';
-  gh += '<th colspan="2"></th>';
-  gh += '<th colspan="5"></th>';
-  gh += '<th></th>';
-  Object.keys(groups).forEach(g => {
-    gh += `<th class="group-header" colspan="${groups[g].length}">${g}</th>`;
-  });
-  gh += '<th colspan="2"></th>';
-  gh += '<th></th>';
-  gh += '</tr>';
+  let gh = '<tr><th colspan="2"></th><th colspan="5"></th><th></th>';
+  Object.keys(groups).forEach(g => { gh += `<th class="group-header" colspan="${groups[g].length}">${g}</th>`; });
+  gh += '<th colspan="2"></th><th></th></tr>';
 
   let h = '<tr>';
-  h += '<th><div class="th-inner">#</div></th>';
-  h += '<th><div class="th-inner"></div></th>';
-  h += '<th><div class="th-inner">Location</div></th>';
-  h += '<th><div class="th-inner">Sub-loc.</div></th>';
-  h += '<th><div class="th-inner">Frame</div></th>';
-  h += '<th><div class="th-inner">Tipo</div></th>';
-  h += '<th><div class="th-inner">Or.</div></th>';
+  h += '<th><div class="th-inner">#</div></th><th><div class="th-inner"></div></th>';
+  h += '<th><div class="th-inner">Location</div></th><th><div class="th-inner">Sub-loc.</div></th>';
+  h += '<th><div class="th-inner">Frame</div></th><th><div class="th-inner">Tipo</div></th><th><div class="th-inner">Or.</div></th>';
   h += '<th><div class="th-inner">Immagini</div></th>';
-  columns.forEach(c => {
-    h += `<th><div class="th-inner" title="${c.column_group}: ${c.name}">${c.name}</div></th>`;
-  });
-  h += '<th><div class="th-inner">% Mod.</div></th>';
-  h += '<th><div class="th-inner">Note</div></th>';
-  h += '<th><div class="th-inner"></div></th>';
-  h += '</tr>';
-
+  columns.forEach(c => { h += `<th><div class="th-inner" title="${c.column_group}: ${c.name}">${c.name}</div></th>`; });
+  h += '<th><div class="th-inner">% Mod.</div></th><th><div class="th-inner">Note</div></th><th><div class="th-inner"></div></th></tr>';
   thead.innerHTML = gh + h;
 
   let b = '';
@@ -331,34 +381,79 @@ function renderSheet() {
     const locBreak = img.location && img.location !== prevLoc;
     prevLoc = img.location;
     const pv = img.phase_values || {};
-
     b += `<tr class="${locBreak && idx > 0 ? 'location-break' : ''}" data-id="${img.id}">`;
     b += `<td><div class="cell" style="color:var(--paper-m);font-size:.6rem;text-align:center">${idx+1}</div></td>`;
-    b += `<td><div class="row-actions"><button onclick="deleteRow(${img.id})" title="Elimina" data-testid="button-delete-row-${img.id}">✕</button></div></td>`;
-    b += `<td class="col-location editable" data-field="location" data-id="${img.id}"><div class="cell">${esc(img.location)}</div></td>`;
-    b += `<td class="col-sub-location editable" data-field="sub_location" data-id="${img.id}"><div class="cell">${esc(img.sub_location)}</div></td>`;
-    b += `<td class="col-frame editable" data-field="frame" data-id="${img.id}"><div class="cell">${esc(img.frame)}</div></td>`;
-    b += `<td class="col-tipo editable" data-field="tipo" data-id="${img.id}"><div class="cell">${esc(img.tipo)}</div></td>`;
-    b += `<td class="col-orient editable" data-field="orientation" data-id="${img.id}"><div class="cell">${esc(img.orientation)}</div></td>`;
-    b += `<td class="col-image-name editable" data-field="image_name" data-id="${img.id}"><div class="cell">${esc(img.image_name)}</div></td>`;
-
+    b += `<td><div class="row-actions"><button onclick="deleteImageRow(${img.id})" title="Elimina" data-testid="button-delete-row-${img.id}">✕</button></div></td>`;
+    b += `<td class="col-location editable" data-field="location" data-id="${img.id}" data-api="images"><div class="cell">${esc(img.location)}</div></td>`;
+    b += `<td class="col-sub-location editable" data-field="sub_location" data-id="${img.id}" data-api="images"><div class="cell">${esc(img.sub_location)}</div></td>`;
+    b += `<td class="col-frame editable" data-field="frame" data-id="${img.id}" data-api="images"><div class="cell">${esc(img.frame)}</div></td>`;
+    b += `<td class="col-tipo editable" data-field="tipo" data-id="${img.id}" data-api="images"><div class="cell">${esc(img.tipo)}</div></td>`;
+    b += `<td class="col-orient editable" data-field="orientation" data-id="${img.id}" data-api="images"><div class="cell">${esc(img.orientation)}</div></td>`;
+    b += `<td class="col-image-name editable" data-field="image_name" data-id="${img.id}" data-api="images"><div class="cell">${esc(img.image_name)}</div></td>`;
     columns.forEach(c => {
       const val = pv[c.column_key] !== undefined ? pv[c.column_key] : 0;
-      b += `<td class="col-phase editable" data-field="${esc(c.column_key)}" data-id="${img.id}" data-type="phase"><div class="cell ${val == 0 ? 'val-0' : 'val-pos'}">${val}</div></td>`;
+      b += `<td class="col-phase editable" data-field="${esc(c.column_key)}" data-id="${img.id}" data-type="phase" data-api="images"><div class="cell ${val == 0 ? 'val-0' : 'val-pos'}">${val}</div></td>`;
     });
-
-    b += `<td class="col-pct editable" data-field="percentuale_modifica" data-id="${img.id}" data-type="number"><div class="cell">${img.percentuale_modifica || ''}</div></td>`;
-    b += `<td class="col-note editable" data-field="note" data-id="${img.id}"><div class="cell">${esc(img.note)}</div></td>`;
-    b += `<td></td>`;
-    b += '</tr>';
+    b += `<td class="col-pct editable" data-field="percentuale_modifica" data-id="${img.id}" data-type="number" data-api="images"><div class="cell">${img.percentuale_modifica || ''}</div></td>`;
+    b += `<td class="col-note editable" data-field="note" data-id="${img.id}" data-api="images"><div class="cell">${esc(img.note)}</div></td>`;
+    b += '<td></td></tr>';
   });
   tbody.innerHTML = b;
 
   document.getElementById('stat-rows').textContent = images.length;
   const locs = new Set(images.map(i => i.location).filter(Boolean));
-  document.getElementById('stat-locations').textContent = locs.size;
+  document.getElementById('stat-extra').innerHTML = `Location: <span class="stat-val">${locs.size}</span>`;
   document.getElementById('toolbar-info').textContent = images.length ? `${images.length} immagini` : 'Nessuna immagine';
 }
+
+// ──── LOCATIONS ────────────────────────────
+
+async function loadLocations() {
+  try {
+    const res = await fetch(`/api/foglio-locations/${currentJobId}`);
+    if (!res.ok) return;
+    locations = await res.json();
+    if (!Array.isArray(locations)) locations = [];
+    renderLocations();
+  } catch(e) { console.error(e); }
+}
+
+function renderLocations() {
+  const thead = document.getElementById('sheet-thead');
+  const tbody = document.getElementById('sheet-tbody');
+  const table = document.getElementById('sheet-table');
+  document.getElementById('empty-state').style.display = 'none';
+  table.style.display = '';
+  document.getElementById('stats-bar').style.display = 'flex';
+
+  thead.innerHTML = '<tr>' +
+    '<th><div class="th-inner">#</div></th>' +
+    '<th><div class="th-inner"></div></th>' +
+    '<th><div class="th-inner">Nome location</div></th>' +
+    '<th><div class="th-inner">Tipologia</div></th>' +
+    '<th><div class="th-inner">Descrizione</div></th>' +
+    '<th><div class="th-inner">Note</div></th>' +
+    '</tr>';
+
+  let b = '';
+  locations.forEach((loc, idx) => {
+    b += `<tr data-id="${loc.id}">`;
+    b += `<td><div class="cell" style="color:var(--paper-m);font-size:.6rem;text-align:center">${idx+1}</div></td>`;
+    b += `<td><div class="row-actions"><button onclick="deleteLocation(${loc.id})" title="Elimina" data-testid="button-delete-loc-${loc.id}">✕</button></div></td>`;
+    b += `<td class="col-nome editable" data-field="nome_location" data-id="${loc.id}" data-api="locations"><div class="cell">${esc(loc.nome_location)}</div></td>`;
+    b += `<td class="col-tipologia editable" data-field="tipologia" data-id="${loc.id}" data-api="locations" data-type="select"><div class="cell">${esc(loc.tipologia)}</div></td>`;
+    b += `<td class="col-desc editable" data-field="descrizione" data-id="${loc.id}" data-api="locations"><div class="cell">${esc(loc.descrizione)}</div></td>`;
+    b += `<td class="col-note editable" data-field="note" data-id="${loc.id}" data-api="locations"><div class="cell">${esc(loc.note)}</div></td>`;
+    b += '</tr>';
+  });
+  tbody.innerHTML = b;
+
+  document.getElementById('stat-rows').textContent = locations.length;
+  document.getElementById('stat-extra').innerHTML = '';
+  document.getElementById('toolbar-info').textContent = locations.length ? `${locations.length} locations` : 'Nessuna location';
+}
+
+// ──── INLINE EDITING (shared) ────────────────────────────
 
 function esc(s) {
   if (s == null) return '';
@@ -376,21 +471,31 @@ function startEditing(td) {
   editingCell = td;
   td.classList.add('editing');
   const field = td.dataset.field;
-  const id = td.dataset.id;
   const isPhase = td.dataset.type === 'phase';
   const isNumber = td.dataset.type === 'number' || isPhase;
+  const isSelect = td.dataset.type === 'select';
   const currentVal = td.querySelector('.cell').textContent.trim();
 
-  const input = document.createElement('input');
-  input.className = 'cell-input';
-  input.type = isNumber ? 'number' : 'text';
-  input.value = currentVal === '0' && isPhase ? '' : currentVal;
-  if (isNumber) { input.step = isPhase ? '1' : '0.1'; input.min = '0'; }
-  td.appendChild(input);
-  input.focus();
-  input.select();
+  let el;
+  if (isSelect && field === 'tipologia') {
+    el = document.createElement('select');
+    el.className = 'cell-input';
+    el.innerHTML = '<option value="">—</option>' + TIPOLOGIE.map(t => `<option value="${esc(t)}"${t===currentVal?' selected':''}>${esc(t)}</option>`).join('');
+    td.appendChild(el);
+    el.focus();
+    el.addEventListener('change', function() { stopEditing(td); });
+  } else {
+    el = document.createElement('input');
+    el.className = 'cell-input';
+    el.type = isNumber ? 'number' : 'text';
+    el.value = currentVal === '0' && isPhase ? '' : currentVal;
+    if (isNumber) { el.step = isPhase ? '1' : '0.1'; el.min = '0'; }
+    td.appendChild(el);
+    el.focus();
+    el.select();
+  }
 
-  input.addEventListener('keydown', function(ev) {
+  el.addEventListener('keydown', function(ev) {
     if (ev.key === 'Enter') { stopEditing(td); }
     if (ev.key === 'Escape') { cancelEditing(td); }
     if (ev.key === 'Tab') {
@@ -400,8 +505,8 @@ function startEditing(td) {
       if (next && next.classList.contains('editable')) startEditing(next);
     }
   });
-  input.addEventListener('blur', function() {
-    setTimeout(() => { if (editingCell === td) stopEditing(td); }, 100);
+  el.addEventListener('blur', function() {
+    setTimeout(() => { if (editingCell === td) stopEditing(td); }, 150);
   });
 }
 
@@ -412,6 +517,7 @@ async function stopEditing(td) {
   const newVal = input.value;
   const field = td.dataset.field;
   const id = td.dataset.id;
+  const api = td.dataset.api;
   const isPhase = td.dataset.type === 'phase';
   const isNumber = td.dataset.type === 'number' || isPhase;
   const val = isNumber ? (parseFloat(newVal) || 0) : newVal;
@@ -425,20 +531,15 @@ async function stopEditing(td) {
   }
   editingCell = null;
 
+  const endpoint = api === 'locations' ? `/api/foglio-locations/${id}/cell` : `/api/foglio-images/${id}/cell`;
   try {
-    const res = await fetch(`/api/foglio-images/${id}/cell`, {
+    const res = await fetch(endpoint, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ field, value: val })
     });
-    if (!res.ok) {
-      console.error('Cell save failed');
-      await loadSheet();
-    }
-  } catch(e) {
-    console.error(e);
-    await loadSheet();
-  }
+    if (!res.ok) { console.error('Cell save failed'); await loadCurrentTab(); }
+  } catch(e) { console.error(e); await loadCurrentTab(); }
 }
 
 function cancelEditing(td) {
@@ -447,6 +548,8 @@ function cancelEditing(td) {
   if (input) input.remove();
   editingCell = null;
 }
+
+// ──── IMAGE ROW MODAL ────────────────────────────
 
 function openAddRowModal() {
   document.getElementById('row-modal-title').textContent = 'Aggiungi immagine';
@@ -461,7 +564,6 @@ function openAddRowModal() {
   document.getElementById('rm-pct').value = '0';
   document.getElementById('rm-opt1').checked = false;
   document.getElementById('rm-opt2').checked = false;
-
   if (images.length) {
     const last = images[images.length - 1];
     document.getElementById('rm-location').value = last.location || '';
@@ -470,9 +572,7 @@ function openAddRowModal() {
   document.getElementById('row-modal').classList.add('active');
 }
 
-function closeRowModal() {
-  document.getElementById('row-modal').classList.remove('active');
-}
+function closeRowModal() { document.getElementById('row-modal').classList.remove('active'); }
 
 async function submitRow() {
   const data = {
@@ -488,36 +588,62 @@ async function submitRow() {
     optional_2: document.getElementById('rm-opt2').checked,
     sort_order: images.length
   };
-
   try {
-    const res = await fetch(`/api/foglio-images/${currentJobId}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    });
+    const res = await fetch(`/api/foglio-images/${currentJobId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
     if (!res.ok) { alert('Errore nel salvataggio'); return; }
     closeRowModal();
-    await loadSheet();
+    await loadElencoImmagini();
   } catch(e) { alert('Errore: ' + e.message); }
 }
 
-async function deleteRow(id) {
+async function deleteImageRow(id) {
   if (!confirm('Eliminare questa riga?')) return;
-  try {
-    await fetch(`/api/foglio-images/${id}`, { method: 'DELETE' });
-    await loadSheet();
-  } catch(e) { console.error(e); }
+  try { await fetch(`/api/foglio-images/${id}`, { method: 'DELETE' }); await loadElencoImmagini(); } catch(e) { console.error(e); }
 }
 
-async function openColumnsModal() {
+// ──── LOCATION MODAL ────────────────────────────
+
+function openLocModal() {
+  document.getElementById('loc-modal-title').textContent = 'Aggiungi location';
+  document.getElementById('lm-nome').value = '';
+  document.getElementById('lm-tipologia').value = '';
+  document.getElementById('lm-descrizione').value = '';
+  document.getElementById('lm-note').value = '';
+  document.getElementById('loc-modal').classList.add('active');
+}
+
+function closeLocModal() { document.getElementById('loc-modal').classList.remove('active'); }
+
+async function submitLocation() {
+  const data = {
+    nome_location: document.getElementById('lm-nome').value,
+    tipologia: document.getElementById('lm-tipologia').value,
+    descrizione: document.getElementById('lm-descrizione').value,
+    note: document.getElementById('lm-note').value,
+    sort_order: locations.length
+  };
+  if (!data.nome_location) { alert('Inserisci il nome della location'); return; }
+  try {
+    const res = await fetch(`/api/foglio-locations/${currentJobId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+    if (!res.ok) { alert('Errore nel salvataggio'); return; }
+    closeLocModal();
+    await loadLocations();
+  } catch(e) { alert('Errore: ' + e.message); }
+}
+
+async function deleteLocation(id) {
+  if (!confirm('Eliminare questa location?')) return;
+  try { await fetch(`/api/foglio-locations/${id}`, { method: 'DELETE' }); await loadLocations(); } catch(e) { console.error(e); }
+}
+
+// ──── COLUMNS CONFIG ────────────────────────────
+
+function openColumnsModal() {
   document.getElementById('columns-modal').classList.add('active');
   renderColumnsList();
   document.getElementById('btn-init-defaults').style.display = columns.length ? 'none' : '';
 }
-
-function closeColumnsModal() {
-  document.getElementById('columns-modal').classList.remove('active');
-}
+function closeColumnsModal() { document.getElementById('columns-modal').classList.remove('active'); }
 
 function renderColumnsList() {
   const list = document.getElementById('col-list');
@@ -525,13 +651,7 @@ function renderColumnsList() {
     list.innerHTML = '<p style="font-size:.65rem;color:var(--paper-m);text-align:center;padding:12px">Nessuna colonna configurata. Clicca "Carica predefinite" per iniziare.</p>';
     return;
   }
-  list.innerHTML = columns.map(c => `
-    <div class="col-item">
-      <span class="col-name">${esc(c.name)}</span>
-      <span class="col-group">${esc(c.column_group)}</span>
-      <button onclick="deleteColumn(${c.id})" title="Rimuovi" data-testid="button-delete-col-${c.id}">✕</button>
-    </div>
-  `).join('');
+  list.innerHTML = columns.map(c => `<div class="col-item"><span class="col-name">${esc(c.name)}</span><span class="col-group">${esc(c.column_group)}</span><button onclick="deleteColumn(${c.id})" title="Rimuovi" data-testid="button-delete-col-${c.id}">✕</button></div>`).join('');
 }
 
 async function addColumn() {
@@ -539,36 +659,34 @@ async function addColumn() {
   if (!name) return;
   const group = document.getElementById('new-col-group').value;
   try {
-    const res = await fetch(`/api/foglio-columns/${currentJobId}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, column_group: group, sort_order: columns.length })
-    });
+    const res = await fetch(`/api/foglio-columns/${currentJobId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, column_group: group, sort_order: columns.length }) });
     if (!res.ok) { alert('Errore'); return; }
     document.getElementById('new-col-name').value = '';
-    await loadSheet();
+    await loadElencoImmagini();
     renderColumnsList();
   } catch(e) { console.error(e); }
 }
 
 async function deleteColumn(id) {
   if (!confirm('Rimuovere questa colonna?')) return;
-  try {
-    await fetch(`/api/foglio-columns/${id}`, { method: 'DELETE' });
-    await loadSheet();
-    renderColumnsList();
-  } catch(e) { console.error(e); }
+  try { await fetch(`/api/foglio-columns/${id}`, { method: 'DELETE' }); await loadElencoImmagini(); renderColumnsList(); } catch(e) { console.error(e); }
 }
 
 async function initDefaultColumns() {
   try {
     const res = await fetch(`/api/foglio-columns/${currentJobId}/init-default`, { method: 'POST' });
     if (!res.ok) { alert('Errore'); return; }
-    await loadSheet();
+    await loadElencoImmagini();
     renderColumnsList();
     document.getElementById('btn-init-defaults').style.display = 'none';
   } catch(e) { console.error(e); }
 }
+
+// Populate tipologia dropdown from JS constant
+(function() {
+  const sel = document.getElementById('lm-tipologia');
+  TIPOLOGIE.forEach(t => { const o = document.createElement('option'); o.value = t; o.textContent = t; sel.appendChild(o); });
+})();
 
 loadJobs();
 </script>

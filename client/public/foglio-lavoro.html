@@ -128,8 +128,32 @@ tr.expand-row .expand-content::-webkit-scrollbar-thumb{background:var(--paper-l)
 .thumb-mini{width:44px;height:44px;border-radius:4px;object-fit:cover;border:1px solid var(--paper-l);cursor:pointer;transition:border-color .15s,transform .15s;flex-shrink:0}
 .thumb-mini:hover{border-color:var(--accent);transform:scale(1.06)}
 
-.col-image-name .cell{font-size:.82rem;font-weight:700;gap:10px;letter-spacing:.01em;color:#fff}
-.col-image-name{min-width:260px}
+.col-image-name .cell{font-size:1.1rem;font-weight:700;gap:10px;letter-spacing:.01em;color:#fff;padding:6px 10px;min-height:48px}
+.col-image-name{min-width:300px}
+
+tr[data-color="red"] td{background:rgba(239,68,68,.12)!important;border-color:rgba(239,68,68,.25)!important}
+tr[data-color="orange"] td{background:rgba(249,115,22,.12)!important;border-color:rgba(249,115,22,.25)!important}
+tr[data-color="yellow"] td{background:rgba(234,179,8,.10)!important;border-color:rgba(234,179,8,.22)!important}
+tr[data-color="green"] td{background:rgba(34,197,94,.10)!important;border-color:rgba(34,197,94,.22)!important}
+tr[data-color="blue"] td{background:rgba(59,130,246,.10)!important;border-color:rgba(59,130,246,.22)!important}
+tr[data-color="purple"] td{background:rgba(168,85,247,.10)!important;border-color:rgba(168,85,247,.22)!important}
+tr[data-color="pink"] td{background:rgba(236,72,153,.10)!important;border-color:rgba(236,72,153,.22)!important}
+tr[data-color="gray"] td{background:rgba(107,114,128,.12)!important;border-color:rgba(107,114,128,.25)!important}
+
+.color-picker-popup{position:fixed;z-index:200;background:var(--paper-h);border:1px solid var(--paper-l);border-radius:8px;padding:8px;display:none;box-shadow:0 6px 24px rgba(0,0,0,.5);gap:6px;flex-wrap:wrap;width:180px}
+.color-picker-popup.active{display:flex}
+.color-dot{width:24px;height:24px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .15s,border-color .15s}
+.color-dot:hover{transform:scale(1.15);border-color:#fff}
+.color-dot.active{border-color:#fff;box-shadow:0 0 6px rgba(255,255,255,.3)}
+.color-dot[data-color=""]{background:var(--paper);border:2px dashed var(--paper-l);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--paper-m)}
+.color-dot[data-color="red"]{background:#ef4444}
+.color-dot[data-color="orange"]{background:#f97316}
+.color-dot[data-color="yellow"]{background:#eab308}
+.color-dot[data-color="green"]{background:#22c55e}
+.color-dot[data-color="blue"]{background:#3b82f6}
+.color-dot[data-color="purple"]{background:#a855f7}
+.color-dot[data-color="pink"]{background:#ec4899}
+.color-dot[data-color="gray"]{background:#6b7280}
 
 .col-detail{transition:width .2s,padding .2s,opacity .2s,max-width .2s}
 .col-detail.collapsed{width:0!important;min-width:0!important;max-width:0!important;padding:0!important;overflow:hidden;border-left:none;border-right:none;opacity:0}
@@ -327,6 +351,18 @@ th.col-detail.collapsed .th-inner{display:none}
       <button class="btn btn-primary" onclick="initDefaultColumns()" data-testid="button-init-defaults" id="btn-init-defaults">Carica predefinite</button>
     </div>
   </div>
+</div>
+
+<div class="color-picker-popup" id="color-picker-popup" data-testid="color-picker-popup">
+  <div class="color-dot" data-color="" title="Nessun colore" data-testid="color-dot-none">✕</div>
+  <div class="color-dot" data-color="red" title="Rosso" data-testid="color-dot-red"></div>
+  <div class="color-dot" data-color="orange" title="Arancione" data-testid="color-dot-orange"></div>
+  <div class="color-dot" data-color="yellow" title="Giallo" data-testid="color-dot-yellow"></div>
+  <div class="color-dot" data-color="green" title="Verde" data-testid="color-dot-green"></div>
+  <div class="color-dot" data-color="blue" title="Blu" data-testid="color-dot-blue"></div>
+  <div class="color-dot" data-color="purple" title="Viola" data-testid="color-dot-purple"></div>
+  <div class="color-dot" data-color="pink" title="Rosa" data-testid="color-dot-pink"></div>
+  <div class="color-dot" data-color="gray" title="Grigio" data-testid="color-dot-gray"></div>
 </div>
 
 <!-- Batch Upload Modal -->
@@ -541,7 +577,7 @@ function renderElencoImmagini() {
     const isExpanded = expandedRows.has(img.id);
     const hasRevs = imgRevs.length > 0;
 
-    b += `<tr class="${locBreak && idx > 0 ? 'location-break' : ''}" data-id="${img.id}">`;
+    b += `<tr class="${locBreak && idx > 0 ? 'location-break' : ''}" data-id="${img.id}"${img.row_color ? ' data-color="'+esc(img.row_color)+'"' : ''} oncontextmenu="showColorPicker(event,${img.id})">`;
     b += `<td><div class="cell" style="justify-content:center"><button class="expand-toggle${isExpanded ? ' open' : ''}${hasRevs ? '' : ' no-revs'}" onclick="toggleExpand(${img.id})" title="${hasRevs ? imgRevs.length+' revisioni' : 'Espandi per caricare revisioni'}" data-testid="button-expand-${img.id}">&#9654;</button>${hasRevs ? '<span style="font-size:.46rem;color:var(--accent);margin-left:1px">'+imgRevs.length+'</span>' : ''}</div></td>`;
     b += `<td><div class="cell" style="color:var(--paper-m);font-size:.6rem;text-align:center">${idx+1}</div></td>`;
     b += `<td><div class="row-actions"><button onclick="deleteImageRow(${img.id})" title="Elimina" data-testid="button-delete-row-${img.id}">✕</button></div></td>`;
@@ -1118,6 +1154,51 @@ async function deleteImageRow(id) {
   if (!confirm('Eliminare questa riga?')) return;
   try { await fetch(`/api/foglio-images/${id}`, { method: 'DELETE' }); await loadElencoImmagini(); } catch(e) { console.error(e); }
 }
+
+// ──── ROW COLOR PICKER ────────────────────────────
+
+let colorPickerTarget = null;
+
+function showColorPicker(e, imageId) {
+  e.preventDefault();
+  colorPickerTarget = imageId;
+  const popup = document.getElementById('color-picker-popup');
+  const img = images.find(i => i.id === imageId);
+  const current = img ? (img.row_color || '') : '';
+  popup.querySelectorAll('.color-dot').forEach(d => d.classList.toggle('active', d.dataset.color === current));
+  let x = e.clientX, y = e.clientY;
+  if (x + 190 > window.innerWidth) x = window.innerWidth - 200;
+  if (y + 50 > window.innerHeight) y = y - 50;
+  popup.style.left = x + 'px';
+  popup.style.top = y + 'px';
+  popup.classList.add('active');
+}
+
+document.getElementById('color-picker-popup').addEventListener('click', async (e) => {
+  const dot = e.target.closest('.color-dot');
+  if (!dot || colorPickerTarget === null) return;
+  const color = dot.dataset.color;
+  const id = colorPickerTarget;
+  document.getElementById('color-picker-popup').classList.remove('active');
+  const row = document.querySelector(`tr[data-id="${id}"]`);
+  const img = images.find(i => i.id === id);
+  const prevColor = img ? (img.row_color || '') : '';
+  if (row) { if (color) row.setAttribute('data-color', color); else row.removeAttribute('data-color'); }
+  if (img) img.row_color = color;
+  try {
+    const res = await fetch(`/api/foglio-images/${id}/cell`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ field: 'row_color', value: color }) });
+    if (!res.ok) throw new Error('Errore salvataggio');
+  } catch(e) {
+    console.error(e);
+    if (row) { if (prevColor) row.setAttribute('data-color', prevColor); else row.removeAttribute('data-color'); }
+    if (img) img.row_color = prevColor;
+  }
+  colorPickerTarget = null;
+});
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#color-picker-popup')) document.getElementById('color-picker-popup').classList.remove('active');
+});
 
 // ──── LOCATION MODAL ────────────────────────────
 

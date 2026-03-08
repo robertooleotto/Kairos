@@ -703,7 +703,11 @@ export async function registerRoutes(
 
   app.patch("/api/foglio-images/:id/cell", async (req, res) => {
     const { field, value } = req.body;
-    const directFields = ['location','sub_location','frame','optional_1','optional_2','tipo','orientation','image_name','percentuale_modifica','note','sort_order'];
+    const directFields = ['location','sub_location','frame','optional_1','optional_2','tipo','orientation','image_name','percentuale_modifica','note','sort_order','row_color'];
+    if (field === 'row_color') {
+      const allowed = ['','red','orange','yellow','green','blue','purple','pink','gray'];
+      if (!allowed.includes(value ?? '')) return res.status(400).json({ error: "invalid color" });
+    }
     if (directFields.includes(field)) {
       const rows = await query(`UPDATE foglio_images SET ${field}=$1 WHERE id=$2 RETURNING *`, [value, req.params.id]);
       if (!rows.length) return res.status(404).json({ error: "not found" });

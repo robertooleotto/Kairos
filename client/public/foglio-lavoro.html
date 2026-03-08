@@ -7,8 +7,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Sora:wght@400;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --paper:#0f0f17;--paper-h:#16161f;--paper-l:#24242d;
-  --paper-s:#cdd0de;--paper-m:#737889;--paper-t:#f9fafb;
+  --paper:#f5f5f0;--paper-h:#ebebdf;--paper-l:#d5d5ca;
+  --paper-s:#3a3a42;--paper-m:#8a8a95;--paper-t:#1a1a24;
   --accent:#6366f1;--accent-h:#5558e3;
 }
 *{margin:0;padding:0;box-sizing:border-box}
@@ -17,20 +17,20 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
 
 .header{padding:14px 24px;border-bottom:1px solid var(--paper-l);display:flex;align-items:center;gap:16px;background:var(--paper);z-index:100;flex-shrink:0}
 .brand{flex-shrink:0;display:flex;align-items:center;gap:10px}
-.nav-pills{display:flex;gap:2px;background:rgba(255,255,255,.05);border-radius:10px;padding:3px;position:absolute;left:50%;transform:translateX(-50%)}
+.nav-pills{display:flex;gap:2px;background:rgba(0,0,0,.04);border-radius:10px;padding:3px;position:absolute;left:50%;transform:translateX(-50%)}
 .nav-pill{padding:5px 16px;border-radius:8px;font-size:.72rem;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--paper-m);font-family:'Sora',sans-serif;transition:all .15s}
-.nav-pill.active{background:#1c1f30;color:var(--paper-t)}
+.nav-pill.active{background:#fff;color:var(--paper-t);box-shadow:0 1px 3px rgba(0,0,0,.08)}
 .nav-pill:hover:not(.active){color:var(--paper-s)}
 
 .toolbar{padding:10px 24px;border-bottom:1px solid var(--paper-l);display:flex;align-items:center;gap:12px;background:var(--paper-h);flex-shrink:0}
-.toolbar select{background:var(--paper-l);color:var(--paper-t);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:6px 12px;font-size:.72rem;font-family:'Sora',sans-serif;cursor:pointer;min-width:200px}
+.toolbar select{background:#fff;color:var(--paper-t);border:1px solid var(--paper-l);border-radius:6px;padding:6px 12px;font-size:.72rem;font-family:'Sora',sans-serif;cursor:pointer;min-width:200px}
 .toolbar select:focus{outline:none;border-color:var(--accent)}
 
 .btn{padding:6px 14px;border-radius:6px;font-size:.68rem;font-weight:600;border:none;cursor:pointer;font-family:'Sora',sans-serif;transition:all .15s;display:inline-flex;align-items:center;gap:5px}
 .btn-primary{background:var(--accent);color:#fff}
 .btn-primary:hover{background:var(--accent-h)}
-.btn-ghost{background:transparent;color:var(--paper-m);border:1px solid rgba(255,255,255,.08)}
-.btn-ghost:hover{color:var(--paper-s);border-color:rgba(255,255,255,.15)}
+.btn-ghost{background:transparent;color:var(--paper-m);border:1px solid var(--paper-l)}
+.btn-ghost:hover{color:var(--paper-s);border-color:var(--paper-m)}
 .btn-danger{background:#ef4444;color:#fff}
 .btn-danger:hover{background:#dc2626}
 .btn-sm{padding:4px 10px;font-size:.62rem}
@@ -41,18 +41,18 @@ table.sheet{border-collapse:collapse;font-size:.68rem;width:max-content;min-widt
 table.sheet thead{position:sticky;top:0;z-index:10}
 table.sheet th{background:var(--paper-h);color:var(--paper-m);padding:0;font-weight:600;text-transform:uppercase;letter-spacing:.04em;border:1px solid var(--paper-l);white-space:nowrap;position:relative}
 table.sheet th .th-inner{padding:6px 10px;display:flex;align-items:center;gap:4px}
-table.sheet th.group-header{background:#1a1a2e;color:var(--accent);text-align:center;font-size:.6rem;border-bottom:2px solid var(--accent)}
+table.sheet th.group-header{background:rgba(99,102,241,.06);color:var(--accent);text-align:center;font-size:.6rem;border-bottom:2px solid var(--accent)}
 
-table.sheet td{padding:0;border:1px solid var(--paper-l);background:var(--paper);white-space:nowrap;min-width:50px}
+table.sheet td{padding:0;border:1px solid var(--paper-l);background:#fff;white-space:nowrap;min-width:50px}
 table.sheet td .cell{padding:4px 8px;min-height:28px;display:flex;align-items:center;cursor:default}
 table.sheet td.editable .cell{cursor:text}
 table.sheet td.editable:hover{background:rgba(99,102,241,.06)}
-table.sheet td.editing{background:rgba(99,102,241,.1);box-shadow:inset 0 0 0 1.5px var(--accent)}
+table.sheet td.editing{background:rgba(99,102,241,.08);box-shadow:inset 0 0 0 1.5px var(--accent)}
 table.sheet td.editing .cell{display:none}
 table.sheet td input.cell-input,table.sheet td select.cell-input{width:100%;padding:4px 8px;min-height:28px;background:transparent;color:var(--paper-t);border:none;font-family:'Sora',sans-serif;font-size:.68rem;outline:none}
 table.sheet td input.cell-input[type=number]{text-align:center}
-table.sheet td select.cell-input{cursor:pointer;background:var(--paper)}
-table.sheet td select.cell-input option{background:var(--paper-h);color:var(--paper-t)}
+table.sheet td select.cell-input{cursor:pointer;background:#fff}
+table.sheet td select.cell-input option{background:#fff;color:var(--paper-t)}
 
 table.sheet td.col-location .cell,
 table.sheet td.col-sub-location .cell,
@@ -60,7 +60,7 @@ table.sheet td.col-nome .cell{font-weight:600;color:var(--paper-s)}
 table.sheet td.col-frame .cell{text-align:center;font-family:'JetBrains Mono',monospace;font-size:.65rem}
 table.sheet td.col-tipo .cell,
 table.sheet td.col-orient .cell{text-align:center;font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--paper-m)}
-table.sheet td.col-image-name .cell{font-family:'Sora',sans-serif;font-size:1.6rem;font-weight:700;color:#fff;max-width:500px;overflow:hidden;text-overflow:ellipsis;letter-spacing:.01em;padding:8px 10px;min-height:52px;gap:10px;line-height:1.2}
+table.sheet td.col-image-name .cell{font-family:'Sora',sans-serif;font-size:1rem;font-weight:700;color:var(--paper-t);max-width:500px;overflow:hidden;text-overflow:ellipsis;letter-spacing:.01em;padding:8px 10px;min-height:44px;gap:10px;line-height:1.2}
 table.sheet td.col-phase .cell{text-align:center;font-family:'JetBrains Mono',monospace;font-size:.65rem}
 table.sheet td.col-phase .cell.val-0{color:var(--paper-l)}
 table.sheet td.col-phase .cell.val-pos{color:#22c55e}
@@ -69,7 +69,7 @@ table.sheet td.col-desc .cell{max-width:350px;overflow:hidden;text-overflow:elli
 table.sheet td.col-pct .cell{text-align:center;font-family:'JetBrains Mono',monospace;font-size:.62rem}
 table.sheet td.col-tipologia .cell{color:var(--accent);font-size:.64rem}
 
-table.sheet tr:hover td{background:rgba(255,255,255,.02)}
+table.sheet tr:hover td{background:rgba(99,102,241,.03)}
 table.sheet tr.location-break td{border-top:2px solid var(--accent)}
 
 .row-actions{display:flex;gap:2px;opacity:0;transition:opacity .15s}
@@ -81,9 +81,9 @@ table.sheet tr:hover .row-actions{opacity:1}
 .empty-state svg{width:48px;height:48px;opacity:.3}
 .empty-state h3{font-family:'Fraunces',serif;font-size:1.1rem;color:var(--paper-s)}
 
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:200;align-items:center;justify-content:center}
 .modal-overlay.active{display:flex}
-.modal{background:var(--paper-h);border:1px solid var(--paper-l);border-radius:12px;padding:24px;width:480px;max-width:90vw;max-height:85vh;overflow-y:auto}
+.modal{background:#fff;border:1px solid var(--paper-l);border-radius:12px;padding:24px;width:480px;max-width:90vw;max-height:85vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.12)}
 .modal h3{font-family:'Fraunces',serif;font-size:1rem;margin-bottom:16px}
 .modal label{display:block;font-size:.68rem;font-weight:600;color:var(--paper-m);margin-bottom:4px;margin-top:12px}
 .modal input,.modal select,.modal textarea{width:100%;padding:8px 12px;background:var(--paper);border:1px solid var(--paper-l);border-radius:6px;color:var(--paper-t);font-family:'Sora',sans-serif;font-size:.72rem}
@@ -111,7 +111,7 @@ table.sheet tr:hover .row-actions{opacity:1}
 .expand-toggle:hover{color:var(--paper-s)}
 .expand-toggle.open{transform:rotate(90deg);color:var(--accent)}
 
-tr.expand-row td{background:var(--paper-h);padding:0;border:1px solid var(--paper-l)}
+tr.expand-row td{background:var(--paper);padding:0;border:1px solid var(--paper-l)}
 tr.expand-row .expand-content{padding:10px 16px;display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;align-items:flex-start}
 tr.expand-row .expand-content::-webkit-scrollbar{height:4px}
 tr.expand-row .expand-content::-webkit-scrollbar-thumb{background:var(--paper-l);border-radius:2px}
@@ -139,12 +139,23 @@ tr[data-color="purple"] td{background:rgba(168,85,247,.10)!important;border-colo
 tr[data-color="pink"] td{background:rgba(236,72,153,.10)!important;border-color:rgba(236,72,153,.22)!important}
 tr[data-color="gray"] td{background:rgba(107,114,128,.12)!important;border-color:rgba(107,114,128,.25)!important}
 
-.color-picker-popup{position:fixed;z-index:200;background:var(--paper-h);border:1px solid var(--paper-l);border-radius:8px;padding:8px;display:none;box-shadow:0 6px 24px rgba(0,0,0,.5);gap:6px;flex-wrap:wrap;width:180px}
+.color-picker-popup{position:fixed;z-index:200;background:#fff;border:1px solid var(--paper-l);border-radius:8px;padding:8px;display:none;box-shadow:0 6px 24px rgba(0,0,0,.15);gap:6px;flex-wrap:wrap;width:180px}
 .color-picker-popup.active{display:flex}
 .color-dot{width:24px;height:24px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .15s,border-color .15s}
-.color-dot:hover{transform:scale(1.15);border-color:#fff}
-.color-dot.active{border-color:#fff;box-shadow:0 0 6px rgba(255,255,255,.3)}
+.color-dot:hover{transform:scale(1.15);border-color:var(--paper-t)}
+.color-dot.active{border-color:var(--paper-t);box-shadow:0 0 6px rgba(0,0,0,.15)}
 .color-dot[data-color=""]{background:var(--paper);border:2px dashed var(--paper-l);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--paper-m)}
+
+tr.selected td{outline:2px solid var(--accent);outline-offset:-2px}
+.row-select-cb{width:14px;height:14px;accent-color:var(--accent);cursor:pointer}
+
+.phase-check{width:18px;height:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:4px;margin:0 auto;transition:all .15s}
+.phase-check.checked{color:#22c55e}
+.phase-check.unchecked{color:var(--paper-l)}
+.phase-check svg{width:16px;height:16px}
+
+.delete-mode tr[data-id] .row-actions{opacity:1!important;display:flex!important}
+table.sheet:not(.delete-mode) tr[data-id] .row-actions{display:none}
 .color-dot[data-color="red"]{background:#ef4444}
 .color-dot[data-color="orange"]{background:#f97316}
 .color-dot[data-color="yellow"]{background:#eab308}
@@ -160,14 +171,14 @@ tr[data-color="gray"] td{background:rgba(107,114,128,.12)!important;border-color
 th.col-detail.collapsed{border-left:none;border-right:none}
 th.col-detail.collapsed .th-inner{display:none}
 
-.toggle-details-btn{background:transparent;border:1px solid rgba(255,255,255,.08);color:var(--paper-m);cursor:pointer;font-size:.58rem;padding:3px 8px;border-radius:5px;font-family:'Sora',sans-serif;transition:all .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
-.toggle-details-btn:hover{color:var(--paper-s);border-color:rgba(255,255,255,.15)}
+.toggle-details-btn{background:transparent;border:1px solid var(--paper-l);color:var(--paper-m);cursor:pointer;font-size:.58rem;padding:3px 8px;border-radius:5px;font-family:'Sora',sans-serif;transition:all .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
+.toggle-details-btn:hover{color:var(--paper-s);border-color:var(--paper-m)}
 .toggle-details-btn.active{color:var(--accent);border-color:var(--accent)}
 
 .lightbox-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:300;align-items:center;justify-content:center;flex-direction:column;gap:12px}
 .lightbox-overlay.active{display:flex}
 .lightbox-overlay img{max-width:90vw;max-height:80vh;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.5)}
-.lightbox-overlay .lb-info{color:var(--paper-s);font-size:.72rem;text-align:center}
+.lightbox-overlay .lb-info{color:#e5e5e5;font-size:.72rem;text-align:center}
 .lightbox-overlay .lb-close{position:absolute;top:16px;right:20px;background:transparent;border:none;color:#fff;font-size:1.5rem;cursor:pointer;opacity:.7}
 .lightbox-overlay .lb-close:hover{opacity:1}
 .lightbox-overlay .lb-nav{display:flex;gap:12px;margin-top:8px}
@@ -177,7 +188,7 @@ th.col-detail.collapsed .th-inner{display:none}
 .upload-progress{font-size:.5rem;color:var(--accent);text-align:center;margin-top:2px}
 
 .batch-dropzone{border:2px dashed var(--paper-l);border-radius:10px;padding:24px;display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:8px;cursor:pointer;transition:border-color .2s,background .2s;font-size:.68rem;color:var(--paper-s)}
-.batch-dropzone:hover,.batch-dropzone.drag-over{border-color:var(--accent);background:rgba(99,102,241,.04)}
+.batch-dropzone:hover,.batch-dropzone.drag-over{border-color:var(--accent);background:rgba(99,102,241,.06)}
 .batch-file-list{max-height:160px;overflow-y:auto;border:1px solid var(--paper-l);border-radius:6px;padding:6px 8px;font-size:.62rem}
 .batch-file-list .bfl-item{display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid var(--paper-l)}
 .batch-file-list .bfl-item:last-child{border-bottom:none}
@@ -193,7 +204,7 @@ th.col-detail.collapsed .th-inner{display:none}
 .br-status-matched{color:#22c55e;font-weight:600;font-size:.56rem}
 .br-status-unmatched{color:#ef4444;font-weight:600;font-size:.56rem}
 .br-match-name{color:var(--paper-m);font-size:.56rem}
-.batch-summary{font-size:.68rem;display:flex;gap:16px;padding:8px 12px;background:var(--paper-h);border-radius:6px}
+.batch-summary{font-size:.68rem;display:flex;gap:16px;padding:8px 12px;background:var(--paper);border-radius:6px}
 .batch-summary .bs-num{font-weight:700;font-family:'JetBrains Mono',monospace}
 </style>
 </head>
@@ -202,7 +213,7 @@ th.col-detail.collapsed .th-inner{display:none}
 <div class="header">
   <div class="brand">
     <img src="nudesign-logo.png" alt="NuDesign" style="height:56px;object-fit:contain">
-    <span style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:1.15rem;font-weight:500;letter-spacing:.04em;color:#fff;opacity:.92">Kairos</span>
+    <span style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:1.15rem;font-weight:500;letter-spacing:.04em;color:var(--paper-t);opacity:.92">Kairos</span>
   </div>
   <div class="nav-pills">
     <button class="nav-pill" onclick="location.href='preview.html'" data-testid="nav-calendario">Calendario</button>
@@ -238,6 +249,14 @@ th.col-detail.collapsed .th-inner{display:none}
     <button class="btn btn-ghost" id="btn-columns" onclick="openColumnsModal()" data-testid="button-columns" style="display:none">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
       Colonne
+    </button>
+    <button class="btn btn-ghost" id="btn-color-selected" onclick="colorSelectedRows(event)" data-testid="button-color-selected" style="display:none" title="Colora righe selezionate">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>
+      Colora
+    </button>
+    <button class="btn btn-ghost" id="btn-delete-mode" onclick="toggleDeleteMode()" data-testid="button-delete-mode" style="display:none" title="Attiva/disattiva modalità eliminazione">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      Elimina
     </button>
   </div>
   <span id="toolbar-info" style="font-size:.62rem;color:var(--paper-m);margin-left:auto"></span>
@@ -480,9 +499,13 @@ async function onJobChange() {
 function switchTab(tab) {
   currentTab = tab;
   document.querySelectorAll('.sheet-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
-  document.getElementById('btn-columns').style.display = tab === 'elenco_immagini' ? '' : 'none';
-  document.getElementById('btn-batch-upload').style.display = tab === 'elenco_immagini' ? '' : 'none';
-  document.getElementById('btn-toggle-details').style.display = tab === 'elenco_immagini' ? '' : 'none';
+  const isImg = tab === 'elenco_immagini';
+  document.getElementById('btn-columns').style.display = isImg ? '' : 'none';
+  document.getElementById('btn-batch-upload').style.display = isImg ? '' : 'none';
+  document.getElementById('btn-toggle-details').style.display = isImg ? '' : 'none';
+  document.getElementById('btn-color-selected').style.display = isImg ? '' : 'none';
+  document.getElementById('btn-delete-mode').style.display = isImg ? '' : 'none';
+  if (!isImg && deleteModeOn) { deleteModeOn = false; document.getElementById('sheet-table').classList.remove('delete-mode'); document.getElementById('btn-delete-mode').classList.remove('btn-danger'); document.getElementById('btn-delete-mode').classList.add('btn-ghost'); }
   loadCurrentTab();
 }
 
@@ -538,18 +561,19 @@ function renderElencoImmagini() {
   document.getElementById('stats-bar').style.display = 'flex';
 
   const dc = detailsCollapsed ? ' collapsed' : '';
-  const totalCols = 10 + columns.length + 2;
+  const totalCols = 11 + columns.length + 2;
   const groups = {};
   columns.forEach(c => {
     if (!groups[c.column_group]) groups[c.column_group] = [];
     groups[c.column_group].push(c);
   });
 
-  let gh = '<tr><th colspan="3"></th><th class="col-detail' + dc + '" colspan="5"></th><th></th>';
+  let gh = '<tr><th colspan="4"></th><th class="col-detail' + dc + '" colspan="5"></th><th></th>';
   Object.keys(groups).forEach(g => { gh += `<th class="group-header" colspan="${groups[g].length}">${g}</th>`; });
   gh += '<th colspan="2"></th><th></th></tr>';
 
   let h = '<tr>';
+  h += '<th><div class="th-inner"><input type="checkbox" class="row-select-cb" onchange="toggleSelectAll(this)" data-testid="checkbox-select-all" title="Seleziona tutto"></div></th>';
   h += '<th><div class="th-inner" style="width:20px"></div></th>';
   h += '<th><div class="th-inner">#</div></th><th><div class="th-inner"></div></th>';
   h += `<th class="col-detail${dc}"><div class="th-inner">Location</div></th>`;
@@ -576,7 +600,8 @@ function renderElencoImmagini() {
     const isExpanded = expandedRows.has(img.id);
     const hasRevs = imgRevs.length > 0;
 
-    b += `<tr class="${locBreak && idx > 0 ? 'location-break' : ''}" data-id="${img.id}"${img.row_color ? ' data-color="'+esc(img.row_color)+'"' : ''} oncontextmenu="showColorPicker(event,${img.id})">`;
+    b += `<tr class="${locBreak && idx > 0 ? 'location-break' : ''}" data-id="${img.id}"${img.row_color ? ' data-color="'+esc(img.row_color)+'"' : ''}>`;
+    b += `<td><div class="cell" style="justify-content:center"><input type="checkbox" class="row-select-cb" data-row-id="${img.id}" onchange="updateSelectionCount()" data-testid="checkbox-row-${img.id}"></div></td>`;
     b += `<td><div class="cell" style="justify-content:center"><button class="expand-toggle${isExpanded ? ' open' : ''}${hasRevs ? '' : ' no-revs'}" onclick="toggleExpand(${img.id})" title="${hasRevs ? imgRevs.length+' revisioni' : 'Espandi per caricare revisioni'}" data-testid="button-expand-${img.id}">&#9654;</button>${hasRevs ? '<span style="font-size:.46rem;color:var(--accent);margin-left:1px">'+imgRevs.length+'</span>' : ''}</div></td>`;
     b += `<td><div class="cell" style="color:var(--paper-m);font-size:.6rem;text-align:center">${idx+1}</div></td>`;
     b += `<td><div class="row-actions"><button onclick="deleteImageRow(${img.id})" title="Elimina" data-testid="button-delete-row-${img.id}">✕</button></div></td>`;
@@ -595,7 +620,8 @@ function renderElencoImmagini() {
 
     columns.forEach(c => {
       const val = pv[c.column_key] !== undefined ? pv[c.column_key] : 0;
-      b += `<td class="col-phase editable" data-field="${esc(c.column_key)}" data-id="${img.id}" data-type="phase" data-api="images"><div class="cell ${val == 0 ? 'val-0' : 'val-pos'}">${val}</div></td>`;
+      const checked = val == 1;
+      b += `<td class="col-phase" data-field="${esc(c.column_key)}" data-id="${img.id}" data-type="phase" data-api="images"><div class="cell" style="justify-content:center"><div class="phase-check ${checked ? 'checked' : 'unchecked'}" onclick="togglePhaseCheck(${img.id},'${esc(c.column_key)}',${val})" data-testid="check-${c.column_key}-${img.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">${checked ? '<path d="M20 6L9 17l-5-5"/>' : '<path d="M20 6L9 17l-5-5" opacity=".2"/>'}</svg></div></div></td>`;
     });
     b += `<td class="col-pct editable" data-field="percentuale_modifica" data-id="${img.id}" data-type="number" data-api="images"><div class="cell">${img.percentuale_modifica || ''}</div></td>`;
     b += `<td class="col-note editable" data-field="note" data-id="${img.id}" data-api="images"><div class="cell">${esc(img.note)}</div></td>`;
@@ -653,16 +679,20 @@ function getLatestThumb(imgRevs) {
 function buildExpandRow(imageId, imgRevs, totalCols) {
   let html = `<tr class="expand-row" data-expand-for="${imageId}"><td colspan="${totalCols}"><div class="expand-content">`;
 
-  const phaseKeys = columns.map(c => c.column_key);
-  const phaseNames = {};
-  columns.forEach(c => { phaseNames[c.column_key] = c.name; });
-  phaseKeys.push('_finale');
-  phaseNames['_finale'] = 'Definitiva';
+  const expandPhases = [
+    { key: 'location_bozza', label: 'Location Bozza' },
+    { key: 'location_def', label: 'Location Def' },
+    { key: 'revisioni', label: 'Revisioni' },
+    { key: 'post', label: 'Post' },
+    { key: 'rifacimenti', label: 'Rifacimenti' },
+    { key: 'recupero_post', label: 'Post' },
+    { key: '_finale', label: 'Definitiva' }
+  ];
 
-  phaseKeys.forEach(pk => {
+  expandPhases.forEach(({ key: pk, label }) => {
     const phaseRevs = imgRevs.filter(r => r.phase_key === pk);
     html += `<div class="phase-slot" data-phase="${esc(pk)}" data-image-id="${imageId}">`;
-    html += `<div class="phase-slot-label">${esc(phaseNames[pk] || pk)}</div>`;
+    html += `<div class="phase-slot-label">${esc(label)}</div>`;
     html += `<div class="phase-slot-thumbs">`;
     phaseRevs.forEach((rev, ri) => {
       if (rev.file_type === 'image') {
@@ -672,7 +702,7 @@ function buildExpandRow(imageId, imgRevs, totalCols) {
       }
       html += `<span class="phase-thumb-version">v${rev.version}</span>`;
     });
-    html += `<div class="phase-thumb-placeholder" onclick="startUpload(${imageId},'${esc(pk)}')" title="Carica revisione per ${esc(phaseNames[pk] || pk)}" data-testid="upload-phase-${imageId}-${pk}">+</div>`;
+    html += `<div class="phase-thumb-placeholder" onclick="startUpload(${imageId},'${esc(pk)}')" title="Carica revisione per ${esc(label)}" data-testid="upload-phase-${imageId}-${pk}">+</div>`;
     html += '</div></div>';
   });
 
@@ -1154,50 +1184,91 @@ async function deleteImageRow(id) {
   try { await fetch(`/api/foglio-images/${id}`, { method: 'DELETE' }); await loadElencoImmagini(); } catch(e) { console.error(e); }
 }
 
-// ──── ROW COLOR PICKER ────────────────────────────
+// ──── ROW SELECTION & COLOR ────────────────────────────
 
-let colorPickerTarget = null;
+function getSelectedIds() {
+  return Array.from(document.querySelectorAll('.row-select-cb[data-row-id]:checked')).map(cb => parseInt(cb.dataset.rowId));
+}
 
-function showColorPicker(e, imageId) {
-  e.preventDefault();
-  colorPickerTarget = imageId;
+function toggleSelectAll(masterCb) {
+  const cbs = document.querySelectorAll('.row-select-cb[data-row-id]');
+  cbs.forEach(cb => { cb.checked = masterCb.checked; });
+  updateSelectionCount();
+}
+
+function updateSelectionCount() {
+  const sel = getSelectedIds();
+  const info = document.getElementById('toolbar-info');
+  if (sel.length > 0) {
+    info.textContent = `${sel.length} selezionat${sel.length === 1 ? 'a' : 'e'}`;
+  } else {
+    info.textContent = images.length ? `${images.length} immagini` : 'Nessuna immagine';
+  }
+}
+
+function colorSelectedRows(e) {
+  const sel = getSelectedIds();
+  if (!sel.length) { alert('Seleziona almeno una riga'); return; }
+  colorPickerMode = 'selection';
   const popup = document.getElementById('color-picker-popup');
-  const img = images.find(i => i.id === imageId);
-  const current = img ? (img.row_color || '') : '';
-  popup.querySelectorAll('.color-dot').forEach(d => d.classList.toggle('active', d.dataset.color === current));
-  let x = e.clientX, y = e.clientY;
-  if (x + 190 > window.innerWidth) x = window.innerWidth - 200;
-  if (y + 50 > window.innerHeight) y = y - 50;
-  popup.style.left = x + 'px';
-  popup.style.top = y + 'px';
+  const rect = e.target.closest('button').getBoundingClientRect();
+  popup.style.left = rect.left + 'px';
+  popup.style.top = (rect.bottom + 4) + 'px';
+  popup.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
   popup.classList.add('active');
 }
 
+let colorPickerMode = 'selection';
+
 document.getElementById('color-picker-popup').addEventListener('click', async (e) => {
   const dot = e.target.closest('.color-dot');
-  if (!dot || colorPickerTarget === null) return;
+  if (!dot) return;
   const color = dot.dataset.color;
-  const id = colorPickerTarget;
   document.getElementById('color-picker-popup').classList.remove('active');
-  const row = document.querySelector(`tr[data-id="${id}"]`);
-  const img = images.find(i => i.id === id);
-  const prevColor = img ? (img.row_color || '') : '';
-  if (row) { if (color) row.setAttribute('data-color', color); else row.removeAttribute('data-color'); }
-  if (img) img.row_color = color;
-  try {
-    const res = await fetch(`/api/foglio-images/${id}/cell`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ field: 'row_color', value: color }) });
-    if (!res.ok) throw new Error('Errore salvataggio');
-  } catch(e) {
-    console.error(e);
-    if (row) { if (prevColor) row.setAttribute('data-color', prevColor); else row.removeAttribute('data-color'); }
-    if (img) img.row_color = prevColor;
+  const ids = getSelectedIds();
+  if (!ids.length) return;
+  for (const id of ids) {
+    const row = document.querySelector(`tr[data-id="${id}"]`);
+    if (row) { if (color) row.setAttribute('data-color', color); else row.removeAttribute('data-color'); }
+    const img = images.find(i => i.id === id);
+    if (img) img.row_color = color;
+    try {
+      await fetch(`/api/foglio-images/${id}/cell`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ field: 'row_color', value: color }) });
+    } catch(e) { console.error(e); }
   }
-  colorPickerTarget = null;
 });
 
 document.addEventListener('click', (e) => {
-  if (!e.target.closest('#color-picker-popup')) document.getElementById('color-picker-popup').classList.remove('active');
+  if (!e.target.closest('#color-picker-popup') && !e.target.closest('#btn-color-selected')) document.getElementById('color-picker-popup').classList.remove('active');
 });
+
+// ──── DELETE MODE ────────────────────────────
+
+let deleteModeOn = false;
+
+function toggleDeleteMode() {
+  deleteModeOn = !deleteModeOn;
+  const table = document.getElementById('sheet-table');
+  const btn = document.getElementById('btn-delete-mode');
+  table.classList.toggle('delete-mode', deleteModeOn);
+  btn.classList.toggle('btn-danger', deleteModeOn);
+  btn.classList.toggle('btn-ghost', !deleteModeOn);
+}
+
+// ──── PHASE CHECK TOGGLE ────────────────────────────
+
+async function togglePhaseCheck(imageId, fieldKey, currentVal) {
+  const newVal = currentVal == 1 ? 0 : 1;
+  const img = images.find(i => i.id === imageId);
+  if (img) {
+    if (!img.phase_values) img.phase_values = {};
+    img.phase_values[fieldKey] = newVal;
+  }
+  try {
+    await fetch(`/api/foglio-images/${imageId}/cell`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ field: fieldKey, value: newVal }) });
+  } catch(e) { console.error(e); }
+  renderElencoImmagini();
+}
 
 // ──── LOCATION MODAL ────────────────────────────
 

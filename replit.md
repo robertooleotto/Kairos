@@ -20,7 +20,8 @@ Project management tool for NuDesign creative studio. Manages jobs (commesse), t
 - **API Client**: `client/public/api-client.js` - REST API wrapper used by all pages
 
 ## Design
-- Dark theme with indigo (#6366f1) accent for most pages
+- Light theme on foglio-lavoro.html (warm off-white #f5f5f0 background, white #fff table cells)
+- Dark theme with indigo (#6366f1) accent for other pages
 - Gantt page uses dark navy blue theme (#132d4a background, #50b4e6 accent)
 - Fonts: Fraunces (serif headings), Sora (body), JetBrains Mono (monospace)
 - Custom CSS variables for consistent palette
@@ -59,7 +60,7 @@ Project management tool for NuDesign creative studio. Manages jobs (commesse), t
 - dhtmlxGantt page (gantt.html): Full interactive Gantt chart. Dark navy blue theme. Week scale shows W1-W5 per month. Phase CRUD via modal (double-click edit, right-click context menu). Drag/resize auto-save.
 - Review/Proofing (review.html): Upload creative assets (images, PDFs, videos) linked to jobs. Pin annotations on images with comments. Approval workflow (approve/request changes/reject). Version management. 3-panel layout: asset list sidebar, central image viewer with annotation pins, right comments panel.
 - Foglio Lavoro (foglio-lavoro.html): Spreadsheet-like production tracker with Google Sheets-style tab bar at bottom. Tab system includes:
-  - **Elenco Immagini** tab: Image production tracking per commessa. Custom phase columns configurable per job (default: Location Bozza, Location Def, Fotografia, Styling, Revisioni, Render, Post, Finiture, Rifacimenti, Recupero, Fatturato). Inline cell editing with double-click. Phase values stored as JSONB. Columns config modal with add/delete.
+  - **Elenco Immagini** tab: Image production tracking per commessa. Custom phase columns configurable per job (default: Location Bozza, Location Def, Fotografia, Styling, Revisioni, Render, Post, Finiture, Rifacimenti, Recupero, Fatturato). Phase values displayed as checkmark icons (click to toggle 0/1). Row selection via checkboxes for batch color assignment. Delete mode toggled via toolbar button (hidden by default). Image names displayed at 1rem bold. Row colors saved in `row_color` column (red/orange/yellow/green/blue/purple/pink/gray). Columns config modal with add/delete.
   - **Locations** tab: Location list per commessa with Nome location, Tipologia (dropdown with 22 predefined values like "Architettura interni moderna", "Set studio complesso", "Moodboard" etc.), Descrizione, Note. Inline editing with dropdown for tipologia field.
 - `foglio_locations` table: id(serial), job_id(text), nome_location, tipologia, descrizione, note, sort_order
   - **Expandable Revision Rows**: Each image row has an expand toggle (▶) that reveals per-phase revision slots. Users can upload revision files (images/videos/PDFs, max 20MB) directly into phase cells, see thumbnails, and click to open a lightbox with prev/next navigation and keyboard support (Escape/Arrow keys). The latest revision thumbnail also appears inline in the image name column.

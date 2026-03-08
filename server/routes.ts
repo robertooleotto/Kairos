@@ -765,6 +765,81 @@ export async function registerRoutes(
     res.json({ ok: true });
   });
 
+  // ─── FOGLIO REVISIONS ───────────────────────────────────────
+
+  const revisionStorage = multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, uploadsDir),
+    filename: (_req, file, cb) => {
+      let ext = path.extname(file.originalname).toLowerCase();
+      const safeExts = [".jpg",".jpeg",".png",".gif",".webp",".mp4",".pdf"];
+      if (!safeExts.includes(ext)) ext = ".jpg";
+      cb(null, `revision_${Date.now()}${ext}`);
+    },
+  });
+  const revisionUpload = multer({
+    storage: revisionStorage,
+    limits: { fileSize: 20 * 1024 * 1024 },
+    fileFilter: (_req, file, cb) => {
+      const ext = path.extname(file.originalname).toLowerCase();
+      const allowedMimes = ["image/jpeg","image/png","image/gif","image/webp","application/pdf","video/mp4","video/quicktime"];
+      if (allowedMimes.includes(file.mimetype) && [".jpg",".jpeg",".png",".gif",".webp",".mp4",".pdf"].includes(ext)) cb(null, true);
+      else cb(new Error("Formato non supportato. Consentiti: JPG, PNG, GIF, WebP, PDF, MP4."));
+    },
+  });
+
+  app.get("/api/foglio-revisions/:imageId", async (req, res) => {
+    const { phase_key } = req.query;
+    let sql = "SELECT * FROM foglio_revisions WHERE foglio_image_id=$1";
+    const params: any[] = [req.params.imageId];
+    if (phase_key) { params.push(phase_key); sql += ` AND phase_key=$${params.length}`; }
+    sql += " ORDER BY phase_key, version, created_at";
+    const rows = await query(sql, params);
+    res.json(rows);
+  });
+
+  app.get("/api/foglio-revisions-batch/:jobId", async (req, res) => {
+    const rows = await query(
+      `SELECT fr.* FROM foglio_revisions fr
+       JOIN foglio_images fi ON fi.id = fr.foglio_image_id
+       WHERE fi.job_id=$1
+       ORDER BY fr.foglio_image_id, fr.phase_key, fr.version`,
+      [req.params.jobId]
+    );
+    res.json(rows);
+  });
+
+  app.post("/api/foglio-revisions/:imageId/upload", (req, res) => {
+    revisionUpload.single("file")(req, res, async (err) => {
+      if (err) return res.status(400).json({ error: err.message });
+      if (!req.file) return res.status(400).json({ error: "Nessun file caricato" });
+      const { phase_key, title, notes, uploaded_by } = req.body;
+      const fileType = req.file.mimetype.startsWith("image/") ? "image" : req.file.mimetype.startsWith("video/") ? "video" : "document";
+      const prevVersions = await query(
+        "SELECT COALESCE(MAX(version),0) as maxv FROM foglio_revisions WHERE foglio_image_id=$1 AND phase_key=$2",
+        [req.params.imageId, phase_key || '']
+      );
+      const version = ((prevVersions[0] as any)?.maxv || 0) + 1;
+      const rows = await query(
+        `INSERT INTO foglio_revisions (foglio_image_id, phase_key, file_url, file_type, title, version, notes, uploaded_by)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
+        [req.params.imageId, phase_key || '', `/uploads/${req.file.filename}`, fileType, title || req.file.originalname, version, notes || '', uploaded_by || '']
+      );
+      res.json(rows[0]);
+    });
+  });
+
+  app.delete("/api/foglio-revisions/:id", async (req, res) => {
+    const rows = await query("SELECT file_url FROM foglio_revisions WHERE id=$1", [req.params.id]);
+    if (rows.length) {
+      const fileUrl = (rows[0] as any).file_url;
+      const fileName = path.basename(fileUrl);
+      const filePath = path.join(uploadsDir, fileName);
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    }
+    await query("DELETE FROM foglio_revisions WHERE id=$1", [req.params.id]);
+    res.json({ ok: true });
+  });
+
   // ─── SCHEMA PREVIEW ───────────────────────────────────────
   app.get("/api/schema", async (req, res) => {
     const tables = await query(`

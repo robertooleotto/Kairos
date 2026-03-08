@@ -62,6 +62,8 @@ Project management tool for NuDesign creative studio. Manages jobs (commesse), t
   - **Elenco Immagini** tab: Image production tracking per commessa. Custom phase columns configurable per job (default: Location Bozza, Location Def, Fotografia, Styling, Revisioni, Render, Post, Finiture, Rifacimenti, Recupero, Fatturato). Inline cell editing with double-click. Phase values stored as JSONB. Columns config modal with add/delete.
   - **Locations** tab: Location list per commessa with Nome location, Tipologia (dropdown with 22 predefined values like "Architettura interni moderna", "Set studio complesso", "Moodboard" etc.), Descrizione, Note. Inline editing with dropdown for tipologia field.
 - `foglio_locations` table: id(serial), job_id(text), nome_location, tipologia, descrizione, note, sort_order
+  - **Expandable Revision Rows**: Each image row has an expand toggle (▶) that reveals per-phase revision slots. Users can upload revision files (images/videos/PDFs, max 20MB) directly into phase cells, see thumbnails, and click to open a lightbox with prev/next navigation and keyboard support (Escape/Arrow keys). The latest revision thumbnail also appears inline in the image name column.
+- `foglio_revisions` table: id(serial), foglio_image_id(int FK→foglio_images.id), phase_key(text), file_url(text), file_type(text: image/video/document), title(text), version(int), notes(text), uploaded_by(text), created_at(timestamp). Index on (foglio_image_id, phase_key).
 - AREA_TO_CATEGORIES maps area IDs to task_type categories for filtering in the phase form.
 
 ## Foglio Lavoro API Endpoints
@@ -80,6 +82,10 @@ Project management tool for NuDesign creative studio. Manages jobs (commesse), t
 - PUT /api/foglio-locations/:id - Update location
 - PATCH /api/foglio-locations/:id/cell - Update single cell
 - DELETE /api/foglio-locations/:id - Delete location
+- GET /api/foglio-revisions/:imageId - List revisions for an image (optional ?phase_key filter)
+- GET /api/foglio-revisions-batch/:jobId - Batch fetch all revisions for a job
+- POST /api/foglio-revisions/:imageId/upload - Upload revision file (multipart, max 20MB)
+- DELETE /api/foglio-revisions/:id - Delete revision + file
 
 ## Review API Endpoints
 - POST /api/review-assets/upload - Upload file (multipart, max 20MB, JPG/PNG/GIF/WebP/PDF/MP4)

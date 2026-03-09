@@ -45,77 +45,81 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
 .gallery-empty svg{width:48px;height:48px;opacity:.3}
 .gallery-empty h3{font-family:'Fraunces',serif;font-size:1.1rem;color:var(--paper-s)}
 
-.viewer-panel{position:absolute;inset:0;background:#0a0a12;display:flex;flex-direction:column;z-index:20;opacity:0;pointer-events:none;transform:translateX(20px);transition:opacity .15s,transform .15s}
-.viewer-panel.open{opacity:1;pointer-events:auto;transform:translateX(0)}
+.viewer-panel{position:absolute;inset:0;background:#0a0a12;display:flex;flex-direction:column;z-index:20;opacity:0;pointer-events:none;transition:opacity .12s}
+.viewer-panel.open{opacity:1;pointer-events:auto}
 .viewer-body{flex:1;display:flex;overflow:hidden;min-height:0}
 
-.viewer-toolbar{padding:10px 18px;background:#111;border-bottom:1px solid #222;display:flex;align-items:center;gap:12px;z-index:10;flex-shrink:0}
-.viewer-title{font-size:.82rem;font-weight:600;flex:1;color:#fff}
-.viewer-meta{font-size:.62rem;color:#888}
-.tool-btn{padding:6px 12px;border-radius:7px;font-size:.7rem;font-weight:600;cursor:pointer;border:1px solid #333;background:transparent;color:#ccc;font-family:'Sora',sans-serif;transition:all .15s;display:inline-flex;align-items:center;gap:5px}
+.viewer-toolbar{padding:8px 18px;background:#111;border-bottom:1px solid #222;display:flex;align-items:center;gap:8px;z-index:10;flex-shrink:0;flex-wrap:wrap}
+.viewer-title{font-size:.82rem;font-weight:600;color:#fff}
+.viewer-meta{font-size:.62rem;color:#888;margin-right:auto}
+.tool-btn{padding:5px 10px;border-radius:6px;font-size:.65rem;font-weight:600;cursor:pointer;border:1px solid #333;background:transparent;color:#aaa;font-family:'Sora',sans-serif;transition:all .12s;display:inline-flex;align-items:center;gap:4px}
 .tool-btn:hover{border-color:var(--accent);color:var(--accent)}
 .tool-btn.active{background:rgba(99,102,241,.15);border-color:var(--accent);color:var(--accent)}
 .tool-btn svg{width:14px;height:14px}
-.close-viewer-btn{padding:6px 10px;border-radius:7px;font-size:1rem;cursor:pointer;border:1px solid #333;background:transparent;color:#ccc;font-family:'Sora',sans-serif;transition:all .15s;line-height:1}
+.tool-sep{width:1px;height:20px;background:#333;margin:0 2px}
+.close-viewer-btn{padding:5px 9px;border-radius:6px;font-size:1rem;cursor:pointer;border:1px solid #333;background:transparent;color:#aaa;font-family:'Sora',sans-serif;line-height:1}
 .close-viewer-btn:hover{color:#fff;border-color:#666}
 
-.viewer-canvas{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;cursor:grab}
-.viewer-canvas.grabbing{cursor:grabbing}
-.canvas-wrap{position:relative;transform-origin:0 0;will-change:transform}
-.canvas-image{display:block;user-select:none;border-radius:4px;position:relative;z-index:1;max-width:none;max-height:none}
-
-.zoom-controls{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:4px;z-index:10;background:rgba(0,0,0,.6);border-radius:8px;padding:4px;backdrop-filter:blur(6px)}
-.zoom-btn{width:32px;height:28px;border-radius:6px;border:none;background:transparent;color:#ccc;cursor:pointer;font-size:.72rem;font-weight:600;font-family:'Sora',sans-serif;display:flex;align-items:center;justify-content:center;transition:all .1s}
-.zoom-btn:hover{background:rgba(255,255,255,.1);color:#fff}
-.zoom-btn.active{background:rgba(99,102,241,.2);color:var(--accent)}
-.zoom-btn svg{width:14px;height:14px}
-.zoom-level{color:#999;font-size:.6rem;font-weight:600;display:flex;align-items:center;padding:0 6px;min-width:40px;justify-content:center;user-select:none}
+.viewer-canvas{flex:1;position:relative;overflow:auto;background:#0a0a12}
+.canvas-container{position:relative;transform-origin:0 0;display:inline-block}
+.canvas-container img{display:block;user-select:none;-webkit-user-drag:none}
+.draw-svg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:4}
+.draw-svg.drawing{pointer-events:auto;cursor:crosshair}
+.draw-svg line,.draw-svg rect,.draw-svg ellipse,.draw-svg polyline,.draw-svg path{stroke-linecap:round;stroke-linejoin:round}
 
 .pin-marker{position:absolute;width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;cursor:pointer;transform:translate(-50%,-50%);z-index:5;box-shadow:0 2px 8px rgba(99,102,241,.5);border:2px solid #fff;transition:transform .15s}
 .pin-marker:hover{transform:translate(-50%,-50%) scale(1.2)}
 .pin-marker.resolved{background:var(--green);box-shadow:0 2px 8px rgba(34,197,94,.5)}
 .pin-marker.active-pin{background:#fff;color:var(--accent);transform:translate(-50%,-50%) scale(1.25)}
 
-.comments-sidebar{width:320px;min-width:320px;border-left:1px solid #222;display:flex;flex-direction:column;background:#111;flex-shrink:0;overflow:hidden}
-.comments-header{padding:12px 16px;border-bottom:1px solid #222;display:flex;align-items:center;gap:8px}
-.comments-header h3{font-size:.78rem;font-weight:600;flex:1;color:#fff}
-.comment-count{background:rgba(99,102,241,.15);color:var(--accent);padding:2px 8px;border-radius:10px;font-size:.65rem;font-weight:700}
+.zoom-bar{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:3px;z-index:15;background:rgba(0,0,0,.65);border-radius:8px;padding:4px;backdrop-filter:blur(8px)}
+.zoom-btn{height:26px;min-width:30px;border-radius:5px;border:none;background:transparent;color:#bbb;cursor:pointer;font-size:.65rem;font-weight:600;font-family:'Sora',sans-serif;display:flex;align-items:center;justify-content:center;padding:0 6px;transition:all .1s}
+.zoom-btn:hover{background:rgba(255,255,255,.1);color:#fff}
+.zoom-btn svg{width:13px;height:13px}
+.zoom-label{color:#888;font-size:.58rem;font-weight:600;display:flex;align-items:center;padding:0 4px;min-width:36px;justify-content:center;user-select:none}
 
-.comments-list{flex:1;overflow-y:auto;padding:10px}
-.comment-item{padding:10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid #222;margin-bottom:6px}
+.nav-arrows{position:absolute;top:50%;display:flex;justify-content:space-between;width:100%;padding:0 8px;z-index:15;transform:translateY(-50%);pointer-events:none}
+.nav-arrow{pointer-events:auto;width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.12);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.9rem;transition:all .12s}
+.nav-arrow:hover{background:rgba(0,0,0,.75)}
+
+.comments-sidebar{width:310px;min-width:310px;border-left:1px solid #222;display:flex;flex-direction:column;background:#111;flex-shrink:0;overflow:hidden}
+.comments-header{padding:10px 14px;border-bottom:1px solid #222;display:flex;align-items:center;gap:8px}
+.comments-header h3{font-size:.75rem;font-weight:600;flex:1;color:#fff}
+.comment-count{background:rgba(99,102,241,.15);color:var(--accent);padding:2px 8px;border-radius:10px;font-size:.6rem;font-weight:700}
+.comments-list{flex:1;overflow-y:auto;padding:8px}
+.comment-item{padding:8px;border-radius:7px;background:rgba(255,255,255,.03);border:1px solid #222;margin-bottom:5px}
 .comment-item.highlighted{border-color:rgba(99,102,241,.4);background:rgba(99,102,241,.06)}
 .comment-item.resolved-comment{opacity:.5}
-.comment-head{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.comment-head{display:flex;align-items:center;gap:6px;margin-bottom:3px}
 .comment-pin-num{width:18px;height:18px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0}
-.comment-author{font-size:.68rem;font-weight:600;flex:1;color:#ddd}
-.comment-time{font-size:.56rem;color:#666}
-.comment-body{font-size:.7rem;color:#aaa;line-height:1.5;margin-bottom:4px}
-.comment-tag{display:inline-block;padding:1px 5px;border-radius:3px;font-size:.5rem;font-weight:700;margin-right:4px;vertical-align:middle;text-transform:uppercase;letter-spacing:.03em}
+.comment-author{font-size:.65rem;font-weight:600;flex:1;color:#ddd}
+.comment-time{font-size:.52rem;color:#555}
+.comment-body{font-size:.68rem;color:#aaa;line-height:1.45;margin-bottom:3px}
+.comment-tag{display:inline-block;padding:1px 5px;border-radius:3px;font-size:.48rem;font-weight:700;margin-right:3px;vertical-align:middle;text-transform:uppercase;letter-spacing:.03em}
 .tag-correzione{background:rgba(245,158,11,.15);color:var(--yellow)}
 .tag-approvato{background:rgba(34,197,94,.15);color:var(--green)}
 .tag-problema{background:rgba(239,68,68,.15);color:var(--red)}
 .tag-nota{background:rgba(99,102,241,.15);color:var(--accent)}
 .tag-domanda{background:rgba(6,182,212,.15);color:var(--cyan)}
-.comment-actions{display:flex;gap:4px}
-.comment-action-btn{padding:2px 6px;border-radius:4px;font-size:.56rem;font-weight:600;cursor:pointer;border:1px solid #333;background:transparent;color:#888;font-family:'Sora',sans-serif}
+.comment-actions{display:flex;gap:3px}
+.comment-action-btn{padding:2px 5px;border-radius:3px;font-size:.52rem;font-weight:600;cursor:pointer;border:1px solid #333;background:transparent;color:#777;font-family:'Sora',sans-serif}
 .comment-action-btn:hover{color:#ddd;border-color:#555}
 
-.comment-input-area{padding:10px;border-top:1px solid #222}
-.comment-form-row{display:flex;gap:6px;margin-bottom:6px}
-.comment-select{background:rgba(255,255,255,.05);border:1px solid #333;border-radius:5px;padding:4px 8px;color:#ccc;font-family:'Sora',sans-serif;font-size:.62rem;cursor:pointer;outline:none;flex:1}
+.comment-input-area{padding:8px;border-top:1px solid #222}
+.comment-form-row{display:flex;gap:5px;margin-bottom:5px}
+.comment-select{background:rgba(255,255,255,.05);border:1px solid #333;border-radius:4px;padding:3px 6px;color:#bbb;font-family:'Sora',sans-serif;font-size:.58rem;cursor:pointer;outline:none;flex:1}
 .comment-select:focus{border-color:var(--accent)}
-.comment-select option{background:#111;color:#ccc}
-.comment-textarea{width:100%;background:rgba(255,255,255,.05);border:1px solid #333;border-radius:6px;padding:8px 10px;color:#eee;font-family:'Sora',sans-serif;font-size:.7rem;outline:none;resize:none;min-height:56px}
+.comment-select option{background:#111;color:#bbb}
+.comment-textarea{width:100%;background:rgba(255,255,255,.05);border:1px solid #333;border-radius:5px;padding:7px 9px;color:#eee;font-family:'Sora',sans-serif;font-size:.68rem;outline:none;resize:none;min-height:48px}
 .comment-textarea:focus{border-color:var(--accent)}
-.comment-textarea::placeholder{color:#555}
-.comment-submit-row{display:flex;align-items:center;gap:6px;margin-top:6px}
-.comment-submit-btn{padding:6px 14px;border-radius:6px;font-size:.68rem;font-weight:600;cursor:pointer;border:none;background:var(--accent);color:#fff;font-family:'Sora',sans-serif;margin-left:auto}
+.comment-textarea::placeholder{color:#444}
+.comment-submit-row{display:flex;align-items:center;gap:5px;margin-top:5px}
+.comment-submit-btn{padding:5px 12px;border-radius:5px;font-size:.65rem;font-weight:600;cursor:pointer;border:none;background:var(--accent);color:#fff;font-family:'Sora',sans-serif;margin-left:auto}
 .comment-submit-btn:disabled{opacity:.4;cursor:not-allowed}
-.pin-hint{font-size:.56rem;color:#666;font-style:italic}
-
-.nav-arrows{position:absolute;top:50%;display:flex;justify-content:space-between;width:100%;padding:0 8px;z-index:10;transform:translateY(-50%);pointer-events:none}
-.nav-arrow{pointer-events:auto;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.15);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;transition:all .15s}
-.nav-arrow:hover{background:rgba(0,0,0,.8);border-color:rgba(255,255,255,.3)}
+.pin-hint{font-size:.52rem;color:#555;font-style:italic}
+.draw-color-picker{display:flex;gap:3px;align-items:center}
+.draw-color-swatch{width:16px;height:16px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border-color .1s}
+.draw-color-swatch:hover,.draw-color-swatch.active{border-color:#fff}
 </style>
 </head>
 <body>
@@ -163,15 +167,44 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
 
   <div class="viewer-panel" id="viewer-panel">
     <div class="viewer-toolbar" id="viewer-toolbar">
-      <div>
-        <div class="viewer-title" id="viewer-title" data-testid="text-viewer-title"></div>
-        <div class="viewer-meta" id="viewer-meta"></div>
-      </div>
-      <div style="flex:1"></div>
-      <button class="tool-btn" id="btn-pin-mode" data-testid="btn-pin-mode" onclick="togglePinMode()">
+      <div class="viewer-title" id="viewer-title" data-testid="text-viewer-title"></div>
+      <div class="viewer-meta" id="viewer-meta"></div>
+
+      <button class="tool-btn" id="btn-tool-pin" data-testid="btn-pin-mode" onclick="setTool('pin')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-        Annota
+        Pin
       </button>
+      <div class="tool-sep"></div>
+      <button class="tool-btn" id="btn-tool-circle" data-testid="btn-tool-circle" onclick="setTool('circle')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
+        Cerchio
+      </button>
+      <button class="tool-btn" id="btn-tool-rect" data-testid="btn-tool-rect" onclick="setTool('rect')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+        Rettangolo
+      </button>
+      <button class="tool-btn" id="btn-tool-arrow" data-testid="btn-tool-arrow" onclick="setTool('arrow')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        Freccia
+      </button>
+      <button class="tool-btn" id="btn-tool-freehand" data-testid="btn-tool-freehand" onclick="setTool('freehand')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17c1-3 4-8 7-8s3 5 6 5 4-4 5-6"/></svg>
+        Libero
+      </button>
+      <div class="tool-sep"></div>
+      <div class="draw-color-picker" id="draw-colors" data-testid="draw-color-picker">
+        <div class="draw-color-swatch active" style="background:#ef4444" onclick="setDrawColor('#ef4444',this)" data-testid="color-red"></div>
+        <div class="draw-color-swatch" style="background:#f59e0b" onclick="setDrawColor('#f59e0b',this)" data-testid="color-yellow"></div>
+        <div class="draw-color-swatch" style="background:#22c55e" onclick="setDrawColor('#22c55e',this)" data-testid="color-green"></div>
+        <div class="draw-color-swatch" style="background:#6366f1" onclick="setDrawColor('#6366f1',this)" data-testid="color-blue"></div>
+        <div class="draw-color-swatch" style="background:#ffffff" onclick="setDrawColor('#ffffff',this)" data-testid="color-white"></div>
+      </div>
+      <button class="tool-btn" id="btn-undo-draw" data-testid="btn-undo-draw" onclick="undoDraw()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+        Annulla
+      </button>
+      <button class="tool-btn" id="btn-clear-draw" data-testid="btn-clear-draw" onclick="clearDraw()">Pulisci</button>
+      <div style="flex:1"></div>
       <button class="close-viewer-btn" onclick="closeViewer()" data-testid="btn-close-viewer">&times;</button>
     </div>
     <div class="viewer-body">
@@ -180,17 +213,14 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
           <button class="nav-arrow" onclick="navImage(-1)" data-testid="btn-prev-image">&larr;</button>
           <button class="nav-arrow" onclick="navImage(1)" data-testid="btn-next-image">&rarr;</button>
         </div>
-        <div class="zoom-controls" data-testid="zoom-controls">
-          <button class="zoom-btn" onclick="zoomTo(zoomLevel-0.25)" data-testid="btn-zoom-out" title="Zoom out">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-          </button>
-          <span class="zoom-level" id="zoom-level" data-testid="text-zoom-level">Fit</span>
-          <button class="zoom-btn" onclick="zoomTo(zoomLevel+0.25)" data-testid="btn-zoom-in" title="Zoom in">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-          </button>
-          <button class="zoom-btn" onclick="zoomFit()" data-testid="btn-zoom-fit" title="Adatta">Fit</button>
-          <button class="zoom-btn" onclick="zoomTo(1)" data-testid="btn-zoom-100" title="100%">1:1</button>
-          <button class="zoom-btn" onclick="zoomTo(2)" data-testid="btn-zoom-200" title="200%">2x</button>
+        <div class="canvas-container" id="canvas-container"></div>
+        <div class="zoom-bar" data-testid="zoom-controls">
+          <button class="zoom-btn" onclick="doZoom(-1)" data-testid="btn-zoom-out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+          <span class="zoom-label" id="zoom-label" data-testid="text-zoom-level">100%</span>
+          <button class="zoom-btn" onclick="doZoom(1)" data-testid="btn-zoom-in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+          <button class="zoom-btn" onclick="zoomFit()" data-testid="btn-zoom-fit">Fit</button>
+          <button class="zoom-btn" onclick="zoomSet(1)" data-testid="btn-zoom-100">1:1</button>
+          <button class="zoom-btn" onclick="zoomSet(2)" data-testid="btn-zoom-200">2x</button>
         </div>
       </div>
       <div class="comments-sidebar" id="comments-sidebar">
@@ -231,561 +261,261 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
 
 <script src="api-client.js"></script>
 <script>
-let allJobs = [];
-let currentJobId = null;
-let currentPhase = '';
-let allRevisions = [];
-let filteredRevisions = [];
-let allImages = [];
-let allColumns = [];
-let currentRevision = null;
-let currentComments = [];
-let pinMode = false;
-let pendingPin = null;
-let replyToId = null;
+let allJobs=[], currentJobId=null, currentPhase='', allRevisions=[], filteredRevisions=[];
+let allImages=[], allColumns=[], currentRevision=null, currentComments=[];
+let pendingPin=null, replyToId=null;
 
-let zoomLevel = 0;
-let zoomFitScale = 1;
-let panX = 0, panY = 0;
-let isPanning = false;
-let panStart = { x: 0, y: 0, px: 0, py: 0 };
+let currentTool='';
+let zoomScale=1;
+let drawColor='#ef4444';
+let drawShapes=[];
+let drawingShape=null;
+let freehandPoints=[];
 
-const TAG_LABELS = {
-  correzione: 'Correzione',
-  problema: 'Problema',
-  nota: 'Nota',
-  domanda: 'Domanda',
-  approvato: 'Approvato'
-};
+const TAG_LABELS={correzione:'Correzione',problema:'Problema',nota:'Nota',domanda:'Domanda',approvato:'Approvato'};
+const PHASE_LABELS={'location_bozza':'Location Bozza','location_def':'Location Def','fotografia':'Fotografia','styling':'Styling','revisioni':'Revisioni','render':'Render','post':'Post','finiture':'Finiture','rifacimenti':'Rifacimenti','recupero_render':'Render (Rec.)','recupero_post':'Post (Rec.)','recupero_finiture':'Finiture (Rec.)','recupero':'Recupero','fatturato':'Fatturato','_finale':'Definitiva'};
 
-const PHASE_LABELS = {
-  'location_bozza': 'Location Bozza',
-  'location_def': 'Location Def',
-  'fotografia': 'Fotografia',
-  'styling': 'Styling',
-  'revisioni': 'Revisioni',
-  'render': 'Render',
-  'post': 'Post',
-  'finiture': 'Finiture',
-  'rifacimenti': 'Rifacimenti',
-  'recupero_render': 'Render (Rec.)',
-  'recupero_post': 'Post (Rec.)',
-  'recupero_finiture': 'Finiture (Rec.)',
-  'recupero': 'Recupero',
-  'fatturato': 'Fatturato',
-  '_finale': 'Definitiva'
-};
-
-async function init() {
-  try {
-    const res = await fetch('/api/jobs');
-    allJobs = await res.json();
-    const sel = document.getElementById('job-select');
-    allJobs.forEach(j => {
-      const o = document.createElement('option');
-      o.value = j.id;
-      o.textContent = (j.code || '') + ' — ' + (j.title || j.name);
-      sel.appendChild(o);
-    });
-
-    const params = new URLSearchParams(location.search);
-    const jobId = params.get('jobId');
-    const revisionId = params.get('revisionId');
-    const imageId = params.get('imageId');
-    if (jobId) {
-      sel.value = jobId;
-      await onJobChange();
-      if (revisionId) {
-        const rev = filteredRevisions.find(r => r.id == revisionId);
-        if (rev) openViewer(rev.id);
-      } else if (imageId) {
-        const rev = filteredRevisions.find(r => r.foglio_image_id == imageId);
-        if (rev) openViewer(rev.id);
-      }
+async function init(){
+  try{
+    const res=await fetch('/api/jobs');
+    allJobs=await res.json();
+    const sel=document.getElementById('job-select');
+    allJobs.forEach(j=>{const o=document.createElement('option');o.value=j.id;o.textContent=(j.code||'')+' — '+(j.title||j.name);sel.appendChild(o)});
+    const params=new URLSearchParams(location.search);
+    const jobId=params.get('jobId'), revisionId=params.get('revisionId'), imageId=params.get('imageId');
+    if(jobId){sel.value=jobId;await onJobChange();
+      if(revisionId){const r=filteredRevisions.find(x=>x.id==revisionId);if(r)openViewer(r.id)}
+      else if(imageId){const r=filteredRevisions.find(x=>x.foglio_image_id==imageId);if(r)openViewer(r.id)}
     }
-  } catch(e) { console.error(e); }
+  }catch(e){console.error(e)}
 }
 
-function resetViewerState() {
-  closeViewer();
-  currentRevision = null;
-  currentComments = [];
-  pendingPin = null;
-  replyToId = null;
-  pinMode = false;
-  document.getElementById('btn-pin-mode').classList.remove('active');
-}
-
-async function onJobChange() {
+function resetViewerState(){closeViewer();currentRevision=null;currentComments=[];pendingPin=null;replyToId=null;currentTool='';drawShapes=[];drawingShape=null}
+async function onJobChange(){
   resetViewerState();
-  currentJobId = document.getElementById('job-select').value;
-  if (!currentJobId) {
-    allRevisions = [];
-    allImages = [];
-    allColumns = [];
-    filteredRevisions = [];
-    renderGallery();
-    return;
-  }
-  try {
-    const [revRes, imgRes, colRes] = await Promise.all([
-      fetch(`/api/foglio-revisions-batch/${currentJobId}`),
-      fetch(`/api/foglio-images/${currentJobId}`),
-      fetch(`/api/foglio-columns/${currentJobId}`)
-    ]);
-    allRevisions = revRes.ok ? await revRes.json() : [];
-    allImages = imgRes.ok ? await imgRes.json() : [];
-    allColumns = colRes.ok ? await colRes.json() : [];
+  currentJobId=document.getElementById('job-select').value;
+  if(!currentJobId){allRevisions=[];allImages=[];allColumns=[];filteredRevisions=[];renderGallery();return}
+  try{
+    const[rr,ir,cr]=await Promise.all([fetch(`/api/foglio-revisions-batch/${currentJobId}`),fetch(`/api/foglio-images/${currentJobId}`),fetch(`/api/foglio-columns/${currentJobId}`)]);
+    allRevisions=rr.ok?await rr.json():[];allImages=ir.ok?await ir.json():[];allColumns=cr.ok?await cr.json():[];
+    const ps=document.getElementById('phase-select'),phases=new Set(allRevisions.map(r=>r.phase_key));
+    ps.innerHTML='<option value="">Tutte le fasi</option>';
+    phases.forEach(p=>{const o=document.createElement('option');o.value=p;o.textContent=PHASE_LABELS[p]||p;ps.appendChild(o)});
+    currentPhase='';filterAndRender();
+  }catch(e){console.error(e)}
+}
+function onPhaseChange(){resetViewerState();currentPhase=document.getElementById('phase-select').value;filterAndRender()}
+function filterAndRender(){
+  filteredRevisions=allRevisions.filter(r=>r.file_type==='image');
+  if(currentPhase)filteredRevisions=filteredRevisions.filter(r=>r.phase_key===currentPhase);
+  filteredRevisions.sort((a,b)=>{const na=allImages.find(i=>i.id===a.foglio_image_id),nb=allImages.find(i=>i.id===b.foglio_image_id);return(na?na.image_name:'').localeCompare(nb?nb.image_name:'')||a.id-b.id});
+  renderGallery();
+}
+function renderGallery(){
+  const grid=document.getElementById('gallery-grid'),empty=document.getElementById('gallery-empty'),info=document.getElementById('toolbar-info');
+  if(!currentJobId){grid.style.display='none';empty.style.display='flex';info.textContent='';return}
+  if(!filteredRevisions.length){grid.style.display='none';empty.style.display='flex';empty.querySelector('h3').textContent='Nessuna revisione';empty.querySelector('p').textContent='Non ci sono immagini di revisione per questa selezione';info.textContent='0 immagini';return}
+  empty.style.display='none';grid.style.display='grid';info.textContent=filteredRevisions.length+' immagini';
+  grid.innerHTML=filteredRevisions.map(rev=>{const img=allImages.find(i=>i.id===rev.foglio_image_id);const isA=currentRevision&&currentRevision.id===rev.id;
+    return`<div class="gallery-card${isA?' active':''}" onclick="openViewer(${rev.id})" data-testid="gallery-card-${rev.id}"><img class="gallery-thumb" src="${esc(rev.file_url)}" alt="" loading="lazy"><div class="gallery-info"><div class="gallery-title" data-testid="gallery-title-${rev.id}">${esc(img?img.image_name:rev.title)}</div><div class="gallery-meta">v${rev.version} · ${esc(rev.title)}</div><span class="gallery-phase">${esc(PHASE_LABELS[rev.phase_key]||rev.phase_key)}</span></div></div>`}).join('');
+}
+function esc(s){return s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'):''}
 
-    const phaseSel = document.getElementById('phase-select');
-    const phases = new Set(allRevisions.map(r => r.phase_key));
-    phaseSel.innerHTML = '<option value="">Tutte le fasi</option>';
-    phases.forEach(p => {
-      const o = document.createElement('option');
-      o.value = p;
-      o.textContent = PHASE_LABELS[p] || p;
-      phaseSel.appendChild(o);
-    });
+async function openViewer(revId){
+  const rev=filteredRevisions.find(r=>r.id===revId);if(!rev)return;
+  currentRevision=rev;drawShapes=[];drawingShape=null;currentTool='';
+  pendingPin=null;replyToId=null;
+  document.getElementById('comment-input').value='';
+  document.getElementById('pin-hint').textContent='';
+  document.getElementById('btn-submit-comment').disabled=true;
+  document.getElementById('comment-tag').value='';
+  updateToolButtons();
+  document.getElementById('viewer-panel').classList.add('open');
+  const imgData=allImages.find(i=>i.id===rev.foglio_image_id);
+  document.getElementById('viewer-title').textContent=imgData?imgData.image_name:rev.title;
+  document.getElementById('viewer-meta').textContent=(PHASE_LABELS[rev.phase_key]||rev.phase_key)+' · v'+rev.version;
+  const container=document.getElementById('canvas-container');
+  container.innerHTML=`<img id="review-image" data-testid="review-image" src="${esc(rev.file_url)}"><svg class="draw-svg" id="draw-svg" xmlns="http://www.w3.org/2000/svg"></svg>`;
+  const imgEl=document.getElementById('review-image');
+  imgEl.onload=()=>{zoomFit();renderPins();renderDrawShapes()};
+  zoomScale=1;
+  try{const cr=await fetch('/api/revision-comments/'+rev.id);currentComments=cr.ok?await cr.json():[];}catch(e){currentComments=[]}
+  renderComments();renderGallery();
+}
+function closeViewer(){document.getElementById('viewer-panel').classList.remove('open');currentRevision=null;renderGallery()}
 
-    currentPhase = '';
-    filterAndRender();
-  } catch(e) { console.error(e); }
+function zoomFit(){
+  const cv=document.getElementById('viewer-canvas'),img=document.getElementById('review-image');
+  if(!cv||!img||!img.naturalWidth)return;
+  const cw=cv.clientWidth-20,ch=cv.clientHeight-20;
+  zoomScale=Math.min(cw/img.naturalWidth,ch/img.naturalHeight,1);
+  applyZoom();cv.scrollLeft=(img.naturalWidth*zoomScale-cv.clientWidth)/2;cv.scrollTop=(img.naturalHeight*zoomScale-cv.clientHeight)/2;
+}
+function zoomSet(s){
+  const cv=document.getElementById('viewer-canvas');if(!cv){zoomScale=s;applyZoom();return}
+  const cx=cv.scrollLeft+cv.clientWidth/2,cy=cv.scrollTop+cv.clientHeight/2;
+  const fx=cx/zoomScale,fy=cy/zoomScale;
+  zoomScale=s;applyZoom();
+  cv.scrollLeft=fx*zoomScale-cv.clientWidth/2;cv.scrollTop=fy*zoomScale-cv.clientHeight/2;
+}
+function doZoom(dir){zoomSet(Math.max(0.1,Math.min(zoomScale*(dir>0?1.3:1/1.3),10)))}
+function applyZoom(){
+  const c=document.getElementById('canvas-container');if(!c)return;
+  c.style.transform=`scale(${zoomScale})`;
+  document.getElementById('zoom-label').textContent=Math.round(zoomScale*100)+'%';
 }
 
-function onPhaseChange() {
-  resetViewerState();
-  currentPhase = document.getElementById('phase-select').value;
-  filterAndRender();
-}
+document.getElementById('viewer-canvas').addEventListener('wheel',function(e){
+  if(!currentRevision)return;e.preventDefault();
+  const cv=this,rect=cv.getBoundingClientRect();
+  const mx=(e.clientX-rect.left+cv.scrollLeft)/zoomScale;
+  const my=(e.clientY-rect.top+cv.scrollTop)/zoomScale;
+  const old=zoomScale;
+  zoomScale=Math.max(0.1,Math.min(zoomScale*(e.deltaY<0?1.15:1/1.15),10));
+  applyZoom();
+  cv.scrollLeft=mx*zoomScale-(e.clientX-rect.left);
+  cv.scrollTop=my*zoomScale-(e.clientY-rect.top);
+},{passive:false});
 
-function filterAndRender() {
-  filteredRevisions = allRevisions.filter(r => r.file_type === 'image');
-  if (currentPhase) filteredRevisions = filteredRevisions.filter(r => r.phase_key === currentPhase);
-  filteredRevisions.sort((a, b) => {
-    const imgA = allImages.find(i => i.id === a.foglio_image_id);
-    const imgB = allImages.find(i => i.id === b.foglio_image_id);
-    const nameA = imgA ? imgA.image_name : '';
-    const nameB = imgB ? imgB.image_name : '';
-    return nameA.localeCompare(nameB) || a.id - b.id;
+function navImage(dir){if(!currentRevision)return;const idx=filteredRevisions.findIndex(r=>r.id===currentRevision.id);const n=idx+dir;if(n>=0&&n<filteredRevisions.length)openViewer(filteredRevisions[n].id)}
+document.addEventListener('keydown',e=>{
+  if(!currentRevision)return;if(e.target.tagName==='TEXTAREA'||e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;
+  if(e.key==='ArrowLeft')navImage(-1);if(e.key==='ArrowRight')navImage(1);if(e.key==='Escape')closeViewer();
+  if(e.key==='+'||e.key==='='){e.preventDefault();doZoom(1)}if(e.key==='-'){e.preventDefault();doZoom(-1)}
+  if(e.key==='0'){e.preventDefault();zoomFit()}
+});
+
+function setTool(t){currentTool=currentTool===t?'':t;updateToolButtons()}
+function updateToolButtons(){
+  ['pin','circle','rect','arrow','freehand'].forEach(t=>{
+    const b=document.getElementById('btn-tool-'+t);if(b)b.classList.toggle('active',currentTool===t);
   });
-  renderGallery();
+  const svg=document.getElementById('draw-svg');
+  if(svg)svg.classList.toggle('drawing',currentTool&&currentTool!=='pin');
+  const img=document.getElementById('review-image');
+  if(img)img.style.cursor=currentTool==='pin'?'crosshair':'default';
+  document.getElementById('pin-hint').textContent=currentTool==='pin'?"Clicca sull'immagine per posizionare un pin":currentTool?'Disegna sull\'immagine':'';
+}
+function setDrawColor(c,el){drawColor=c;document.querySelectorAll('.draw-color-swatch').forEach(s=>s.classList.remove('active'));if(el)el.classList.add('active')}
+
+function getImgCoords(e){
+  const img=document.getElementById('review-image');if(!img)return null;
+  const r=img.getBoundingClientRect();
+  return{x:e.clientX-r.left,y:e.clientY-r.top,px:(e.clientX-r.left)/r.width*100,py:(e.clientY-r.top)/r.height*100,
+    imgX:(e.clientX-r.left)/zoomScale,imgY:(e.clientY-r.top)/zoomScale};
 }
 
-function renderGallery() {
-  const grid = document.getElementById('gallery-grid');
-  const empty = document.getElementById('gallery-empty');
-  const info = document.getElementById('toolbar-info');
 
-  if (!currentJobId) {
-    grid.style.display = 'none';
-    empty.style.display = 'flex';
-    info.textContent = '';
-    return;
-  }
-
-  if (!filteredRevisions.length) {
-    grid.style.display = 'none';
-    empty.style.display = 'flex';
-    empty.querySelector('h3').textContent = 'Nessuna revisione';
-    empty.querySelector('p').textContent = 'Non ci sono immagini di revisione per questa selezione';
-    info.textContent = '0 immagini';
-    return;
-  }
-
-  empty.style.display = 'none';
-  grid.style.display = 'grid';
-  info.textContent = filteredRevisions.length + ' immagini';
-
-  grid.innerHTML = filteredRevisions.map(rev => {
-    const img = allImages.find(i => i.id === rev.foglio_image_id);
-    const imageName = img ? img.image_name : '';
-    const phaseLabel = PHASE_LABELS[rev.phase_key] || rev.phase_key;
-    const isActive = currentRevision && currentRevision.id === rev.id;
-    return `<div class="gallery-card${isActive ? ' active' : ''}" onclick="openViewer(${rev.id})" data-testid="gallery-card-${rev.id}">
-      <img class="gallery-thumb" src="${esc(rev.file_url)}" alt="${esc(rev.title)}" loading="lazy">
-      <div class="gallery-info">
-        <div class="gallery-title" data-testid="gallery-title-${rev.id}">${esc(imageName || rev.title)}</div>
-        <div class="gallery-meta">v${rev.version} · ${esc(rev.title)}</div>
-        <span class="gallery-phase">${esc(phaseLabel)}</span>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function esc(s) {
-  if (!s) return '';
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-}
-
-async function openViewer(revId) {
-  const rev = filteredRevisions.find(r => r.id === revId);
-  if (!rev) return;
-  currentRevision = rev;
-
-  const panel = document.getElementById('viewer-panel');
-  panel.classList.add('open');
-
-  const imgData = allImages.find(i => i.id === rev.foglio_image_id);
-  document.getElementById('viewer-title').textContent = imgData ? imgData.image_name : rev.title;
-  document.getElementById('viewer-meta').textContent = (PHASE_LABELS[rev.phase_key] || rev.phase_key) + ' · v' + rev.version;
-
-  const canvas = document.getElementById('viewer-canvas');
-  let wrap = canvas.querySelector('.canvas-wrap');
-  if (!wrap) {
-    wrap = document.createElement('div');
-    wrap.className = 'canvas-wrap';
-    wrap.id = 'canvas-wrap';
-    canvas.appendChild(wrap);
-  }
-  let imgEl = wrap.querySelector('.canvas-image');
-  if (!imgEl) {
-    imgEl = document.createElement('img');
-    imgEl.className = 'canvas-image';
-    imgEl.id = 'review-image';
-    imgEl.setAttribute('data-testid', 'review-image');
-    imgEl.addEventListener('click', onCanvasClick);
-    wrap.appendChild(imgEl);
-  }
-  imgEl.src = rev.file_url;
-  updateCursor();
-
-  wrap.querySelectorAll('.pin-marker').forEach(p => p.remove());
-
-  imgEl.onload = () => {
-    zoomFit();
-    renderPins();
-  };
-
-  zoomLevel = 0;
-  panX = 0; panY = 0;
-
-  try {
-    const commentsRes = await fetch('/api/revision-comments/' + rev.id);
-    currentComments = commentsRes.ok ? await commentsRes.json() : [];
-  } catch(e) { currentComments = []; }
-
-  renderComments();
-  renderGallery();
-}
-
-function closeViewer() {
-  document.getElementById('viewer-panel').classList.remove('open');
-  currentRevision = null;
-  renderGallery();
-}
-
-function zoomFit() {
-  const canvas = document.getElementById('viewer-canvas');
-  const img = document.getElementById('review-image');
-  if (!canvas || !img || !img.naturalWidth) return;
-  const cw = canvas.clientWidth - 40;
-  const ch = canvas.clientHeight - 40;
-  zoomFitScale = Math.min(cw / img.naturalWidth, ch / img.naturalHeight, 1);
-  zoomLevel = zoomFitScale;
-  panX = 0; panY = 0;
-  applyTransform();
-  document.getElementById('zoom-level').textContent = 'Fit';
-}
-
-function zoomTo(level) {
-  const img = document.getElementById('review-image');
-  if (!img || !img.naturalWidth) return;
-  zoomLevel = Math.max(0.1, Math.min(level, 8));
-  applyTransform();
-  const pct = Math.round(zoomLevel * 100);
-  document.getElementById('zoom-level').textContent = pct + '%';
-}
-
-function applyTransform() {
-  const canvas = document.getElementById('viewer-canvas');
-  const wrap = document.getElementById('canvas-wrap');
-  const img = document.getElementById('review-image');
-  if (!wrap || !img || !img.naturalWidth) return;
-
-  const iw = img.naturalWidth * zoomLevel;
-  const ih = img.naturalHeight * zoomLevel;
-  const cw = canvas.clientWidth;
-  const ch = canvas.clientHeight;
-
-  let tx = panX, ty = panY;
-  if (iw <= cw) tx = (cw - iw) / 2;
-  else tx = Math.min(0, Math.max(cw - iw, tx));
-  if (ih <= ch) ty = (ch - ih) / 2;
-  else ty = Math.min(0, Math.max(ch - ih, ty));
-  panX = tx; panY = ty;
-
-  wrap.style.transform = `translate(${tx}px,${ty}px) scale(${zoomLevel})`;
-  wrap.style.width = img.naturalWidth + 'px';
-  wrap.style.height = img.naturalHeight + 'px';
-}
-
-function updateCursor() {
-  const canvas = document.getElementById('viewer-canvas');
-  const img = document.getElementById('review-image');
-  if (pinMode) {
-    canvas.style.cursor = 'crosshair';
-    if (img) img.style.cursor = 'crosshair';
-  } else {
-    const isZoomed = img && img.naturalWidth && (img.naturalWidth * zoomLevel > canvas.clientWidth || img.naturalHeight * zoomLevel > canvas.clientHeight);
-    canvas.style.cursor = isZoomed ? 'grab' : 'default';
-    if (img) img.style.cursor = isZoomed ? 'grab' : 'default';
-  }
-}
-
-(function setupCanvasEvents() {
-  const canvas = document.getElementById('viewer-canvas');
-
-  canvas.addEventListener('wheel', (e) => {
+(function setupDrawing(){
+  const cv=document.getElementById('viewer-canvas');
+  cv.addEventListener('mousedown',e=>{
+    if(!currentTool||currentTool==='pin')return;
+    const svg=document.getElementById('draw-svg');if(!svg||!e.target.closest('.draw-svg'))return;
+    const c=getImgCoords(e);if(!c)return;
     e.preventDefault();
-    const img = document.getElementById('review-image');
-    if (!img || !img.naturalWidth) return;
-    const delta = e.deltaY > 0 ? -0.15 : 0.15;
-    const oldZ = zoomLevel;
-    const newZ = Math.max(0.1, Math.min(zoomLevel + delta * zoomLevel, 8));
-
-    const rect = canvas.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
-    panX = mx - (mx - panX) * (newZ / oldZ);
-    panY = my - (my - panY) * (newZ / oldZ);
-    zoomLevel = newZ;
-    applyTransform();
-    updateCursor();
-    document.getElementById('zoom-level').textContent = Math.round(zoomLevel * 100) + '%';
-  }, { passive: false });
-
-  canvas.addEventListener('mousedown', (e) => {
-    if (pinMode) return;
-    if (e.target.closest('.nav-arrow') || e.target.closest('.zoom-controls') || e.target.closest('.pin-marker')) return;
-    isPanning = true;
-    panStart = { x: e.clientX, y: e.clientY, px: panX, py: panY };
-    canvas.classList.add('grabbing');
-    e.preventDefault();
+    if(currentTool==='freehand'){freehandPoints=[{x:c.imgX,y:c.imgY}];drawingShape={type:'freehand',color:drawColor,points:freehandPoints}}
+    else{drawingShape={type:currentTool,color:drawColor,x1:c.imgX,y1:c.imgY,x2:c.imgX,y2:c.imgY}}
+    renderDrawShapes();
   });
-
-  window.addEventListener('mousemove', (e) => {
-    if (!isPanning) return;
-    panX = panStart.px + (e.clientX - panStart.x);
-    panY = panStart.py + (e.clientY - panStart.y);
-    applyTransform();
+  window.addEventListener('mousemove',e=>{
+    if(!drawingShape)return;
+    const c=getImgCoords(e);if(!c)return;
+    if(drawingShape.type==='freehand'){freehandPoints.push({x:c.imgX,y:c.imgY});drawingShape.points=freehandPoints}
+    else{drawingShape.x2=c.imgX;drawingShape.y2=c.imgY}
+    renderDrawShapes();
   });
-
-  window.addEventListener('mouseup', () => {
-    if (isPanning) {
-      isPanning = false;
-      document.getElementById('viewer-canvas').classList.remove('grabbing');
-    }
-  });
-
-  canvas.addEventListener('dblclick', (e) => {
-    if (e.target.closest('.nav-arrow') || e.target.closest('.zoom-controls') || e.target.closest('.pin-marker')) return;
-    if (pinMode) return;
-    const img = document.getElementById('review-image');
-    if (!img) return;
-    if (Math.abs(zoomLevel - zoomFitScale) < 0.05) {
-      zoomTo(1);
-    } else {
-      zoomFit();
-    }
+  window.addEventListener('mouseup',()=>{
+    if(!drawingShape)return;
+    drawShapes.push({...drawingShape});drawingShape=null;renderDrawShapes();
   });
 })();
 
-function navImage(dir) {
-  if (!currentRevision) return;
-  const idx = filteredRevisions.findIndex(r => r.id === currentRevision.id);
-  if (idx < 0) return;
-  const next = idx + dir;
-  if (next >= 0 && next < filteredRevisions.length) {
-    openViewer(filteredRevisions[next].id);
-  }
+function renderDrawShapes(){
+  const svg=document.getElementById('draw-svg');if(!svg)return;
+  const img=document.getElementById('review-image');if(!img)return;
+  svg.setAttribute('viewBox',`0 0 ${img.naturalWidth} ${img.naturalHeight}`);
+  const all=[...drawShapes];if(drawingShape)all.push(drawingShape);
+  const defs=`<defs><marker id="ah" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="context-stroke"/></marker></defs>`;
+  svg.innerHTML=defs+all.map(s=>{
+    const sw=Math.max(2,3/zoomScale);
+    if(s.type==='circle'){const cx=(s.x1+s.x2)/2,cy=(s.y1+s.y2)/2,rx=Math.abs(s.x2-s.x1)/2,ry=Math.abs(s.y2-s.y1)/2;
+      return`<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="none" stroke="${s.color}" stroke-width="${sw}"/>`}
+    if(s.type==='rect'){const x=Math.min(s.x1,s.x2),y=Math.min(s.y1,s.y2),w=Math.abs(s.x2-s.x1),h=Math.abs(s.y2-s.y1);
+      return`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="${s.color}" stroke-width="${sw}" rx="${sw}"/>`}
+    if(s.type==='arrow')return`<line x1="${s.x1}" y1="${s.y1}" x2="${s.x2}" y2="${s.y2}" stroke="${s.color}" stroke-width="${sw}" marker-end="url(#ah)"/>`;
+    if(s.type==='freehand'&&s.points&&s.points.length>1){const d='M'+s.points.map(p=>p.x+' '+p.y).join(' L ');
+      return`<path d="${d}" fill="none" stroke="${s.color}" stroke-width="${sw}"/>`}
+    return'';
+  }).join('');
 }
+function undoDraw(){drawShapes.pop();renderDrawShapes()}
+function clearDraw(){drawShapes=[];renderDrawShapes()}
 
-document.addEventListener('keydown', (e) => {
-  if (!currentRevision) return;
-  if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
-  if (e.key === 'ArrowLeft') navImage(-1);
-  if (e.key === 'ArrowRight') navImage(1);
-  if (e.key === 'Escape') closeViewer();
-  if (e.key === '+' || e.key === '=') { e.preventDefault(); zoomTo(zoomLevel + 0.25); }
-  if (e.key === '-') { e.preventDefault(); zoomTo(zoomLevel - 0.25); }
-  if (e.key === '0') { e.preventDefault(); zoomFit(); }
-});
-
-function togglePinMode() {
-  pinMode = !pinMode;
-  document.getElementById('btn-pin-mode').classList.toggle('active', pinMode);
-  updateCursor();
-  document.getElementById('pin-hint').textContent = pinMode ? "Clicca sull'immagine per posizionare un pin" : '';
-}
-
-function onCanvasClick(e) {
-  if (!pinMode) return;
-  if (isPanning) return;
-  const img = document.getElementById('review-image');
-  if (!img) return;
-  const rect = img.getBoundingClientRect();
-  const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(2);
-  const y = ((e.clientY - rect.top) / rect.height * 100).toFixed(2);
-  pendingPin = { x: parseFloat(x), y: parseFloat(y) };
-  document.getElementById('pin-hint').textContent = 'Pin a (' + x + '%, ' + y + '%). Scrivi il commento.';
-  document.getElementById('comment-input').focus();
-  document.getElementById('btn-submit-comment').disabled = false;
-}
-
-function renderPins() {
-  const wrap = document.getElementById('canvas-wrap');
-  if (!wrap) return;
-  wrap.querySelectorAll('.pin-marker').forEach(p => p.remove());
-  const img = document.getElementById('review-image');
-  if (!img || !img.naturalWidth) return;
-
-  let pinNum = 0;
-  currentComments.filter(c => c.pin_x != null && c.pin_y != null && !c.parent_comment_id).forEach(c => {
-    pinNum++;
-    const pin = document.createElement('div');
-    pin.className = 'pin-marker' + (c.resolved ? ' resolved' : '');
-    pin.setAttribute('data-testid', 'pin-' + c.id);
-    pin.textContent = pinNum;
-    pin.style.left = c.pin_x + '%';
-    pin.style.top = c.pin_y + '%';
-    pin.onclick = (ev) => { ev.stopPropagation(); highlightComment(c.id); };
-    wrap.appendChild(pin);
+function renderPins(){
+  const wrap=document.getElementById('canvas-container');if(!wrap)return;
+  wrap.querySelectorAll('.pin-marker').forEach(p=>p.remove());
+  const img=document.getElementById('review-image');if(!img||!img.naturalWidth)return;
+  let n=0;
+  currentComments.filter(c=>c.pin_x!=null&&c.pin_y!=null&&!c.parent_comment_id).forEach(c=>{
+    n++;const pin=document.createElement('div');
+    pin.className='pin-marker'+(c.resolved?' resolved':'');pin.setAttribute('data-testid','pin-'+c.id);
+    pin.textContent=n;pin.style.left=c.pin_x+'%';pin.style.top=c.pin_y+'%';
+    pin.onclick=ev=>{ev.stopPropagation();highlightComment(c.id)};wrap.appendChild(pin);
   });
 }
 
-function renderComments() {
-  const list = document.getElementById('comments-list');
-  const topLevel = currentComments.filter(c => !c.parent_comment_id);
-  document.getElementById('comment-count').textContent = topLevel.length;
-
-  if (!currentComments.length) {
-    list.innerHTML = '<div style="padding:16px;text-align:center;color:#666;font-size:.7rem">Nessun commento. Clicca sull\'immagine per aggiungere un pin.</div>';
-    return;
-  }
-
-  let pinNum = 0;
-  list.innerHTML = topLevel.map(c => {
-    const hasPin = c.pin_x != null && c.pin_y != null;
-    if (hasPin) pinNum++;
-    const replies = currentComments.filter(r => r.parent_comment_id === c.id);
-    const tag = parseTag(c.content);
-    return `<div class="comment-item${c.resolved ? ' resolved-comment' : ''}" id="comment-${c.id}" data-testid="comment-${c.id}">
-      <div class="comment-head">
-        ${hasPin ? '<div class="comment-pin-num' + (c.resolved ? ' resolved' : '') + '">' + pinNum + '</div>' : ''}
-        <span class="comment-author">${esc(c.author_name)}</span>
-        <span class="comment-time">${formatTime(c.created_at)}</span>
-      </div>
-      <div class="comment-body">${tag.html}${esc(tag.text)}</div>
+function renderComments(){
+  const list=document.getElementById('comments-list');
+  const top=currentComments.filter(c=>!c.parent_comment_id);
+  document.getElementById('comment-count').textContent=top.length;
+  if(!currentComments.length){list.innerHTML='<div style="padding:14px;text-align:center;color:#555;font-size:.68rem">Nessun commento. Usa Pin o gli strumenti di disegno.</div>';return}
+  let pn=0;
+  list.innerHTML=top.map(c=>{const hp=c.pin_x!=null&&c.pin_y!=null;if(hp)pn++;const reps=currentComments.filter(r=>r.parent_comment_id===c.id);const tg=parseTag(c.content);
+    return`<div class="comment-item${c.resolved?' resolved-comment':''}" id="comment-${c.id}" data-testid="comment-${c.id}">
+      <div class="comment-head">${hp?'<div class="comment-pin-num'+(c.resolved?' resolved':'')+'">'+pn+'</div>':''}
+        <span class="comment-author">${esc(c.author_name)}</span><span class="comment-time">${fmtTime(c.created_at)}</span></div>
+      <div class="comment-body">${tg.html}${esc(tg.text)}</div>
       <div class="comment-actions">
-        <button class="comment-action-btn" data-testid="btn-resolve-${c.id}" onclick="resolveComment(${c.id},${!c.resolved})">${c.resolved ? 'Riapri' : 'Risolvi'}</button>
+        <button class="comment-action-btn" data-testid="btn-resolve-${c.id}" onclick="resolveComment(${c.id},${!c.resolved})">${c.resolved?'Riapri':'Risolvi'}</button>
         <button class="comment-action-btn" data-testid="btn-reply-${c.id}" onclick="startReply(${c.id})">Rispondi</button>
-        <button class="comment-action-btn" data-testid="btn-delete-comment-${c.id}" onclick="deleteComment(${c.id})">Elimina</button>
-      </div>
-      ${replies.map(r => {
-        const rt = parseTag(r.content);
-        return `<div style="margin:6px 0 0 24px;padding:6px 8px;border-radius:6px;background:rgba(255,255,255,.02);border:1px solid #222">
-          <div class="comment-head"><span class="comment-author">${esc(r.author_name)}</span><span class="comment-time">${formatTime(r.created_at)}</span></div>
-          <div class="comment-body">${rt.html}${esc(rt.text)}</div>
-        </div>`;
-      }).join('')}
-    </div>`;
-  }).join('');
+        <button class="comment-action-btn" data-testid="btn-delete-comment-${c.id}" onclick="deleteComment(${c.id})">Elimina</button></div>
+      ${reps.map(r=>{const rt=parseTag(r.content);return`<div style="margin:4px 0 0 22px;padding:5px 7px;border-radius:5px;background:rgba(255,255,255,.02);border:1px solid #222">
+        <div class="comment-head"><span class="comment-author">${esc(r.author_name)}</span><span class="comment-time">${fmtTime(r.created_at)}</span></div>
+        <div class="comment-body">${rt.html}${esc(rt.text)}</div></div>`}).join('')}
+    </div>`}).join('');
 }
+function parseTag(c){if(!c)return{html:'',text:''};const m=c.match(/^\[(\w+)\]\s*/);if(m&&TAG_LABELS[m[1]])return{html:'<span class="comment-tag tag-'+m[1]+'">'+TAG_LABELS[m[1]]+'</span> ',text:c.slice(m[0].length)};return{html:'',text:c}}
+function fmtTime(t){if(!t)return'';const d=new Date(t),n=new Date(),df=n-d;if(df<6e4)return'Ora';if(df<36e5)return Math.floor(df/6e4)+'m fa';if(df<864e5)return Math.floor(df/36e5)+'h fa';return d.toLocaleDateString('it-IT',{day:'numeric',month:'short'})}
+function highlightComment(id){document.querySelectorAll('.comment-item').forEach(c=>c.classList.remove('highlighted'));const el=document.getElementById('comment-'+id);if(el){el.classList.add('highlighted');el.scrollIntoView({behavior:'smooth',block:'center'})}document.querySelectorAll('.pin-marker').forEach(p=>p.classList.remove('active-pin'));const pin=document.querySelector('[data-testid="pin-'+id+'"]');if(pin)pin.classList.add('active-pin')}
+function startReply(id){replyToId=id;const c=currentComments.find(x=>x.id===id);document.getElementById('pin-hint').textContent='Rispondendo a '+esc(c?.author_name||'')+'...';document.getElementById('comment-input').focus();document.getElementById('btn-submit-comment').disabled=false}
 
-function parseTag(content) {
-  if (!content) return { html: '', text: '' };
-  const match = content.match(/^\[(\w+)\]\s*/);
-  if (match && TAG_LABELS[match[1]]) {
-    return {
-      html: '<span class="comment-tag tag-' + match[1] + '">' + TAG_LABELS[match[1]] + '</span> ',
-      text: content.slice(match[0].length)
-    };
+async function submitComment(){
+  const raw=document.getElementById('comment-input').value.trim();if(!raw||!currentRevision)return;
+  const author=document.getElementById('comment-author').value;
+  const tag=document.getElementById('comment-tag').value;
+  const content=tag?'['+tag+'] '+raw:raw;
+  try{
+    const body={author_name:author,content,pin_x:pendingPin?pendingPin.x:null,pin_y:pendingPin?pendingPin.y:null,parent_comment_id:replyToId||null};
+    const res=await fetch('/api/revision-comments/'+currentRevision.id,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!res.ok)throw new Error('Errore');
+    document.getElementById('comment-input').value='';pendingPin=null;replyToId=null;
+    document.getElementById('pin-hint').textContent='';document.getElementById('btn-submit-comment').disabled=true;
+    document.getElementById('comment-tag').value='';
+    const cm=await fetch('/api/revision-comments/'+currentRevision.id).then(r=>r.json());
+    currentComments=cm;renderComments();renderPins();
+  }catch(e){console.error(e)}
+}
+async function resolveComment(id,resolved){try{await fetch('/api/revision-comments/'+id+'/resolve',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({resolved})});const cm=await fetch('/api/revision-comments/'+currentRevision.id).then(r=>r.json());currentComments=cm;renderComments();renderPins()}catch(e){console.error(e)}}
+async function deleteComment(id){if(!confirm('Eliminare?'))return;try{await fetch('/api/revision-comments/'+id,{method:'DELETE'});const cm=await fetch('/api/revision-comments/'+currentRevision.id).then(r=>r.json());currentComments=cm;renderComments();renderPins()}catch(e){console.error(e)}}
+document.getElementById('comment-input').addEventListener('input',function(){document.getElementById('btn-submit-comment').disabled=!this.value.trim()});
+
+document.addEventListener('click',function(e){
+  if(currentTool==='pin'&&e.target.id==='review-image'){
+    const c=getImgCoords(e);if(!c)return;
+    pendingPin={x:parseFloat(c.px.toFixed(2)),y:parseFloat(c.py.toFixed(2))};
+    document.getElementById('pin-hint').textContent='Pin posizionato. Scrivi il commento.';
+    document.getElementById('comment-input').focus();document.getElementById('btn-submit-comment').disabled=false;
   }
-  return { html: '', text: content };
-}
-
-function formatTime(t) {
-  if (!t) return '';
-  const d = new Date(t);
-  const now = new Date();
-  const diff = now - d;
-  if (diff < 60000) return 'Ora';
-  if (diff < 3600000) return Math.floor(diff / 60000) + 'm fa';
-  if (diff < 86400000) return Math.floor(diff / 3600000) + 'h fa';
-  return d.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
-}
-
-function highlightComment(id) {
-  document.querySelectorAll('.comment-item').forEach(c => c.classList.remove('highlighted'));
-  const el = document.getElementById('comment-' + id);
-  if (el) { el.classList.add('highlighted'); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
-  document.querySelectorAll('.pin-marker').forEach(p => p.classList.remove('active-pin'));
-  const pin = document.querySelector('[data-testid="pin-' + id + '"]');
-  if (pin) pin.classList.add('active-pin');
-}
-
-function startReply(id) {
-  replyToId = id;
-  const c = currentComments.find(cc => cc.id === id);
-  document.getElementById('pin-hint').textContent = 'Rispondendo a ' + esc(c?.author_name || '') + '...';
-  document.getElementById('comment-input').focus();
-  document.getElementById('btn-submit-comment').disabled = false;
-}
-
-async function submitComment() {
-  const rawContent = document.getElementById('comment-input').value.trim();
-  if (!rawContent || !currentRevision) return;
-  const authorName = document.getElementById('comment-author').value;
-  const tag = document.getElementById('comment-tag').value;
-  const content = tag ? '[' + tag + '] ' + rawContent : rawContent;
-  try {
-    const body = {
-      author_name: authorName,
-      content,
-      pin_x: pendingPin ? pendingPin.x : null,
-      pin_y: pendingPin ? pendingPin.y : null,
-      parent_comment_id: replyToId || null
-    };
-    const res = await fetch('/api/revision-comments/' + currentRevision.id, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
-    });
-    if (!res.ok) throw new Error('Errore');
-    document.getElementById('comment-input').value = '';
-    pendingPin = null;
-    replyToId = null;
-    document.getElementById('pin-hint').textContent = '';
-    document.getElementById('btn-submit-comment').disabled = true;
-    document.getElementById('comment-tag').value = '';
-    const comments = await fetch('/api/revision-comments/' + currentRevision.id).then(r => r.json());
-    currentComments = comments;
-    renderComments();
-    renderPins();
-  } catch(e) { console.error(e); }
-}
-
-async function resolveComment(id, resolved) {
-  try {
-    await fetch('/api/revision-comments/' + id + '/resolve', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ resolved }) });
-    const comments = await fetch('/api/revision-comments/' + currentRevision.id).then(r => r.json());
-    currentComments = comments;
-    renderComments();
-    renderPins();
-  } catch(e) { console.error(e); }
-}
-
-async function deleteComment(id) {
-  if (!confirm('Eliminare questo commento?')) return;
-  try {
-    await fetch('/api/revision-comments/' + id, { method: 'DELETE' });
-    const comments = await fetch('/api/revision-comments/' + currentRevision.id).then(r => r.json());
-    currentComments = comments;
-    renderComments();
-    renderPins();
-  } catch(e) { console.error(e); }
-}
-
-document.getElementById('comment-input').addEventListener('input', function() {
-  document.getElementById('btn-submit-comment').disabled = !this.value.trim();
 });
 
 init();

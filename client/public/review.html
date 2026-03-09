@@ -60,8 +60,9 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
 .close-viewer-btn{padding:5px 9px;border-radius:6px;font-size:1rem;cursor:pointer;border:1px solid #333;background:transparent;color:#aaa;font-family:'Sora',sans-serif;line-height:1}
 .close-viewer-btn:hover{color:#fff;border-color:#666}
 
-.viewer-canvas{flex:1;position:relative;overflow:auto;background:#0a0a12}
-.canvas-container{position:relative;transform-origin:0 0;display:inline-block}
+.viewer-canvas-wrap{flex:1;position:relative;overflow:hidden;background:#0a0a12}
+.viewer-canvas{position:absolute;inset:0;overflow:auto}
+.canvas-container{position:relative;transform-origin:0 0;display:block}
 .canvas-container img{display:block;user-select:none;-webkit-user-drag:none}
 .draw-svg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:4}
 .draw-svg.drawing{pointer-events:auto;cursor:crosshair}
@@ -208,12 +209,14 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
       <button class="close-viewer-btn" onclick="closeViewer()" data-testid="btn-close-viewer">&times;</button>
     </div>
     <div class="viewer-body">
-      <div class="viewer-canvas" id="viewer-canvas">
+      <div class="viewer-canvas-wrap">
+        <div class="viewer-canvas" id="viewer-canvas">
+          <div class="canvas-container" id="canvas-container"></div>
+        </div>
         <div class="nav-arrows">
           <button class="nav-arrow" onclick="navImage(-1)" data-testid="btn-prev-image">&larr;</button>
           <button class="nav-arrow" onclick="navImage(1)" data-testid="btn-next-image">&rarr;</button>
         </div>
-        <div class="canvas-container" id="canvas-container"></div>
         <div class="zoom-bar" data-testid="zoom-controls">
           <button class="zoom-btn" onclick="doZoom(-1)" data-testid="btn-zoom-out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
           <span class="zoom-label" id="zoom-label" data-testid="text-zoom-level">100%</span>
@@ -347,34 +350,53 @@ function closeViewer(){document.getElementById('viewer-panel').classList.remove(
 function zoomFit(){
   const cv=document.getElementById('viewer-canvas'),img=document.getElementById('review-image');
   if(!cv||!img||!img.naturalWidth)return;
-  const cw=cv.clientWidth-20,ch=cv.clientHeight-20;
+  const cw=cv.clientWidth,ch=cv.clientHeight;
   zoomScale=Math.min(cw/img.naturalWidth,ch/img.naturalHeight,1);
-  applyZoom();cv.scrollLeft=(img.naturalWidth*zoomScale-cv.clientWidth)/2;cv.scrollTop=(img.naturalHeight*zoomScale-cv.clientHeight)/2;
+  applyZoom();
+  cv.scrollLeft=(cv.scrollWidth-cw)/2;
+  cv.scrollTop=(cv.scrollHeight-ch)/2;
 }
 function zoomSet(s){
-  const cv=document.getElementById('viewer-canvas');if(!cv){zoomScale=s;applyZoom();return}
-  const cx=cv.scrollLeft+cv.clientWidth/2,cy=cv.scrollTop+cv.clientHeight/2;
-  const fx=cx/zoomScale,fy=cy/zoomScale;
+  const cv=document.getElementById('viewer-canvas'),img=document.getElementById('review-image');
+  if(!cv||!img||!img.naturalWidth){zoomScale=s;applyZoom();return}
+  const vw=cv.clientWidth,vh=cv.clientHeight;
+  const oldIw=img.naturalWidth*zoomScale,oldIh=img.naturalHeight*zoomScale;
+  const oldPadX=Math.max(0,(vw-oldIw)/2),oldPadY=Math.max(0,(vh-oldIh)/2);
+  const cx=cv.scrollLeft+vw/2,cy=cv.scrollTop+vh/2;
+  const imgPtX=(cx-oldPadX)/zoomScale,imgPtY=(cy-oldPadY)/zoomScale;
   zoomScale=s;applyZoom();
-  cv.scrollLeft=fx*zoomScale-cv.clientWidth/2;cv.scrollTop=fy*zoomScale-cv.clientHeight/2;
+  const newIw=img.naturalWidth*zoomScale,newIh=img.naturalHeight*zoomScale;
+  const newPadX=Math.max(0,(vw-newIw)/2),newPadY=Math.max(0,(vh-newIh)/2);
+  cv.scrollLeft=imgPtX*zoomScale+newPadX-vw/2;cv.scrollTop=imgPtY*zoomScale+newPadY-vh/2;
 }
-function doZoom(dir){zoomSet(Math.max(0.1,Math.min(zoomScale*(dir>0?1.3:1/1.3),10)))}
+function doZoom(dir){zoomSet(Math.max(0.05,Math.min(zoomScale*(dir>0?1.3:1/1.3),10)))}
 function applyZoom(){
-  const c=document.getElementById('canvas-container');if(!c)return;
+  const c=document.getElementById('canvas-container'),cv=document.getElementById('viewer-canvas'),img=document.getElementById('review-image');
+  if(!c||!cv||!img||!img.naturalWidth)return;
+  const iw=img.naturalWidth*zoomScale,ih=img.naturalHeight*zoomScale;
+  const vw=cv.clientWidth,vh=cv.clientHeight;
+  const padX=Math.max(0,(vw-iw)/2),padY=Math.max(0,(vh-ih)/2);
   c.style.transform=`scale(${zoomScale})`;
+  c.style.marginLeft=padX+'px';c.style.marginTop=padY+'px';
+  c.style.marginRight=padX+'px';c.style.marginBottom=padY+'px';
   document.getElementById('zoom-label').textContent=Math.round(zoomScale*100)+'%';
 }
 
 document.getElementById('viewer-canvas').addEventListener('wheel',function(e){
   if(!currentRevision)return;e.preventDefault();
   const cv=this,rect=cv.getBoundingClientRect();
-  const mx=(e.clientX-rect.left+cv.scrollLeft)/zoomScale;
-  const my=(e.clientY-rect.top+cv.scrollTop)/zoomScale;
-  const old=zoomScale;
-  zoomScale=Math.max(0.1,Math.min(zoomScale*(e.deltaY<0?1.15:1/1.15),10));
+  const cx=e.clientX-rect.left+cv.scrollLeft,cy=e.clientY-rect.top+cv.scrollTop;
+  const img=document.getElementById('review-image');if(!img)return;
+  const iw=img.naturalWidth*zoomScale,ih=img.naturalHeight*zoomScale;
+  const vw=cv.clientWidth,vh=cv.clientHeight;
+  const padX=Math.max(0,(vw-iw)/2),padY=Math.max(0,(vh-ih)/2);
+  const imgPtX=(cx-padX)/zoomScale,imgPtY=(cy-padY)/zoomScale;
+  zoomScale=Math.max(0.05,Math.min(zoomScale*(e.deltaY<0?1.15:1/1.15),10));
   applyZoom();
-  cv.scrollLeft=mx*zoomScale-(e.clientX-rect.left);
-  cv.scrollTop=my*zoomScale-(e.clientY-rect.top);
+  const newIw=img.naturalWidth*zoomScale,newIh=img.naturalHeight*zoomScale;
+  const newPadX=Math.max(0,(vw-newIw)/2),newPadY=Math.max(0,(vh-newIh)/2);
+  cv.scrollLeft=imgPtX*zoomScale+newPadX-(e.clientX-rect.left);
+  cv.scrollTop=imgPtY*zoomScale+newPadY-(e.clientY-rect.top);
 },{passive:false});
 
 function navImage(dir){if(!currentRevision)return;const idx=filteredRevisions.findIndex(r=>r.id===currentRevision.id);const n=idx+dir;if(n>=0&&n<filteredRevisions.length)openViewer(filteredRevisions[n].id)}

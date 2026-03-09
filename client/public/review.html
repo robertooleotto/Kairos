@@ -130,6 +130,16 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
 .draw-color-picker{display:flex;gap:3px;align-items:center}
 .draw-color-swatch{width:16px;height:16px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border-color .1s}
 .draw-color-swatch:hover,.draw-color-swatch.active{border-color:#fff}
+.stroke-picker{display:flex;gap:2px;align-items:center}
+.stroke-opt{width:22px;height:22px;border-radius:5px;cursor:pointer;border:1px solid #333;background:transparent;display:flex;align-items:center;justify-content:center;transition:all .1s;padding:0}
+.stroke-opt:hover{border-color:var(--accent)}
+.stroke-opt.active{border-color:var(--accent);background:rgba(99,102,241,.15)}
+.stroke-opt .stroke-line{background:#bbb;border-radius:1px;width:12px}
+
+.shape-tooltip{position:fixed;z-index:100;background:rgba(0,0,0,.88);color:#eee;padding:6px 10px;border-radius:6px;font-size:.65rem;font-family:'Sora',sans-serif;max-width:220px;line-height:1.4;pointer-events:none;opacity:0;transition:opacity .12s;white-space:pre-wrap;word-break:break-word;box-shadow:0 4px 12px rgba(0,0,0,.5)}
+.shape-tooltip.visible{opacity:1}
+.shape-tooltip .tt-author{font-weight:600;color:#fff;font-size:.6rem;margin-bottom:2px}
+.shape-tooltip .tt-dept{font-size:.5rem;color:#999;margin-bottom:2px}
 
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;padding:10px 20px;border-radius:8px;font-size:.75rem;font-weight:600;z-index:999;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.show{opacity:1}
@@ -212,6 +222,13 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
         <div class="draw-color-swatch" style="background:#6366f1" onclick="setDrawColor('#6366f1',this)" data-testid="color-blue"></div>
         <div class="draw-color-swatch" style="background:#ffffff" onclick="setDrawColor('#ffffff',this)" data-testid="color-white"></div>
       </div>
+      <div class="tool-sep"></div>
+      <div class="stroke-picker" id="stroke-picker" data-testid="stroke-picker">
+        <button class="stroke-opt" onclick="setStrokeWidth(2,this)" data-testid="stroke-thin" title="Sottile"><div class="stroke-line" style="height:1px"></div></button>
+        <button class="stroke-opt active" onclick="setStrokeWidth(4,this)" data-testid="stroke-medium" title="Medio"><div class="stroke-line" style="height:2px"></div></button>
+        <button class="stroke-opt" onclick="setStrokeWidth(7,this)" data-testid="stroke-thick" title="Spesso"><div class="stroke-line" style="height:4px"></div></button>
+        <button class="stroke-opt" onclick="setStrokeWidth(12,this)" data-testid="stroke-extra" title="Extra"><div class="stroke-line" style="height:6px"></div></button>
+      </div>
       <div style="flex:1"></div>
       <button class="close-viewer-btn" onclick="closeViewer()" data-testid="btn-close-viewer">&times;</button>
     </div>
@@ -275,6 +292,7 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
   </div>
 </div>
 
+<div class="shape-tooltip" id="shape-tooltip"></div>
 <div class="toast" id="toast"></div>
 
 <script src="api-client.js"></script>
@@ -286,8 +304,10 @@ let pendingPin=null, pendingShape=null, replyToId=null;
 let currentTool='';
 let zoomScale=1;
 let drawColor='#ef4444';
+let drawStrokeWidth=4;
 let drawingShape=null;
 let freehandPoints=[];
+let imageLoaded=false;
 
 const SHAPE_LABELS={circle:'Cerchio',rect:'Rettangolo',arrow:'Freccia',freehand:'Libero'};
 const TAG_LABELS={correzione:'Correzione',problema:'Problema',nota:'Nota',domanda:'Domanda',approvato:'Approvato'};
@@ -312,7 +332,7 @@ async function init(){
   }catch(e){console.error(e)}
 }
 
-function resetViewerState(){closeViewer();currentRevision=null;currentComments=[];pendingPin=null;pendingShape=null;replyToId=null;currentTool='';drawingShape=null}
+function resetViewerState(){closeViewer();currentRevision=null;currentComments=[];pendingPin=null;pendingShape=null;replyToId=null;currentTool='';drawingShape=null;imageLoaded=false}
 async function onJobChange(){
   resetViewerState();
   currentJobId=document.getElementById('job-select').value;
@@ -346,7 +366,7 @@ function esc(s){return s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').re
 async function openViewer(revId){
   const rev=filteredRevisions.find(r=>r.id===revId);if(!rev)return;
   currentRevision=rev;drawingShape=null;currentTool='';
-  pendingPin=null;pendingShape=null;replyToId=null;
+  pendingPin=null;pendingShape=null;replyToId=null;imageLoaded=false;
   document.getElementById('comment-input').value='';
   document.getElementById('pin-hint').textContent='';
   document.getElementById('btn-submit-comment').disabled=true;
@@ -363,13 +383,15 @@ async function openViewer(revId){
   imgEl.onload=()=>{
     container.style.width=imgEl.naturalWidth+'px';
     container.style.height=imgEl.naturalHeight+'px';
+    imageLoaded=true;
     zoomFit();renderPins();renderDrawShapes();
   };
   zoomScale=1;
   try{const cr=await fetch('/api/revision-comments/'+rev.id);currentComments=cr.ok?await cr.json():[];}catch(e){currentComments=[]}
   renderComments();renderGallery();
+  if(imageLoaded){renderPins();renderDrawShapes()}
 }
-function closeViewer(){document.getElementById('viewer-panel').classList.remove('open');currentRevision=null;renderGallery()}
+function closeViewer(){document.getElementById('viewer-panel').classList.remove('open');currentRevision=null;imageLoaded=false;hideTooltip();renderGallery()}
 
 function zoomFit(){
   const cv=document.getElementById('viewer-canvas'),img=document.getElementById('review-image');
@@ -458,6 +480,7 @@ function updateToolButtons(){
   else if(currentTool)document.getElementById('pin-hint').textContent="Disegna sull'immagine";
 }
 function setDrawColor(c,el){drawColor=c;document.querySelectorAll('.draw-color-swatch').forEach(s=>s.classList.remove('active'));if(el)el.classList.add('active')}
+function setStrokeWidth(w,el){drawStrokeWidth=w;document.querySelectorAll('.stroke-opt').forEach(s=>s.classList.remove('active'));if(el)el.classList.add('active')}
 
 function getImgCoords(e){
   const img=document.getElementById('review-image');if(!img||!img.naturalWidth)return null;
@@ -474,8 +497,8 @@ function getImgCoords(e){
     if(e.target.closest('.pin-marker'))return;
     const c=getImgCoords(e);if(!c)return;
     e.preventDefault();e.stopPropagation();
-    if(currentTool==='freehand'){freehandPoints=[{x:c.imgX,y:c.imgY}];drawingShape={type:'freehand',color:drawColor,points:[...freehandPoints]}}
-    else{drawingShape={type:currentTool,color:drawColor,x1:c.imgX,y1:c.imgY,x2:c.imgX,y2:c.imgY}}
+    if(currentTool==='freehand'){freehandPoints=[{x:c.imgX,y:c.imgY}];drawingShape={type:'freehand',color:drawColor,stroke_width:drawStrokeWidth,points:[...freehandPoints]}}
+    else{drawingShape={type:currentTool,color:drawColor,stroke_width:drawStrokeWidth,x1:c.imgX,y1:c.imgY,x2:c.imgX,y2:c.imgY}}
     renderDrawShapes();
   });
   window.addEventListener('mousemove',e=>{
@@ -521,18 +544,61 @@ function renderDrawShapes(){
   if(drawingShape)shapes.push(drawingShape);
 
   const defs=`<defs><marker id="ah" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="context-stroke"/></marker></defs>`;
-  svg.innerHTML=defs+shapes.map(s=>{
-    const sw=3;const op=s.resolved?0.3:s.pending?0.7:1;const col=s.color||'#ef4444';
+  svg.innerHTML=defs+shapes.map((s,idx)=>{
+    const sw=s.stroke_width||4;const op=s.resolved?0.3:s.pending?0.7:1;const col=s.color||'#ef4444';
+    const cid=s.commentId?`data-comment-id="${s.commentId}"`:'';
+    const interactStyle=s.commentId?'pointer-events:auto;cursor:pointer;':'';
+    const dashAttr=s.pending?'stroke-dasharray="12 6"':'';
     if(s.type==='circle'){const cx=(s.x1+s.x2)/2,cy=(s.y1+s.y2)/2,rx=Math.abs(s.x2-s.x1)/2,ry=Math.abs(s.y2-s.y1)/2;
-      return`<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="none" stroke="${col}" stroke-width="${sw}" opacity="${op}" ${s.pending?'stroke-dasharray="12 6"':''}/>`}
+      return`<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="rgba(0,0,0,0.001)" stroke="${col}" stroke-width="${sw}" opacity="${op}" ${dashAttr} ${cid} style="${interactStyle}"/>`}
     if(s.type==='rect'){const x=Math.min(s.x1,s.x2),y=Math.min(s.y1,s.y2),w=Math.abs(s.x2-s.x1),h=Math.abs(s.y2-s.y1);
-      return`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="${col}" stroke-width="${sw}" rx="${sw}" opacity="${op}" ${s.pending?'stroke-dasharray="12 6"':''}/>`}
-    if(s.type==='arrow')return`<line x1="${s.x1}" y1="${s.y1}" x2="${s.x2}" y2="${s.y2}" stroke="${col}" stroke-width="${sw}" marker-end="url(#ah)" opacity="${op}" ${s.pending?'stroke-dasharray="12 6"':''}/>`;
+      return`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="rgba(0,0,0,0.001)" stroke="${col}" stroke-width="${sw}" rx="${sw}" opacity="${op}" ${dashAttr} ${cid} style="${interactStyle}"/>`}
+    if(s.type==='arrow'){
+      const hitW=Math.max(sw,12);
+      return`<line x1="${s.x1}" y1="${s.y1}" x2="${s.x2}" y2="${s.y2}" stroke="transparent" stroke-width="${hitW}" ${cid} style="pointer-events:${s.commentId?'auto':'none'};cursor:pointer;"/>` +
+            `<line x1="${s.x1}" y1="${s.y1}" x2="${s.x2}" y2="${s.y2}" stroke="${col}" stroke-width="${sw}" marker-end="url(#ah)" opacity="${op}" ${dashAttr} style="pointer-events:none;"/>`}
     if(s.type==='freehand'&&s.points&&s.points.length>1){const d='M'+s.points.map(p=>p.x+' '+p.y).join(' L ');
-      return`<path d="${d}" fill="none" stroke="${col}" stroke-width="${sw}" opacity="${op}" ${s.pending?'stroke-dasharray="12 6"':''}/>`}
+      const hitW=Math.max(sw,10);
+      return`<path d="${d}" fill="none" stroke="transparent" stroke-width="${hitW}" ${cid} style="pointer-events:${s.commentId?'auto':'none'};cursor:pointer;"/>` +
+            `<path d="${d}" fill="none" stroke="${col}" stroke-width="${sw}" opacity="${op}" ${dashAttr} style="pointer-events:none;"/>`}
     return'';
   }).join('');
+
+  setupShapeHover();
 }
+
+function setupShapeHover(){
+  const svg=document.getElementById('draw-svg');if(!svg)return;
+  svg.querySelectorAll('[data-comment-id]').forEach(el=>{
+    el.addEventListener('mouseenter',onShapeEnter);
+    el.addEventListener('mouseleave',onShapeLeave);
+    el.addEventListener('mousemove',onShapeMove);
+    el.addEventListener('click',onShapeClick);
+  });
+}
+function onShapeEnter(e){
+  const cid=parseInt(e.currentTarget.getAttribute('data-comment-id'));
+  const c=currentComments.find(x=>x.id===cid);if(!c)return;
+  const tt=document.getElementById('shape-tooltip');
+  const tg=parseTag(c.content);
+  const deptName=c.department_id?getDeptName(c.department_id):'';
+  tt.innerHTML=`<div class="tt-author">${esc(c.author_name)}</div>${deptName?'<div class="tt-dept">'+esc(deptName)+'</div>':''}${tg.html?'<span style="font-size:.52rem">'+tg.html+'</span>':''}${esc(tg.text)}`;
+  tt.classList.add('visible');
+  positionTooltip(e);
+}
+function onShapeMove(e){positionTooltip(e)}
+function onShapeLeave(){hideTooltip()}
+function onShapeClick(e){
+  const cid=parseInt(e.currentTarget.getAttribute('data-comment-id'));
+  highlightComment(cid);
+}
+function positionTooltip(e){
+  const tt=document.getElementById('shape-tooltip');
+  const x=e.clientX+14,y=e.clientY+14;
+  tt.style.left=Math.min(x,window.innerWidth-240)+'px';
+  tt.style.top=Math.min(y,window.innerHeight-80)+'px';
+}
+function hideTooltip(){document.getElementById('shape-tooltip').classList.remove('visible')}
 
 function renderPins(){
   const wrap=document.getElementById('canvas-container');if(!wrap)return;
@@ -561,7 +627,8 @@ function renderComments(){
     const reps=currentComments.filter(r=>r.parent_comment_id===c.id);
     const tg=parseTag(c.content);
     const deptName=c.department_id?getDeptName(c.department_id):'';
-    const sd=hs?(typeof c.shape_data==='string'?JSON.parse(c.shape_data):c.shape_data):null;
+    let sd=null;
+    if(hs){try{sd=typeof c.shape_data==='string'?JSON.parse(c.shape_data):c.shape_data}catch(e){}}
     const shapeIcon=sd?getShapeIcon(sd.type,sd.color):'';
     return`<div class="comment-item${c.resolved?' resolved-comment':''}${c.sent?' sent-comment':''}" id="comment-${c.id}" data-testid="comment-${c.id}">
       <div class="comment-head">

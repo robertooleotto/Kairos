@@ -986,11 +986,13 @@ export async function registerRoutes(
     if (shape_type && VALID_SHAPE_TYPES.includes(shape_type)) {
       sanitizedShapeType = shape_type;
       if (shape_data && typeof shape_data === 'object') {
-        const sd = { type: shape_type };
+        const sd: any = { type: shape_type };
         if (shape_data.color && VALID_COLORS.test(shape_data.color)) sd.color = shape_data.color;
         else sd.color = '#ef4444';
+        const sw = typeof shape_data.stroke_width === 'number' ? Math.min(Math.max(Math.round(shape_data.stroke_width), 1), 20) : 4;
+        sd.stroke_width = sw;
         if (shape_type === 'freehand' && Array.isArray(shape_data.points)) {
-          sd.points = shape_data.points.filter(p => typeof p.x === 'number' && typeof p.y === 'number').map(p => ({ x: p.x, y: p.y }));
+          sd.points = shape_data.points.filter((p: any) => typeof p.x === 'number' && typeof p.y === 'number').map((p: any) => ({ x: p.x, y: p.y }));
         } else {
           if (typeof shape_data.x1 === 'number') sd.x1 = shape_data.x1;
           if (typeof shape_data.y1 === 'number') sd.y1 = shape_data.y1;

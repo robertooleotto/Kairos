@@ -454,9 +454,9 @@ function getImgCoords(e){
   const cv=document.getElementById('viewer-canvas');
   cv.addEventListener('mousedown',e=>{
     if(!currentTool||currentTool==='pin')return;
-    const svg=document.getElementById('draw-svg');if(!svg||!e.target.closest('.draw-svg'))return;
+    if(e.target.closest('.nav-arrow,.zoom-bar,.pin-marker,.comments-sidebar'))return;
     const c=getImgCoords(e);if(!c)return;
-    e.preventDefault();
+    e.preventDefault();e.stopPropagation();
     if(currentTool==='freehand'){freehandPoints=[{x:c.imgX,y:c.imgY}];drawingShape={type:'freehand',color:drawColor,points:freehandPoints}}
     else{drawingShape={type:currentTool,color:drawColor,x1:c.imgX,y1:c.imgY,x2:c.imgX,y2:c.imgY}}
     renderDrawShapes();

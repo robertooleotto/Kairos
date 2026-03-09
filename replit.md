@@ -61,9 +61,10 @@ Project management tool for NuDesign creative studio. Manages jobs (commesse), t
 - dhtmlxGantt page (gantt.html): Full interactive Gantt chart. Dark navy blue theme. Week scale shows W1-W5 per month. Phase CRUD via modal (double-click edit, right-click context menu). Drag/resize auto-save.
 - Review/Proofing (review.html): Gallery-style review tool integrated with foglio_revisions. Light theme gallery, dark viewer. Select commessa → select phase → see all revision images in a grid gallery. Click image to open full-screen viewer with:
   - **Zoom**: Mouse wheel (cursor-relative), Fit/1:1/2x buttons, +/- buttons, keyboard (+/-/0). Uses CSS transform:scale() on .canvas-container with transform-origin:0 0, native overflow:auto scrolling.
-  - **Drawing tools**: SVG overlay for Circle, Rectangle, Arrow, Freehand annotations. Color picker (red/yellow/green/blue/white). Undo/Clear. Shapes stored client-side (drawShapes array), rendered via SVG viewBox matching image natural dimensions.
+  - **Drawing tools**: SVG overlay for Circle, Rectangle, Arrow, Freehand annotations. Color picker (red/yellow/green/blue/white). Draw shape → pendingShape (dashed) → user writes comment + selects department → submit saves shape_data JSONB to DB. Shapes from DB rendered in SVG with resolved shapes at 0.3 opacity.
   - **Pin annotations**: Click to place numbered pins on image, linked to comments. Pins zoom/pan with image inside canvas-container.
-  - **Comments sidebar**: Author selector (Art Director/Reviewer/Cliente/PM/Fotografo/Post-produzione), tag system (Correzione/Problema/Nota/Domanda/Approvato as colored badges), replies, resolve/delete.
+  - **Comments sidebar**: Author selector, tag system (Correzione/Problema/Nota/Domanda/Approvato), department selector (from /api/areas), replies, resolve/delete.
+  - **Department assignment & send**: Each comment has "Invia al reparto" button. "Invia tutti ai reparti" header button marks all unsent. Toast notifications on send. Sent comments shown with green left border badge.
   - Navigation: prev/next arrows + keyboard (Left/Right/Escape).
   - Deep-link: review.html?jobId=...&revisionId=... or &imageId=... from foglio-lavoro "Apri in Review".
 - Foglio Lavoro (foglio-lavoro.html): Spreadsheet-like production tracker with Google Sheets-style tab bar at bottom. Tab system includes:
@@ -110,9 +111,12 @@ Project management tool for NuDesign creative studio. Manages jobs (commesse), t
 
 ## Revision Comments API (used by review.html gallery)
 - GET /api/revision-comments/:revisionId - List comments for a foglio revision
-- POST /api/revision-comments/:revisionId - Add comment (author_name, content, pin_x, pin_y, parent_comment_id)
+- POST /api/revision-comments/:revisionId - Add comment (author_name, content, pin_x, pin_y, parent_comment_id, shape_type, shape_data, department_id)
 - PUT /api/revision-comments/:id/resolve - Toggle resolved
+- PUT /api/revision-comments/:id/send - Mark comment as sent to department
+- PUT /api/revision-comments/send-all/:revisionId - Mark all unsent top-level comments as sent
 - DELETE /api/revision-comments/:id - Delete comment
+- `revision_comments` table extended with: shape_type TEXT, shape_data JSONB (stores drawing annotation coordinates/color), department_id TEXT (area ID), sent BOOLEAN
 
 ## Notes
 - Originally used Supabase auth (login page still references it) - not active

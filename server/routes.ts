@@ -39,8 +39,16 @@ export async function registerRoutes(
     pin_y REAL,
     resolved BOOLEAN DEFAULT false,
     parent_comment_id INTEGER,
+    shape_type TEXT,
+    shape_data JSONB,
+    department_id TEXT,
+    sent BOOLEAN DEFAULT false,
     created_at TIMESTAMP DEFAULT NOW()
   )`);
+  await query(`ALTER TABLE revision_comments ADD COLUMN IF NOT EXISTS shape_type TEXT`);
+  await query(`ALTER TABLE revision_comments ADD COLUMN IF NOT EXISTS shape_data JSONB`);
+  await query(`ALTER TABLE revision_comments ADD COLUMN IF NOT EXISTS department_id TEXT`);
+  await query(`ALTER TABLE revision_comments ADD COLUMN IF NOT EXISTS sent BOOLEAN DEFAULT false`);
 
   app.get("/", (req, res) => {
     const publicPath = path.resolve(process.cwd(), "client/public");
@@ -967,16 +975,51 @@ export async function registerRoutes(
   });
 
   app.post("/api/revision-comments/:revisionId", async (req, res) => {
-    const { author_name, content, pin_x, pin_y, parent_comment_id } = req.body;
+    const { author_name, content, pin_x, pin_y, parent_comment_id, shape_type, shape_data, department_id } = req.body;
     if (!content || !content.trim()) return res.status(400).json({ error: "Content is required" });
     const revCheck = await query("SELECT id FROM foglio_revisions WHERE id=$1", [req.params.revisionId]);
     if (!revCheck.length) return res.status(404).json({ error: "Revision not found" });
+    const VALID_SHAPE_TYPES = ['circle', 'rect', 'arrow', 'freehand'];
+    const VALID_COLORS = /^#[0-9a-fA-F]{6}$/;
+    let sanitizedShapeType = null;
+    let sanitizedShapeData = null;
+    if (shape_type && VALID_SHAPE_TYPES.includes(shape_type)) {
+      sanitizedShapeType = shape_type;
+      if (shape_data && typeof shape_data === 'object') {
+        const sd = { type: shape_type };
+        if (shape_data.color && VALID_COLORS.test(shape_data.color)) sd.color = shape_data.color;
+        else sd.color = '#ef4444';
+        if (shape_type === 'freehand' && Array.isArray(shape_data.points)) {
+          sd.points = shape_data.points.filter(p => typeof p.x === 'number' && typeof p.y === 'number').map(p => ({ x: p.x, y: p.y }));
+        } else {
+          if (typeof shape_data.x1 === 'number') sd.x1 = shape_data.x1;
+          if (typeof shape_data.y1 === 'number') sd.y1 = shape_data.y1;
+          if (typeof shape_data.x2 === 'number') sd.x2 = shape_data.x2;
+          if (typeof shape_data.y2 === 'number') sd.y2 = shape_data.y2;
+        }
+        sanitizedShapeData = JSON.stringify(sd);
+      }
+    }
     const rows = await query(
-      `INSERT INTO revision_comments (revision_id, author_name, content, pin_x, pin_y, parent_comment_id)
-       VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
-      [req.params.revisionId, author_name || 'Reviewer', content.trim(), pin_x ?? null, pin_y ?? null, parent_comment_id ?? null]
+      `INSERT INTO revision_comments (revision_id, author_name, content, pin_x, pin_y, parent_comment_id, shape_type, shape_data, department_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+      [req.params.revisionId, author_name || 'Reviewer', content.trim(), pin_x ?? null, pin_y ?? null, parent_comment_id ?? null, sanitizedShapeType, sanitizedShapeData, department_id ?? null]
     );
     res.json(rows[0]);
+  });
+
+  app.put("/api/revision-comments/:id/send", async (req, res) => {
+    const rows = await query("SELECT * FROM revision_comments WHERE id=$1", [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: "Comment not found" });
+    if (!rows[0].department_id) return res.status(400).json({ error: "Comment has no department assigned" });
+    if (rows[0].parent_comment_id) return res.status(400).json({ error: "Cannot send reply comments" });
+    const updated = await query("UPDATE revision_comments SET sent=true WHERE id=$1 RETURNING *", [req.params.id]);
+    res.json(updated[0]);
+  });
+
+  app.put("/api/revision-comments/send-all/:revisionId", async (req, res) => {
+    await query("UPDATE revision_comments SET sent=true WHERE revision_id=$1 AND sent=false AND parent_comment_id IS NULL AND department_id IS NOT NULL", [req.params.revisionId]);
+    res.json({ ok: true });
   });
 
   app.put("/api/revision-comments/:id/resolve", async (req, res) => {

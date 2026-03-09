@@ -83,18 +83,24 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
 .nav-arrow{pointer-events:auto;width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.12);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.9rem;transition:all .12s}
 .nav-arrow:hover{background:rgba(0,0,0,.75)}
 
-.comments-sidebar{width:310px;min-width:310px;border-left:1px solid #222;display:flex;flex-direction:column;background:#111;flex-shrink:0;overflow:hidden}
+.comments-sidebar{width:320px;min-width:320px;border-left:1px solid #222;display:flex;flex-direction:column;background:#111;flex-shrink:0;overflow:hidden}
 .comments-header{padding:10px 14px;border-bottom:1px solid #222;display:flex;align-items:center;gap:8px}
 .comments-header h3{font-size:.75rem;font-weight:600;flex:1;color:#fff}
 .comment-count{background:rgba(99,102,241,.15);color:var(--accent);padding:2px 8px;border-radius:10px;font-size:.6rem;font-weight:700}
-.comments-list{flex:1;overflow-y:auto;padding:8px}
+.send-all-btn{padding:3px 10px;border-radius:5px;font-size:.56rem;font-weight:600;cursor:pointer;border:1px solid #333;background:rgba(99,102,241,.1);color:var(--accent);font-family:'Sora',sans-serif;transition:all .12s}
+.send-all-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+.comments-list{flex:1;overflow-y:auto;padding:8px;min-height:0}
 .comment-item{padding:8px;border-radius:7px;background:rgba(255,255,255,.03);border:1px solid #222;margin-bottom:5px}
 .comment-item.highlighted{border-color:rgba(99,102,241,.4);background:rgba(99,102,241,.06)}
 .comment-item.resolved-comment{opacity:.5}
-.comment-head{display:flex;align-items:center;gap:6px;margin-bottom:3px}
+.comment-item.sent-comment{border-left:2px solid var(--green)}
+.comment-head{display:flex;align-items:center;gap:6px;margin-bottom:3px;flex-wrap:wrap}
 .comment-pin-num{width:18px;height:18px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0}
-.comment-author{font-size:.65rem;font-weight:600;flex:1;color:#ddd}
-.comment-time{font-size:.52rem;color:#555}
+.comment-shape-icon{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1.5px solid}
+.comment-shape-icon svg{width:11px;height:11px}
+.comment-author{font-size:.65rem;font-weight:600;color:#ddd}
+.comment-dept{font-size:.5rem;font-weight:600;padding:1px 5px;border-radius:3px;background:rgba(255,255,255,.06);color:#999}
+.comment-time{font-size:.52rem;color:#555;margin-left:auto}
 .comment-body{font-size:.68rem;color:#aaa;line-height:1.45;margin-bottom:3px}
 .comment-tag{display:inline-block;padding:1px 5px;border-radius:3px;font-size:.48rem;font-weight:700;margin-right:3px;vertical-align:middle;text-transform:uppercase;letter-spacing:.03em}
 .tag-correzione{background:rgba(245,158,11,.15);color:var(--yellow)}
@@ -102,9 +108,12 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
 .tag-problema{background:rgba(239,68,68,.15);color:var(--red)}
 .tag-nota{background:rgba(99,102,241,.15);color:var(--accent)}
 .tag-domanda{background:rgba(6,182,212,.15);color:var(--cyan)}
-.comment-actions{display:flex;gap:3px}
+.comment-actions{display:flex;gap:3px;flex-wrap:wrap}
 .comment-action-btn{padding:2px 5px;border-radius:3px;font-size:.52rem;font-weight:600;cursor:pointer;border:1px solid #333;background:transparent;color:#777;font-family:'Sora',sans-serif}
 .comment-action-btn:hover{color:#ddd;border-color:#555}
+.comment-action-btn.send-btn{border-color:rgba(99,102,241,.3);color:var(--accent)}
+.comment-action-btn.send-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+.comment-action-btn.sent-badge{border-color:rgba(34,197,94,.3);color:var(--green);cursor:default}
 
 .comment-input-area{padding:8px;border-top:1px solid #222}
 .comment-form-row{display:flex;gap:5px;margin-bottom:5px}
@@ -117,10 +126,13 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
 .comment-submit-row{display:flex;align-items:center;gap:5px;margin-top:5px}
 .comment-submit-btn{padding:5px 12px;border-radius:5px;font-size:.65rem;font-weight:600;cursor:pointer;border:none;background:var(--accent);color:#fff;font-family:'Sora',sans-serif;margin-left:auto}
 .comment-submit-btn:disabled{opacity:.4;cursor:not-allowed}
-.pin-hint{font-size:.52rem;color:#555;font-style:italic}
+.pin-hint{font-size:.52rem;color:#888;font-style:italic;flex:1}
 .draw-color-picker{display:flex;gap:3px;align-items:center}
 .draw-color-swatch{width:16px;height:16px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border-color .1s}
 .draw-color-swatch:hover,.draw-color-swatch.active{border-color:#fff}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;padding:10px 20px;border-radius:8px;font-size:.75rem;font-weight:600;z-index:999;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
 </style>
 </head>
 <body>
@@ -200,11 +212,6 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
         <div class="draw-color-swatch" style="background:#6366f1" onclick="setDrawColor('#6366f1',this)" data-testid="color-blue"></div>
         <div class="draw-color-swatch" style="background:#ffffff" onclick="setDrawColor('#ffffff',this)" data-testid="color-white"></div>
       </div>
-      <button class="tool-btn" id="btn-undo-draw" data-testid="btn-undo-draw" onclick="undoDraw()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-        Annulla
-      </button>
-      <button class="tool-btn" id="btn-clear-draw" data-testid="btn-clear-draw" onclick="clearDraw()">Pulisci</button>
       <div style="flex:1"></div>
       <button class="close-viewer-btn" onclick="closeViewer()" data-testid="btn-close-viewer">&times;</button>
     </div>
@@ -230,9 +237,10 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
         <div class="comments-header">
           <h3>Commenti</h3>
           <span class="comment-count" id="comment-count" data-testid="text-comment-count">0</span>
+          <button class="send-all-btn" id="btn-send-all" data-testid="btn-send-all" onclick="sendAllComments()">Invia tutti ai reparti</button>
         </div>
         <div class="comments-list" id="comments-list" data-testid="comments-list"></div>
-        <div class="comment-input-area">
+        <div class="comment-input-area" id="comment-input-area">
           <div class="comment-form-row">
             <select class="comment-select" id="comment-author" data-testid="select-comment-author">
               <option value="Art Director">Art Director</option>
@@ -251,10 +259,15 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
               <option value="approvato">Approvato</option>
             </select>
           </div>
+          <div class="comment-form-row">
+            <select class="comment-select" id="comment-dept" data-testid="select-comment-dept">
+              <option value="">— Reparto —</option>
+            </select>
+          </div>
           <textarea class="comment-textarea" id="comment-input" data-testid="input-comment" placeholder="Scrivi una nota di revisione..."></textarea>
           <div class="comment-submit-row">
             <span class="pin-hint" id="pin-hint"></span>
-            <button class="comment-submit-btn" id="btn-submit-comment" data-testid="btn-submit-comment" onclick="submitComment()" disabled>Invia</button>
+            <button class="comment-submit-btn" id="btn-submit-comment" data-testid="btn-submit-comment" onclick="submitComment()" disabled>Salva</button>
           </div>
         </div>
       </div>
@@ -262,28 +275,34 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
   </div>
 </div>
 
+<div class="toast" id="toast"></div>
+
 <script src="api-client.js"></script>
 <script>
-let allJobs=[], currentJobId=null, currentPhase='', allRevisions=[], filteredRevisions=[];
+let allJobs=[], allAreas=[], currentJobId=null, currentPhase='', allRevisions=[], filteredRevisions=[];
 let allImages=[], allColumns=[], currentRevision=null, currentComments=[];
-let pendingPin=null, replyToId=null;
+let pendingPin=null, pendingShape=null, replyToId=null;
 
 let currentTool='';
 let zoomScale=1;
 let drawColor='#ef4444';
-let drawShapes=[];
 let drawingShape=null;
 let freehandPoints=[];
 
+const SHAPE_LABELS={circle:'Cerchio',rect:'Rettangolo',arrow:'Freccia',freehand:'Libero'};
 const TAG_LABELS={correzione:'Correzione',problema:'Problema',nota:'Nota',domanda:'Domanda',approvato:'Approvato'};
 const PHASE_LABELS={'location_bozza':'Location Bozza','location_def':'Location Def','fotografia':'Fotografia','styling':'Styling','revisioni':'Revisioni','render':'Render','post':'Post','finiture':'Finiture','rifacimenti':'Rifacimenti','recupero_render':'Render (Rec.)','recupero_post':'Post (Rec.)','recupero_finiture':'Finiture (Rec.)','recupero':'Recupero','fatturato':'Fatturato','_finale':'Definitiva'};
 
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500)}
+
 async function init(){
   try{
-    const res=await fetch('/api/jobs');
-    allJobs=await res.json();
+    const[jr,ar]=await Promise.all([fetch('/api/jobs'),fetch('/api/areas')]);
+    allJobs=await jr.json();allAreas=ar.ok?await ar.json():[];
     const sel=document.getElementById('job-select');
     allJobs.forEach(j=>{const o=document.createElement('option');o.value=j.id;o.textContent=(j.code||'')+' — '+(j.title||j.name);sel.appendChild(o)});
+    const deptSel=document.getElementById('comment-dept');
+    allAreas.forEach(a=>{const o=document.createElement('option');o.value=a.id;o.textContent=(a.icon||'')+' '+a.name;deptSel.appendChild(o)});
     const params=new URLSearchParams(location.search);
     const jobId=params.get('jobId'), revisionId=params.get('revisionId'), imageId=params.get('imageId');
     if(jobId){sel.value=jobId;await onJobChange();
@@ -293,7 +312,7 @@ async function init(){
   }catch(e){console.error(e)}
 }
 
-function resetViewerState(){closeViewer();currentRevision=null;currentComments=[];pendingPin=null;replyToId=null;currentTool='';drawShapes=[];drawingShape=null}
+function resetViewerState(){closeViewer();currentRevision=null;currentComments=[];pendingPin=null;pendingShape=null;replyToId=null;currentTool='';drawingShape=null}
 async function onJobChange(){
   resetViewerState();
   currentJobId=document.getElementById('job-select').value;
@@ -326,12 +345,13 @@ function esc(s){return s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').re
 
 async function openViewer(revId){
   const rev=filteredRevisions.find(r=>r.id===revId);if(!rev)return;
-  currentRevision=rev;drawShapes=[];drawingShape=null;currentTool='';
-  pendingPin=null;replyToId=null;
+  currentRevision=rev;drawingShape=null;currentTool='';
+  pendingPin=null;pendingShape=null;replyToId=null;
   document.getElementById('comment-input').value='';
   document.getElementById('pin-hint').textContent='';
   document.getElementById('btn-submit-comment').disabled=true;
   document.getElementById('comment-tag').value='';
+  document.getElementById('comment-dept').value='';
   updateToolButtons();
   document.getElementById('viewer-panel').classList.add('open');
   const imgData=allImages.find(i=>i.id===rev.foglio_image_id);
@@ -356,8 +376,7 @@ function zoomFit(){
   if(!cv||!img||!img.naturalWidth)return;
   const vw=cv.clientWidth,vh=cv.clientHeight;
   zoomScale=Math.min(vw/img.naturalWidth,vh/img.naturalHeight,1);
-  applyZoom();
-  cv.scrollLeft=0;cv.scrollTop=0;
+  applyZoom();cv.scrollLeft=0;cv.scrollTop=0;
 }
 function zoomSet(s){
   const cv=document.getElementById('viewer-canvas'),img=document.getElementById('review-image');
@@ -390,14 +409,12 @@ document.getElementById('viewer-canvas').addEventListener('wheel',function(e){
   const cv=this,rect=cv.getBoundingClientRect();
   const cx=e.clientX-rect.left+cv.scrollLeft,cy=e.clientY-rect.top+cv.scrollTop;
   const img=document.getElementById('review-image');if(!img)return;
-  const iw=img.naturalWidth*zoomScale,ih=img.naturalHeight*zoomScale;
   const vw=cv.clientWidth,vh=cv.clientHeight;
-  const padX=Math.max(0,(vw-iw)/2),padY=Math.max(0,(vh-ih)/2);
+  const padX=Math.max(0,(vw-img.naturalWidth*zoomScale)/2),padY=Math.max(0,(vh-img.naturalHeight*zoomScale)/2);
   const imgPtX=(cx-padX)/zoomScale,imgPtY=(cy-padY)/zoomScale;
   zoomScale=Math.max(0.05,Math.min(zoomScale*(e.deltaY<0?1.15:1/1.15),10));
   applyZoom();
-  const newIw=img.naturalWidth*zoomScale,newIh=img.naturalHeight*zoomScale;
-  const newPadX=Math.max(0,(vw-newIw)/2),newPadY=Math.max(0,(vh-newIh)/2);
+  const newPadX=Math.max(0,(vw-img.naturalWidth*zoomScale)/2),newPadY=Math.max(0,(vh-img.naturalHeight*zoomScale)/2);
   cv.scrollLeft=imgPtX*zoomScale+newPadX-(e.clientX-rect.left);
   cv.scrollTop=imgPtY*zoomScale+newPadY-(e.clientY-rect.top);
 },{passive:false});
@@ -408,25 +425,19 @@ let isPanning=false,panStartX=0,panStartY=0,panScrollX=0,panScrollY=0;
   cv.addEventListener('mousedown',e=>{
     if(currentTool)return;
     if(e.button!==0)return;
-    if(e.target.closest('.nav-arrow,.zoom-bar,.pin-marker'))return;
+    if(e.target.closest('.pin-marker'))return;
     isPanning=true;panStartX=e.clientX;panStartY=e.clientY;
     panScrollX=cv.scrollLeft;panScrollY=cv.scrollTop;
     cv.style.cursor='grabbing';e.preventDefault();
   });
-  window.addEventListener('mousemove',e=>{
-    if(!isPanning)return;
-    cv.scrollLeft=panScrollX-(e.clientX-panStartX);
-    cv.scrollTop=panScrollY-(e.clientY-panStartY);
-  });
-  window.addEventListener('mouseup',()=>{
-    if(!isPanning)return;isPanning=false;cv.style.cursor='';
-  });
+  window.addEventListener('mousemove',e=>{if(!isPanning)return;cv.scrollLeft=panScrollX-(e.clientX-panStartX);cv.scrollTop=panScrollY-(e.clientY-panStartY)});
+  window.addEventListener('mouseup',()=>{if(!isPanning)return;isPanning=false;cv.style.cursor=''});
 })();
 
 function navImage(dir){if(!currentRevision)return;const idx=filteredRevisions.findIndex(r=>r.id===currentRevision.id);const n=idx+dir;if(n>=0&&n<filteredRevisions.length)openViewer(filteredRevisions[n].id)}
 document.addEventListener('keydown',e=>{
   if(!currentRevision)return;if(e.target.tagName==='TEXTAREA'||e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;
-  if(e.key==='ArrowLeft')navImage(-1);if(e.key==='ArrowRight')navImage(1);if(e.key==='Escape')closeViewer();
+  if(e.key==='ArrowLeft')navImage(-1);if(e.key==='ArrowRight')navImage(1);if(e.key==='Escape'){if(pendingShape){cancelPendingShape();return}closeViewer()}
   if(e.key==='+'||e.key==='='){e.preventDefault();doZoom(1)}if(e.key==='-'){e.preventDefault();doZoom(-1)}
   if(e.key==='0'){e.preventDefault();zoomFit()}
 });
@@ -437,12 +448,14 @@ function updateToolButtons(){
     const b=document.getElementById('btn-tool-'+t);if(b)b.classList.toggle('active',currentTool===t);
   });
   const svg=document.getElementById('draw-svg');
-  if(svg)svg.classList.toggle('drawing',currentTool&&currentTool!=='pin');
+  if(svg)svg.classList.toggle('drawing',!!currentTool&&currentTool!=='pin');
   const img=document.getElementById('review-image');
   if(img)img.style.cursor=currentTool==='pin'?'crosshair':'';
   const cv=document.getElementById('viewer-canvas');
   if(cv)cv.style.cursor=currentTool?'default':'grab';
-  document.getElementById('pin-hint').textContent=currentTool==='pin'?"Clicca sull'immagine per posizionare un pin":currentTool?'Disegna sull\'immagine':'';
+  if(!currentTool&&!pendingPin&&!pendingShape)document.getElementById('pin-hint').textContent='';
+  else if(currentTool==='pin')document.getElementById('pin-hint').textContent="Clicca sull'immagine per posizionare un pin";
+  else if(currentTool)document.getElementById('pin-hint').textContent="Disegna sull'immagine";
 }
 function setDrawColor(c,el){drawColor=c;document.querySelectorAll('.draw-color-swatch').forEach(s=>s.classList.remove('active'));if(el)el.classList.add('active')}
 
@@ -454,51 +467,72 @@ function getImgCoords(e){
   return{px:rx*100, py:ry*100, imgX:rx*img.naturalWidth, imgY:ry*img.naturalHeight};
 }
 
-
 (function setupDrawing(){
   const cv=document.getElementById('viewer-canvas');
   cv.addEventListener('mousedown',e=>{
     if(!currentTool||currentTool==='pin')return;
-    if(e.target.closest('.nav-arrow,.zoom-bar,.pin-marker,.comments-sidebar'))return;
+    if(e.target.closest('.pin-marker'))return;
     const c=getImgCoords(e);if(!c)return;
     e.preventDefault();e.stopPropagation();
-    if(currentTool==='freehand'){freehandPoints=[{x:c.imgX,y:c.imgY}];drawingShape={type:'freehand',color:drawColor,points:freehandPoints}}
+    if(currentTool==='freehand'){freehandPoints=[{x:c.imgX,y:c.imgY}];drawingShape={type:'freehand',color:drawColor,points:[...freehandPoints]}}
     else{drawingShape={type:currentTool,color:drawColor,x1:c.imgX,y1:c.imgY,x2:c.imgX,y2:c.imgY}}
     renderDrawShapes();
   });
   window.addEventListener('mousemove',e=>{
     if(!drawingShape)return;
     const c=getImgCoords(e);if(!c)return;
-    if(drawingShape.type==='freehand'){freehandPoints.push({x:c.imgX,y:c.imgY});drawingShape.points=freehandPoints}
+    if(drawingShape.type==='freehand'){freehandPoints.push({x:c.imgX,y:c.imgY});drawingShape.points=[...freehandPoints]}
     else{drawingShape.x2=c.imgX;drawingShape.y2=c.imgY}
     renderDrawShapes();
   });
   window.addEventListener('mouseup',()=>{
     if(!drawingShape)return;
-    drawShapes.push({...drawingShape});drawingShape=null;renderDrawShapes();
+    const finished={...drawingShape};
+    if(finished.type==='freehand')finished.points=[...freehandPoints];
+    drawingShape=null;
+    setPendingShape(finished);
+    renderDrawShapes();
   });
 })();
 
+function setPendingShape(shape){
+  pendingShape=shape;
+  document.getElementById('pin-hint').textContent='Annotazione creata. Scrivi il commento e seleziona il reparto.';
+  document.getElementById('comment-input').focus();
+  document.getElementById('btn-submit-comment').disabled=false;
+  renderDrawShapes();
+}
+function cancelPendingShape(){
+  pendingShape=null;drawingShape=null;
+  document.getElementById('pin-hint').textContent='';
+  document.getElementById('btn-submit-comment').disabled=!document.getElementById('comment-input').value.trim();
+  renderDrawShapes();
+}
+
 function renderDrawShapes(){
   const svg=document.getElementById('draw-svg');if(!svg)return;
-  const img=document.getElementById('review-image');if(!img)return;
+  const img=document.getElementById('review-image');if(!img||!img.naturalWidth)return;
   svg.setAttribute('viewBox',`0 0 ${img.naturalWidth} ${img.naturalHeight}`);
-  const all=[...drawShapes];if(drawingShape)all.push(drawingShape);
+  const shapes=[];
+  currentComments.filter(c=>c.shape_data&&!c.parent_comment_id).forEach(c=>{
+    try{const sd=typeof c.shape_data==='string'?JSON.parse(c.shape_data):c.shape_data;if(sd&&sd.type)shapes.push({...sd,commentId:c.id,resolved:c.resolved})}catch(e){}
+  });
+  if(pendingShape)shapes.push({...pendingShape,pending:true});
+  if(drawingShape)shapes.push(drawingShape);
+
   const defs=`<defs><marker id="ah" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="context-stroke"/></marker></defs>`;
-  svg.innerHTML=defs+all.map(s=>{
-    const sw=Math.max(2,3/zoomScale);
+  svg.innerHTML=defs+shapes.map(s=>{
+    const sw=3;const op=s.resolved?0.3:s.pending?0.7:1;const col=s.color||'#ef4444';
     if(s.type==='circle'){const cx=(s.x1+s.x2)/2,cy=(s.y1+s.y2)/2,rx=Math.abs(s.x2-s.x1)/2,ry=Math.abs(s.y2-s.y1)/2;
-      return`<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="none" stroke="${s.color}" stroke-width="${sw}"/>`}
+      return`<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="none" stroke="${col}" stroke-width="${sw}" opacity="${op}" ${s.pending?'stroke-dasharray="12 6"':''}/>`}
     if(s.type==='rect'){const x=Math.min(s.x1,s.x2),y=Math.min(s.y1,s.y2),w=Math.abs(s.x2-s.x1),h=Math.abs(s.y2-s.y1);
-      return`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="${s.color}" stroke-width="${sw}" rx="${sw}"/>`}
-    if(s.type==='arrow')return`<line x1="${s.x1}" y1="${s.y1}" x2="${s.x2}" y2="${s.y2}" stroke="${s.color}" stroke-width="${sw}" marker-end="url(#ah)"/>`;
+      return`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="${col}" stroke-width="${sw}" rx="${sw}" opacity="${op}" ${s.pending?'stroke-dasharray="12 6"':''}/>`}
+    if(s.type==='arrow')return`<line x1="${s.x1}" y1="${s.y1}" x2="${s.x2}" y2="${s.y2}" stroke="${col}" stroke-width="${sw}" marker-end="url(#ah)" opacity="${op}" ${s.pending?'stroke-dasharray="12 6"':''}/>`;
     if(s.type==='freehand'&&s.points&&s.points.length>1){const d='M'+s.points.map(p=>p.x+' '+p.y).join(' L ');
-      return`<path d="${d}" fill="none" stroke="${s.color}" stroke-width="${sw}"/>`}
+      return`<path d="${d}" fill="none" stroke="${col}" stroke-width="${sw}" opacity="${op}" ${s.pending?'stroke-dasharray="12 6"':''}/>`}
     return'';
   }).join('');
 }
-function undoDraw(){drawShapes.pop();renderDrawShapes()}
-function clearDraw(){drawShapes=[];renderDrawShapes()}
 
 function renderPins(){
   const wrap=document.getElementById('canvas-container');if(!wrap)return;
@@ -517,22 +551,45 @@ function renderComments(){
   const list=document.getElementById('comments-list');
   const top=currentComments.filter(c=>!c.parent_comment_id);
   document.getElementById('comment-count').textContent=top.length;
+  const unsent=top.filter(c=>!c.sent&&!c.resolved).length;
+  document.getElementById('btn-send-all').style.display=unsent>0?'':'none';
   if(!currentComments.length){list.innerHTML='<div style="padding:14px;text-align:center;color:#555;font-size:.68rem">Nessun commento. Usa Pin o gli strumenti di disegno.</div>';return}
   let pn=0;
-  list.innerHTML=top.map(c=>{const hp=c.pin_x!=null&&c.pin_y!=null;if(hp)pn++;const reps=currentComments.filter(r=>r.parent_comment_id===c.id);const tg=parseTag(c.content);
-    return`<div class="comment-item${c.resolved?' resolved-comment':''}" id="comment-${c.id}" data-testid="comment-${c.id}">
-      <div class="comment-head">${hp?'<div class="comment-pin-num'+(c.resolved?' resolved':'')+'">'+pn+'</div>':''}
-        <span class="comment-author">${esc(c.author_name)}</span><span class="comment-time">${fmtTime(c.created_at)}</span></div>
+  list.innerHTML=top.map(c=>{
+    const hp=c.pin_x!=null&&c.pin_y!=null;if(hp)pn++;
+    const hs=!!c.shape_data;
+    const reps=currentComments.filter(r=>r.parent_comment_id===c.id);
+    const tg=parseTag(c.content);
+    const deptName=c.department_id?getDeptName(c.department_id):'';
+    const sd=hs?(typeof c.shape_data==='string'?JSON.parse(c.shape_data):c.shape_data):null;
+    const shapeIcon=sd?getShapeIcon(sd.type,sd.color):'';
+    return`<div class="comment-item${c.resolved?' resolved-comment':''}${c.sent?' sent-comment':''}" id="comment-${c.id}" data-testid="comment-${c.id}">
+      <div class="comment-head">
+        ${hp?'<div class="comment-pin-num'+(c.resolved?' resolved':'')+'">'+pn+'</div>':''}
+        ${shapeIcon}
+        <span class="comment-author">${esc(c.author_name)}</span>
+        ${deptName?'<span class="comment-dept">'+esc(deptName)+'</span>':''}
+        <span class="comment-time">${fmtTime(c.created_at)}</span>
+      </div>
       <div class="comment-body">${tg.html}${esc(tg.text)}</div>
       <div class="comment-actions">
+        ${c.sent?'<span class="comment-action-btn sent-badge">Inviato</span>':'<button class="comment-action-btn send-btn" data-testid="btn-send-'+c.id+'" onclick="sendComment('+c.id+')">Invia al reparto</button>'}
         <button class="comment-action-btn" data-testid="btn-resolve-${c.id}" onclick="resolveComment(${c.id},${!c.resolved})">${c.resolved?'Riapri':'Risolvi'}</button>
         <button class="comment-action-btn" data-testid="btn-reply-${c.id}" onclick="startReply(${c.id})">Rispondi</button>
-        <button class="comment-action-btn" data-testid="btn-delete-comment-${c.id}" onclick="deleteComment(${c.id})">Elimina</button></div>
+        <button class="comment-action-btn" data-testid="btn-delete-comment-${c.id}" onclick="deleteComment(${c.id})">Elimina</button>
+      </div>
       ${reps.map(r=>{const rt=parseTag(r.content);return`<div style="margin:4px 0 0 22px;padding:5px 7px;border-radius:5px;background:rgba(255,255,255,.02);border:1px solid #222">
         <div class="comment-head"><span class="comment-author">${esc(r.author_name)}</span><span class="comment-time">${fmtTime(r.created_at)}</span></div>
         <div class="comment-body">${rt.html}${esc(rt.text)}</div></div>`}).join('')}
     </div>`}).join('');
 }
+
+function getShapeIcon(type,color){
+  const c=color||'#ef4444';
+  const icons={circle:'<circle cx="6" cy="6" r="4.5"/>',rect:'<rect x="1.5" y="1.5" width="9" height="9" rx="1"/>',arrow:'<line x1="2" y1="10" x2="10" y2="2"/>',freehand:'<path d="M2 9c1-2 3-6 5-6s2 4 4 4"/>'};
+  return`<div class="comment-shape-icon" style="border-color:${c}"><svg viewBox="0 0 12 12" fill="none" stroke="${c}" stroke-width="1.5">${icons[type]||''}</svg></div>`;
+}
+function getDeptName(id){const a=allAreas.find(x=>x.id===id);return a?(a.icon||'')+' '+a.name:''}
 function parseTag(c){if(!c)return{html:'',text:''};const m=c.match(/^\[(\w+)\]\s*/);if(m&&TAG_LABELS[m[1]])return{html:'<span class="comment-tag tag-'+m[1]+'">'+TAG_LABELS[m[1]]+'</span> ',text:c.slice(m[0].length)};return{html:'',text:c}}
 function fmtTime(t){if(!t)return'';const d=new Date(t),n=new Date(),df=n-d;if(df<6e4)return'Ora';if(df<36e5)return Math.floor(df/6e4)+'m fa';if(df<864e5)return Math.floor(df/36e5)+'h fa';return d.toLocaleDateString('it-IT',{day:'numeric',month:'short'})}
 function highlightComment(id){document.querySelectorAll('.comment-item').forEach(c=>c.classList.remove('highlighted'));const el=document.getElementById('comment-'+id);if(el){el.classList.add('highlighted');el.scrollIntoView({behavior:'smooth',block:'center'})}document.querySelectorAll('.pin-marker').forEach(p=>p.classList.remove('active-pin'));const pin=document.querySelector('[data-testid="pin-'+id+'"]');if(pin)pin.classList.add('active-pin')}
@@ -542,27 +599,60 @@ async function submitComment(){
   const raw=document.getElementById('comment-input').value.trim();if(!raw||!currentRevision)return;
   const author=document.getElementById('comment-author').value;
   const tag=document.getElementById('comment-tag').value;
+  const dept=document.getElementById('comment-dept').value;
   const content=tag?'['+tag+'] '+raw:raw;
   try{
-    const body={author_name:author,content,pin_x:pendingPin?pendingPin.x:null,pin_y:pendingPin?pendingPin.y:null,parent_comment_id:replyToId||null};
+    const body={
+      author_name:author,content,
+      pin_x:pendingPin?pendingPin.x:null,pin_y:pendingPin?pendingPin.y:null,
+      parent_comment_id:replyToId||null,
+      shape_type:pendingShape?pendingShape.type:null,
+      shape_data:pendingShape?pendingShape:null,
+      department_id:dept||null
+    };
     const res=await fetch('/api/revision-comments/'+currentRevision.id,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-    if(!res.ok)throw new Error('Errore');
-    document.getElementById('comment-input').value='';pendingPin=null;replyToId=null;
+    if(!res.ok){const err=await res.json().catch(()=>({}));showToast(err.error||'Errore nel salvataggio');return}
+    document.getElementById('comment-input').value='';pendingPin=null;pendingShape=null;replyToId=null;
     document.getElementById('pin-hint').textContent='';document.getElementById('btn-submit-comment').disabled=true;
-    document.getElementById('comment-tag').value='';
-    const cm=await fetch('/api/revision-comments/'+currentRevision.id).then(r=>r.json());
-    currentComments=cm;renderComments();renderPins();
-  }catch(e){console.error(e)}
+    document.getElementById('comment-tag').value='';document.getElementById('comment-dept').value='';
+    await refreshComments();
+  }catch(e){console.error(e);showToast('Errore nel salvataggio')}
 }
-async function resolveComment(id,resolved){try{await fetch('/api/revision-comments/'+id+'/resolve',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({resolved})});const cm=await fetch('/api/revision-comments/'+currentRevision.id).then(r=>r.json());currentComments=cm;renderComments();renderPins()}catch(e){console.error(e)}}
-async function deleteComment(id){if(!confirm('Eliminare?'))return;try{await fetch('/api/revision-comments/'+id,{method:'DELETE'});const cm=await fetch('/api/revision-comments/'+currentRevision.id).then(r=>r.json());currentComments=cm;renderComments();renderPins()}catch(e){console.error(e)}}
-document.getElementById('comment-input').addEventListener('input',function(){document.getElementById('btn-submit-comment').disabled=!this.value.trim()});
+async function resolveComment(id,resolved){try{const r=await fetch('/api/revision-comments/'+id+'/resolve',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({resolved})});if(!r.ok)throw new Error('Errore');await refreshComments()}catch(e){console.error(e);showToast('Errore nel salvataggio')}}
+async function deleteComment(id){if(!confirm('Eliminare?'))return;try{const r=await fetch('/api/revision-comments/'+id,{method:'DELETE'});if(!r.ok)throw new Error('Errore');await refreshComments()}catch(e){console.error(e);showToast('Errore nell\'eliminazione')}}
+async function sendComment(id){
+  const c=currentComments.find(x=>x.id===id);
+  if(!c||!c.department_id){showToast('Seleziona un reparto prima di inviare');return}
+  try{
+    const r=await fetch('/api/revision-comments/'+id+'/send',{method:'PUT',headers:{'Content-Type':'application/json'}});
+    if(!r.ok){const err=await r.json().catch(()=>({}));showToast(err.error||'Errore nell\'invio');return}
+    const deptName=getDeptName(c.department_id);
+    showToast('Commento inviato a '+deptName);
+    await refreshComments();
+  }catch(e){console.error(e);showToast('Errore nell\'invio')}
+}
+async function sendAllComments(){
+  if(!currentRevision)return;
+  try{
+    const r=await fetch('/api/revision-comments/send-all/'+currentRevision.id,{method:'PUT',headers:{'Content-Type':'application/json'}});
+    if(!r.ok)throw new Error('Errore');
+    showToast('Tutti i commenti inviati ai reparti');
+    await refreshComments();
+  }catch(e){console.error(e);showToast('Errore nell\'invio')}
+}
+async function refreshComments(){
+  if(!currentRevision)return;
+  try{const r=await fetch('/api/revision-comments/'+currentRevision.id);if(!r.ok)return;const cm=await r.json();currentComments=cm;renderComments();renderPins();renderDrawShapes()}catch(e){console.error(e)}
+}
+document.getElementById('comment-input').addEventListener('input',function(){
+  document.getElementById('btn-submit-comment').disabled=!this.value.trim()&&!pendingPin&&!pendingShape;
+});
 
 document.addEventListener('click',function(e){
   if(currentTool==='pin'&&e.target.id==='review-image'){
     const c=getImgCoords(e);if(!c)return;
     pendingPin={x:parseFloat(c.px.toFixed(2)),y:parseFloat(c.py.toFixed(2))};
-    document.getElementById('pin-hint').textContent='Pin posizionato. Scrivi il commento.';
+    document.getElementById('pin-hint').textContent='Pin posizionato. Scrivi il commento e seleziona il reparto.';
     document.getElementById('comment-input').focus();document.getElementById('btn-submit-comment').disabled=false;
   }
 });

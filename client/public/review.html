@@ -59,16 +59,24 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
 .close-viewer-btn{padding:6px 10px;border-radius:7px;font-size:1rem;cursor:pointer;border:1px solid #333;background:transparent;color:#ccc;font-family:'Sora',sans-serif;transition:all .15s;line-height:1}
 .close-viewer-btn:hover{color:#fff;border-color:#666}
 
-.viewer-canvas{flex:1;position:relative;overflow:auto;display:flex;align-items:center;justify-content:center}
-.canvas-image{max-width:90%;max-height:90%;object-fit:contain;user-select:none;border-radius:4px;cursor:default;position:relative;z-index:1}
+.viewer-canvas{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;cursor:grab}
+.viewer-canvas.grabbing{cursor:grabbing}
+.canvas-wrap{position:relative;transform-origin:0 0;will-change:transform}
+.canvas-image{display:block;user-select:none;border-radius:4px;position:relative;z-index:1;max-width:none;max-height:none}
+
+.zoom-controls{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:4px;z-index:10;background:rgba(0,0,0,.6);border-radius:8px;padding:4px;backdrop-filter:blur(6px)}
+.zoom-btn{width:32px;height:28px;border-radius:6px;border:none;background:transparent;color:#ccc;cursor:pointer;font-size:.72rem;font-weight:600;font-family:'Sora',sans-serif;display:flex;align-items:center;justify-content:center;transition:all .1s}
+.zoom-btn:hover{background:rgba(255,255,255,.1);color:#fff}
+.zoom-btn.active{background:rgba(99,102,241,.2);color:var(--accent)}
+.zoom-btn svg{width:14px;height:14px}
+.zoom-level{color:#999;font-size:.6rem;font-weight:600;display:flex;align-items:center;padding:0 6px;min-width:40px;justify-content:center;user-select:none}
 
 .pin-marker{position:absolute;width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;cursor:pointer;transform:translate(-50%,-50%);z-index:5;box-shadow:0 2px 8px rgba(99,102,241,.5);border:2px solid #fff;transition:transform .15s}
 .pin-marker:hover{transform:translate(-50%,-50%) scale(1.2)}
 .pin-marker.resolved{background:var(--green);box-shadow:0 2px 8px rgba(34,197,94,.5)}
 .pin-marker.active-pin{background:#fff;color:var(--accent);transform:translate(-50%,-50%) scale(1.25)}
 
-.comments-sidebar{width:300px;min-width:300px;border-left:1px solid #222;display:flex;flex-direction:column;background:#111;flex-shrink:0;overflow:hidden}
-.comments-sidebar.hidden{display:none}
+.comments-sidebar{width:320px;min-width:320px;border-left:1px solid #222;display:flex;flex-direction:column;background:#111;flex-shrink:0;overflow:hidden}
 .comments-header{padding:12px 16px;border-bottom:1px solid #222;display:flex;align-items:center;gap:8px}
 .comments-header h3{font-size:.78rem;font-weight:600;flex:1;color:#fff}
 .comment-count{background:rgba(99,102,241,.15);color:var(--accent);padding:2px 8px;border-radius:10px;font-size:.65rem;font-weight:700}
@@ -82,11 +90,21 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
 .comment-author{font-size:.68rem;font-weight:600;flex:1;color:#ddd}
 .comment-time{font-size:.56rem;color:#666}
 .comment-body{font-size:.7rem;color:#aaa;line-height:1.5;margin-bottom:4px}
+.comment-tag{display:inline-block;padding:1px 5px;border-radius:3px;font-size:.5rem;font-weight:700;margin-right:4px;vertical-align:middle;text-transform:uppercase;letter-spacing:.03em}
+.tag-correzione{background:rgba(245,158,11,.15);color:var(--yellow)}
+.tag-approvato{background:rgba(34,197,94,.15);color:var(--green)}
+.tag-problema{background:rgba(239,68,68,.15);color:var(--red)}
+.tag-nota{background:rgba(99,102,241,.15);color:var(--accent)}
+.tag-domanda{background:rgba(6,182,212,.15);color:var(--cyan)}
 .comment-actions{display:flex;gap:4px}
 .comment-action-btn{padding:2px 6px;border-radius:4px;font-size:.56rem;font-weight:600;cursor:pointer;border:1px solid #333;background:transparent;color:#888;font-family:'Sora',sans-serif}
 .comment-action-btn:hover{color:#ddd;border-color:#555}
 
 .comment-input-area{padding:10px;border-top:1px solid #222}
+.comment-form-row{display:flex;gap:6px;margin-bottom:6px}
+.comment-select{background:rgba(255,255,255,.05);border:1px solid #333;border-radius:5px;padding:4px 8px;color:#ccc;font-family:'Sora',sans-serif;font-size:.62rem;cursor:pointer;outline:none;flex:1}
+.comment-select:focus{border-color:var(--accent)}
+.comment-select option{background:#111;color:#ccc}
 .comment-textarea{width:100%;background:rgba(255,255,255,.05);border:1px solid #333;border-radius:6px;padding:8px 10px;color:#eee;font-family:'Sora',sans-serif;font-size:.7rem;outline:none;resize:none;min-height:56px}
 .comment-textarea:focus{border-color:var(--accent)}
 .comment-textarea::placeholder{color:#555}
@@ -95,7 +113,7 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
 .comment-submit-btn:disabled{opacity:.4;cursor:not-allowed}
 .pin-hint{font-size:.56rem;color:#666;font-style:italic}
 
-.nav-arrows{position:absolute;top:50%;display:flex;justify-content:space-between;width:100%;padding:0 8px;z-index:6;transform:translateY(-50%);pointer-events:none}
+.nav-arrows{position:absolute;top:50%;display:flex;justify-content:space-between;width:100%;padding:0 8px;z-index:10;transform:translateY(-50%);pointer-events:none}
 .nav-arrow{pointer-events:auto;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.15);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;transition:all .15s}
 .nav-arrow:hover{background:rgba(0,0,0,.8);border-color:rgba(255,255,255,.3)}
 </style>
@@ -162,6 +180,18 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
           <button class="nav-arrow" onclick="navImage(-1)" data-testid="btn-prev-image">&larr;</button>
           <button class="nav-arrow" onclick="navImage(1)" data-testid="btn-next-image">&rarr;</button>
         </div>
+        <div class="zoom-controls" data-testid="zoom-controls">
+          <button class="zoom-btn" onclick="zoomTo(zoomLevel-0.25)" data-testid="btn-zoom-out" title="Zoom out">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+          </button>
+          <span class="zoom-level" id="zoom-level" data-testid="text-zoom-level">Fit</span>
+          <button class="zoom-btn" onclick="zoomTo(zoomLevel+0.25)" data-testid="btn-zoom-in" title="Zoom in">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+          </button>
+          <button class="zoom-btn" onclick="zoomFit()" data-testid="btn-zoom-fit" title="Adatta">Fit</button>
+          <button class="zoom-btn" onclick="zoomTo(1)" data-testid="btn-zoom-100" title="100%">1:1</button>
+          <button class="zoom-btn" onclick="zoomTo(2)" data-testid="btn-zoom-200" title="200%">2x</button>
+        </div>
       </div>
       <div class="comments-sidebar" id="comments-sidebar">
         <div class="comments-header">
@@ -170,7 +200,25 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
         </div>
         <div class="comments-list" id="comments-list" data-testid="comments-list"></div>
         <div class="comment-input-area">
-          <textarea class="comment-textarea" id="comment-input" data-testid="input-comment" placeholder="Clicca sull'immagine per aggiungere un pin, poi scrivi qui..."></textarea>
+          <div class="comment-form-row">
+            <select class="comment-select" id="comment-author" data-testid="select-comment-author">
+              <option value="Art Director">Art Director</option>
+              <option value="Reviewer">Reviewer</option>
+              <option value="Cliente">Cliente</option>
+              <option value="PM">PM</option>
+              <option value="Fotografo">Fotografo</option>
+              <option value="Post-produzione">Post-produzione</option>
+            </select>
+            <select class="comment-select" id="comment-tag" data-testid="select-comment-tag">
+              <option value="">Nessun tag</option>
+              <option value="correzione">Correzione</option>
+              <option value="problema">Problema</option>
+              <option value="nota">Nota</option>
+              <option value="domanda">Domanda</option>
+              <option value="approvato">Approvato</option>
+            </select>
+          </div>
+          <textarea class="comment-textarea" id="comment-input" data-testid="input-comment" placeholder="Scrivi una nota di revisione..."></textarea>
           <div class="comment-submit-row">
             <span class="pin-hint" id="pin-hint"></span>
             <button class="comment-submit-btn" id="btn-submit-comment" data-testid="btn-submit-comment" onclick="submitComment()" disabled>Invia</button>
@@ -195,6 +243,20 @@ let currentComments = [];
 let pinMode = false;
 let pendingPin = null;
 let replyToId = null;
+
+let zoomLevel = 0;
+let zoomFitScale = 1;
+let panX = 0, panY = 0;
+let isPanning = false;
+let panStart = { x: 0, y: 0, px: 0, py: 0 };
+
+const TAG_LABELS = {
+  correzione: 'Correzione',
+  problema: 'Problema',
+  nota: 'Nota',
+  domanda: 'Domanda',
+  approvato: 'Approvato'
+};
 
 const PHASE_LABELS = {
   'location_bozza': 'Location Bozza',
@@ -363,26 +425,39 @@ async function openViewer(revId) {
   const panel = document.getElementById('viewer-panel');
   panel.classList.add('open');
 
-  const img = allImages.find(i => i.id === rev.foglio_image_id);
-  document.getElementById('viewer-title').textContent = img ? img.image_name : rev.title;
+  const imgData = allImages.find(i => i.id === rev.foglio_image_id);
+  document.getElementById('viewer-title').textContent = imgData ? imgData.image_name : rev.title;
   document.getElementById('viewer-meta').textContent = (PHASE_LABELS[rev.phase_key] || rev.phase_key) + ' · v' + rev.version;
 
   const canvas = document.getElementById('viewer-canvas');
-  let imgEl = canvas.querySelector('.canvas-image');
+  let wrap = canvas.querySelector('.canvas-wrap');
+  if (!wrap) {
+    wrap = document.createElement('div');
+    wrap.className = 'canvas-wrap';
+    wrap.id = 'canvas-wrap';
+    canvas.appendChild(wrap);
+  }
+  let imgEl = wrap.querySelector('.canvas-image');
   if (!imgEl) {
     imgEl = document.createElement('img');
     imgEl.className = 'canvas-image';
     imgEl.id = 'review-image';
     imgEl.setAttribute('data-testid', 'review-image');
-    imgEl.onclick = onCanvasClick;
-    canvas.appendChild(imgEl);
+    imgEl.addEventListener('click', onCanvasClick);
+    wrap.appendChild(imgEl);
   }
   imgEl.src = rev.file_url;
-  imgEl.style.cursor = pinMode ? 'crosshair' : 'default';
+  updateCursor();
 
-  canvas.querySelectorAll('.pin-marker').forEach(p => p.remove());
-  const wrapper = document.getElementById('pin-wrapper');
-  if (wrapper) wrapper.remove();
+  wrap.querySelectorAll('.pin-marker').forEach(p => p.remove());
+
+  imgEl.onload = () => {
+    zoomFit();
+    renderPins();
+  };
+
+  zoomLevel = 0;
+  panX = 0; panY = 0;
 
   try {
     const commentsRes = await fetch('/api/revision-comments/' + rev.id);
@@ -390,7 +465,6 @@ async function openViewer(revId) {
   } catch(e) { currentComments = []; }
 
   renderComments();
-  renderPins();
   renderGallery();
 }
 
@@ -399,6 +473,122 @@ function closeViewer() {
   currentRevision = null;
   renderGallery();
 }
+
+function zoomFit() {
+  const canvas = document.getElementById('viewer-canvas');
+  const img = document.getElementById('review-image');
+  if (!canvas || !img || !img.naturalWidth) return;
+  const cw = canvas.clientWidth - 40;
+  const ch = canvas.clientHeight - 40;
+  zoomFitScale = Math.min(cw / img.naturalWidth, ch / img.naturalHeight, 1);
+  zoomLevel = zoomFitScale;
+  panX = 0; panY = 0;
+  applyTransform();
+  document.getElementById('zoom-level').textContent = 'Fit';
+}
+
+function zoomTo(level) {
+  const img = document.getElementById('review-image');
+  if (!img || !img.naturalWidth) return;
+  zoomLevel = Math.max(0.1, Math.min(level, 8));
+  applyTransform();
+  const pct = Math.round(zoomLevel * 100);
+  document.getElementById('zoom-level').textContent = pct + '%';
+}
+
+function applyTransform() {
+  const canvas = document.getElementById('viewer-canvas');
+  const wrap = document.getElementById('canvas-wrap');
+  const img = document.getElementById('review-image');
+  if (!wrap || !img || !img.naturalWidth) return;
+
+  const iw = img.naturalWidth * zoomLevel;
+  const ih = img.naturalHeight * zoomLevel;
+  const cw = canvas.clientWidth;
+  const ch = canvas.clientHeight;
+
+  let tx = panX, ty = panY;
+  if (iw <= cw) tx = (cw - iw) / 2;
+  else tx = Math.min(0, Math.max(cw - iw, tx));
+  if (ih <= ch) ty = (ch - ih) / 2;
+  else ty = Math.min(0, Math.max(ch - ih, ty));
+  panX = tx; panY = ty;
+
+  wrap.style.transform = `translate(${tx}px,${ty}px) scale(${zoomLevel})`;
+  wrap.style.width = img.naturalWidth + 'px';
+  wrap.style.height = img.naturalHeight + 'px';
+}
+
+function updateCursor() {
+  const canvas = document.getElementById('viewer-canvas');
+  const img = document.getElementById('review-image');
+  if (pinMode) {
+    canvas.style.cursor = 'crosshair';
+    if (img) img.style.cursor = 'crosshair';
+  } else {
+    const isZoomed = img && img.naturalWidth && (img.naturalWidth * zoomLevel > canvas.clientWidth || img.naturalHeight * zoomLevel > canvas.clientHeight);
+    canvas.style.cursor = isZoomed ? 'grab' : 'default';
+    if (img) img.style.cursor = isZoomed ? 'grab' : 'default';
+  }
+}
+
+(function setupCanvasEvents() {
+  const canvas = document.getElementById('viewer-canvas');
+
+  canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const img = document.getElementById('review-image');
+    if (!img || !img.naturalWidth) return;
+    const delta = e.deltaY > 0 ? -0.15 : 0.15;
+    const oldZ = zoomLevel;
+    const newZ = Math.max(0.1, Math.min(zoomLevel + delta * zoomLevel, 8));
+
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    panX = mx - (mx - panX) * (newZ / oldZ);
+    panY = my - (my - panY) * (newZ / oldZ);
+    zoomLevel = newZ;
+    applyTransform();
+    updateCursor();
+    document.getElementById('zoom-level').textContent = Math.round(zoomLevel * 100) + '%';
+  }, { passive: false });
+
+  canvas.addEventListener('mousedown', (e) => {
+    if (pinMode) return;
+    if (e.target.closest('.nav-arrow') || e.target.closest('.zoom-controls') || e.target.closest('.pin-marker')) return;
+    isPanning = true;
+    panStart = { x: e.clientX, y: e.clientY, px: panX, py: panY };
+    canvas.classList.add('grabbing');
+    e.preventDefault();
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!isPanning) return;
+    panX = panStart.px + (e.clientX - panStart.x);
+    panY = panStart.py + (e.clientY - panStart.y);
+    applyTransform();
+  });
+
+  window.addEventListener('mouseup', () => {
+    if (isPanning) {
+      isPanning = false;
+      document.getElementById('viewer-canvas').classList.remove('grabbing');
+    }
+  });
+
+  canvas.addEventListener('dblclick', (e) => {
+    if (e.target.closest('.nav-arrow') || e.target.closest('.zoom-controls') || e.target.closest('.pin-marker')) return;
+    if (pinMode) return;
+    const img = document.getElementById('review-image');
+    if (!img) return;
+    if (Math.abs(zoomLevel - zoomFitScale) < 0.05) {
+      zoomTo(1);
+    } else {
+      zoomFit();
+    }
+  });
+})();
 
 function navImage(dir) {
   if (!currentRevision) return;
@@ -412,22 +602,25 @@ function navImage(dir) {
 
 document.addEventListener('keydown', (e) => {
   if (!currentRevision) return;
-  if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+  if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
   if (e.key === 'ArrowLeft') navImage(-1);
   if (e.key === 'ArrowRight') navImage(1);
   if (e.key === 'Escape') closeViewer();
+  if (e.key === '+' || e.key === '=') { e.preventDefault(); zoomTo(zoomLevel + 0.25); }
+  if (e.key === '-') { e.preventDefault(); zoomTo(zoomLevel - 0.25); }
+  if (e.key === '0') { e.preventDefault(); zoomFit(); }
 });
 
 function togglePinMode() {
   pinMode = !pinMode;
   document.getElementById('btn-pin-mode').classList.toggle('active', pinMode);
-  const img = document.getElementById('review-image');
-  if (img) img.style.cursor = pinMode ? 'crosshair' : 'default';
+  updateCursor();
   document.getElementById('pin-hint').textContent = pinMode ? "Clicca sull'immagine per posizionare un pin" : '';
 }
 
 function onCanvasClick(e) {
   if (!pinMode) return;
+  if (isPanning) return;
   const img = document.getElementById('review-image');
   if (!img) return;
   const rect = img.getBoundingClientRect();
@@ -440,28 +633,11 @@ function onCanvasClick(e) {
 }
 
 function renderPins() {
-  const canvas = document.getElementById('viewer-canvas');
-  canvas.querySelectorAll('.pin-marker').forEach(p => p.remove());
+  const wrap = document.getElementById('canvas-wrap');
+  if (!wrap) return;
+  wrap.querySelectorAll('.pin-marker').forEach(p => p.remove());
   const img = document.getElementById('review-image');
-  if (!img) return;
-
-  let wrapper = document.getElementById('pin-wrapper');
-  if (!wrapper) {
-    wrapper = document.createElement('div');
-    wrapper.id = 'pin-wrapper';
-    wrapper.style.cssText = 'position:absolute;pointer-events:auto';
-    canvas.appendChild(wrapper);
-  }
-  const updatePos = () => {
-    const r = img.getBoundingClientRect();
-    const p = canvas.getBoundingClientRect();
-    wrapper.style.left = (r.left - p.left) + 'px';
-    wrapper.style.top = (r.top - p.top) + 'px';
-    wrapper.style.width = r.width + 'px';
-    wrapper.style.height = r.height + 'px';
-  };
-  img.onload = updatePos;
-  setTimeout(updatePos, 100);
+  if (!img || !img.naturalWidth) return;
 
   let pinNum = 0;
   currentComments.filter(c => c.pin_x != null && c.pin_y != null && !c.parent_comment_id).forEach(c => {
@@ -473,13 +649,14 @@ function renderPins() {
     pin.style.left = c.pin_x + '%';
     pin.style.top = c.pin_y + '%';
     pin.onclick = (ev) => { ev.stopPropagation(); highlightComment(c.id); };
-    wrapper.appendChild(pin);
+    wrap.appendChild(pin);
   });
 }
 
 function renderComments() {
   const list = document.getElementById('comments-list');
-  document.getElementById('comment-count').textContent = currentComments.length;
+  const topLevel = currentComments.filter(c => !c.parent_comment_id);
+  document.getElementById('comment-count').textContent = topLevel.length;
 
   if (!currentComments.length) {
     list.innerHTML = '<div style="padding:16px;text-align:center;color:#666;font-size:.7rem">Nessun commento. Clicca sull\'immagine per aggiungere un pin.</div>';
@@ -487,29 +664,44 @@ function renderComments() {
   }
 
   let pinNum = 0;
-  const topLevel = currentComments.filter(c => !c.parent_comment_id);
   list.innerHTML = topLevel.map(c => {
     const hasPin = c.pin_x != null && c.pin_y != null;
     if (hasPin) pinNum++;
     const replies = currentComments.filter(r => r.parent_comment_id === c.id);
+    const tag = parseTag(c.content);
     return `<div class="comment-item${c.resolved ? ' resolved-comment' : ''}" id="comment-${c.id}" data-testid="comment-${c.id}">
       <div class="comment-head">
         ${hasPin ? '<div class="comment-pin-num' + (c.resolved ? ' resolved' : '') + '">' + pinNum + '</div>' : ''}
         <span class="comment-author">${esc(c.author_name)}</span>
         <span class="comment-time">${formatTime(c.created_at)}</span>
       </div>
-      <div class="comment-body">${esc(c.content)}</div>
+      <div class="comment-body">${tag.html}${esc(tag.text)}</div>
       <div class="comment-actions">
         <button class="comment-action-btn" data-testid="btn-resolve-${c.id}" onclick="resolveComment(${c.id},${!c.resolved})">${c.resolved ? 'Riapri' : 'Risolvi'}</button>
         <button class="comment-action-btn" data-testid="btn-reply-${c.id}" onclick="startReply(${c.id})">Rispondi</button>
         <button class="comment-action-btn" data-testid="btn-delete-comment-${c.id}" onclick="deleteComment(${c.id})">Elimina</button>
       </div>
-      ${replies.map(r => `<div style="margin:6px 0 0 24px;padding:6px 8px;border-radius:6px;background:rgba(255,255,255,.02);border:1px solid #222">
-        <div class="comment-head"><span class="comment-author">${esc(r.author_name)}</span><span class="comment-time">${formatTime(r.created_at)}</span></div>
-        <div class="comment-body">${esc(r.content)}</div>
-      </div>`).join('')}
+      ${replies.map(r => {
+        const rt = parseTag(r.content);
+        return `<div style="margin:6px 0 0 24px;padding:6px 8px;border-radius:6px;background:rgba(255,255,255,.02);border:1px solid #222">
+          <div class="comment-head"><span class="comment-author">${esc(r.author_name)}</span><span class="comment-time">${formatTime(r.created_at)}</span></div>
+          <div class="comment-body">${rt.html}${esc(rt.text)}</div>
+        </div>`;
+      }).join('')}
     </div>`;
   }).join('');
+}
+
+function parseTag(content) {
+  if (!content) return { html: '', text: '' };
+  const match = content.match(/^\[(\w+)\]\s*/);
+  if (match && TAG_LABELS[match[1]]) {
+    return {
+      html: '<span class="comment-tag tag-' + match[1] + '">' + TAG_LABELS[match[1]] + '</span> ',
+      text: content.slice(match[0].length)
+    };
+  }
+  return { html: '', text: content };
 }
 
 function formatTime(t) {
@@ -541,11 +733,14 @@ function startReply(id) {
 }
 
 async function submitComment() {
-  const content = document.getElementById('comment-input').value.trim();
-  if (!content || !currentRevision) return;
+  const rawContent = document.getElementById('comment-input').value.trim();
+  if (!rawContent || !currentRevision) return;
+  const authorName = document.getElementById('comment-author').value;
+  const tag = document.getElementById('comment-tag').value;
+  const content = tag ? '[' + tag + '] ' + rawContent : rawContent;
   try {
     const body = {
-      author_name: 'Reviewer',
+      author_name: authorName,
       content,
       pin_x: pendingPin ? pendingPin.x : null,
       pin_y: pendingPin ? pendingPin.y : null,
@@ -560,6 +755,7 @@ async function submitComment() {
     replyToId = null;
     document.getElementById('pin-hint').textContent = '';
     document.getElementById('btn-submit-comment').disabled = true;
+    document.getElementById('comment-tag').value = '';
     const comments = await fetch('/api/revision-comments/' + currentRevision.id).then(r => r.json());
     currentComments = comments;
     renderComments();

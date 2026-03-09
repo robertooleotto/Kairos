@@ -90,49 +90,33 @@ html,body{font-family:'Sora',system-ui,sans-serif;background:var(--ink);color:va
 /* WEEK */
 .cal-week{border-bottom:1px solid var(--paper-l)}
 .cal-week:last-child{border-bottom:none}
-.cal-cells-row{display:grid;grid-template-columns:repeat(7,1fr);height:var(--hdr-h)}
-.cal-cell{border-right:1px solid var(--paper-l);display:flex;align-items:flex-start;transition:background .1s}
+.cal-cells-row{display:grid;grid-template-columns:repeat(7,1fr);min-height:100px}
+.cal-cell{border-right:1px solid var(--paper-l);display:flex;flex-direction:column;padding:4px;transition:background .1s;cursor:default}
 .cal-cell:nth-child(7n){border-right:none}
 .cal-cell:hover{background:var(--paper-h)}.cal-cell.out{background:var(--paper-out)}.cal-cell.wknd{background:var(--paper-wknd)}
-.day-num{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;margin:7px 8px 0;font-size:.8rem;font-weight:600;font-family:'JetBrains Mono',monospace;color:var(--paper-t)}
+.day-num{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;font-size:.75rem;font-weight:600;font-family:'JetBrains Mono',monospace;color:var(--paper-t);margin-bottom:3px;align-self:flex-end}
 .day-num.out{color:var(--paper-m)}.day-num.wknd{color:#b0a0cc}
 .day-num.today{background:var(--today);color:var(--today-t);box-shadow:0 2px 10px rgba(26,115,232,.4)}
 
-/* EVENT ROWS */
-.week-events{display:flex;flex-direction:column;gap:3px;padding:0 0 6px}
-.week-events:empty{display:none}
-.ev-row{display:grid;grid-template-columns:repeat(7,1fr);height:var(--bar-h)}
+/* DEADLINE CHIPS inside cells */
+.cell-deadlines{display:flex;flex-direction:column;gap:2px;flex:1;overflow:hidden}
+.dl-chip{display:flex;align-items:center;gap:4px;padding:2px 5px;border-radius:4px;cursor:pointer;transition:all .12s;overflow:hidden;white-space:nowrap;min-height:18px}
+.dl-chip:hover{filter:brightness(.85);transform:scale(1.02)}
+.dl-chip.dl-selected{box-shadow:inset 0 0 0 2px rgba(255,255,255,.5)}
+.dl-chip-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.dl-chip-text{font-size:.55rem;font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;line-height:1.2}
+.dl-chip.dl-overdue{opacity:.9}
+.dl-chip.dl-overdue .dl-chip-text{text-decoration:line-through;text-decoration-color:rgba(255,255,255,.4)}
+.dl-more{font-size:.52rem;font-weight:700;color:var(--paper-m);padding:1px 5px;cursor:pointer;text-align:center}
+.dl-more:hover{color:var(--paper-t)}
 
-/* SEGMENT */
-.seg{height:var(--bar-h);position:relative;cursor:pointer;overflow:visible}
-.seg-inner{
-  position:absolute;top:2px;bottom:2px;left:-1px;right:-1px;
-  background:var(--jc,#4f46e5);
-  transition:filter .12s,transform .1s;
-}
-.seg.bar-hover .seg-inner{filter:brightness(.82);transform:scaleY(1.06)}
-.seg.start  .seg-inner{left:3px;right:-1px;border-radius:var(--bar-r) 0 0 var(--bar-r)}
-.seg.end    .seg-inner{left:-1px;right:3px;border-radius:0 var(--bar-r) var(--bar-r) 0}
-.seg.solo   .seg-inner{left:3px;right:3px;border-radius:var(--bar-r)}
-.seg.mid    .seg-inner{left:-1px;right:-1px;border-radius:0}
-.seg.active-sel .seg-inner{
-  filter:brightness(1.15);
-}
-.seg.active-sel.start .seg-inner{box-shadow:inset 2px 2px 0 0 rgba(255,255,255,.5),inset 0 -2px 0 0 rgba(255,255,255,.5)}
-.seg.active-sel.end   .seg-inner{box-shadow:inset -2px 2px 0 0 rgba(255,255,255,.5),inset 0 -2px 0 0 rgba(255,255,255,.5)}
-.seg.active-sel.mid   .seg-inner{box-shadow:inset 0 2px 0 0 rgba(255,255,255,.5),inset 0 -2px 0 0 rgba(255,255,255,.5)}
-.seg.active-sel.solo  .seg-inner{box-shadow:inset 0 0 0 2px rgba(255,255,255,.5)}
+/* START chips (lighter) */
+.dl-chip.dl-start{opacity:.45}
+.dl-chip.dl-start .dl-chip-text{font-weight:500}
 
-
-.seg-body{display:flex;align-items:center;gap:6px;padding:0 8px;height:100%;overflow:hidden}
-.seg-client{font-size:.64rem;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.seg-sep{color:#fff;opacity:.4;font-size:.62rem;flex-shrink:0}
-.seg-code{font-family:'JetBrains Mono',monospace;font-size:.56rem;color:rgba(255,255,255,.7);white-space:nowrap;flex-shrink:0}
-.seg-phase{font-size:.58rem;font-weight:500;color:rgba(255,255,255,.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-/* MORE badge */
-.ev-more{font-size:.6rem;font-weight:700;color:var(--paper-m);padding:0 6px;cursor:pointer;line-height:var(--bar-h)}
-.ev-more:hover{color:var(--paper-t)}
+/* Phase deadline chips */
+.dl-chip.dl-phase{opacity:.7}
+.dl-chip.dl-phase .dl-chip-text{font-weight:500;font-style:italic}
 
 .dept-legend{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px}
 .dept-legend-item{display:flex;align-items:center;gap:5px;font-size:.62rem;color:var(--ink-m)}
@@ -518,59 +502,6 @@ const AREA_TO_CATEGORIES={
 let ALL_PHASES={};
 let ALL_AREAS=[];
 
-function phaseColorForDay(jobId,date){
-  const phases=ALL_PHASES[jobId];
-  if(!phases||!phases.length)return null;
-  const d=new Date(date);d.setHours(0,0,0,0);
-  const active=phases.filter(p=>{
-    const ps=p.start_date?new Date(p.start_date):null;
-    const pe=p.due_date?new Date(p.due_date):null;
-    if(ps)ps.setHours(0,0,0,0);
-    if(pe)pe.setHours(0,0,0,0);
-    if(ps&&pe)return d>=ps&&d<=pe;
-    if(ps)return d>=ps;
-    if(pe)return d<=pe;
-    return false;
-  });
-  if(!active.length)return null;
-  const p=active[0];
-  const cat=(p.task_type_category||'').toUpperCase();
-  const shades=DEPT_COLORS[cat];
-  if(!shades)return p.color||'#6366f1';
-  const catPhases=phases.filter(pp=>(pp.task_type_category||'').toUpperCase()===cat);
-  const idx=catPhases.findIndex(pp=>pp.id===p.id);
-  return shades[Math.min(idx,shades.length-1)];
-}
-
-function getDayPhaseColors(jobId,date){
-  const phases=ALL_PHASES[jobId];
-  if(!phases||!phases.length)return [];
-  const d=new Date(date);d.setHours(0,0,0,0);
-  const active=phases.filter(p=>{
-    const ps=p.start_date?new Date(p.start_date):null;
-    const pe=p.due_date?new Date(p.due_date):null;
-    if(ps)ps.setHours(0,0,0,0);
-    if(pe)pe.setHours(0,0,0,0);
-    if(ps&&pe)return d>=ps&&d<=pe;
-    if(ps)return d>=ps;
-    if(pe)return d<=pe;
-    return false;
-  });
-  if(!active.length)return [];
-  const seen=new Set();
-  const colors=[];
-  active.forEach(p=>{
-    const cat=(p.task_type_category||'').toUpperCase();
-    const shades=DEPT_COLORS[cat];
-    if(!shades){colors.push(p.color||'#6366f1');return;}
-    const catPhases=phases.filter(pp=>(pp.task_type_category||'').toUpperCase()===cat);
-    const idx=catPhases.findIndex(pp=>pp.id===p.id);
-    const col=shades[Math.min(idx,shades.length-1)];
-    if(!seen.has(col)){seen.add(col);colors.push(col);}
-  });
-  return colors;
-}
-
 const STATUS_LABELS={
   nuova:'Nuova',in_produzione:'In produzione',in_corso:'In corso',
   in_attesa:'In attesa',sospesa:'Sospesa',completata:'Completata',annullata:'Annullata'
@@ -681,36 +612,32 @@ function changeMonth(dir){
   render();
 }
 
-function buildGanttRows(jobs){
-  const rows=[];
-  const sorted=[...jobs].sort((a,b)=>parseDate(a.started_at)-parseDate(b.started_at));
-  sorted.forEach(j=>{
-    const phases=(ALL_PHASES[j.id]||[]).filter(p=>p.start_date&&p.due_date);
-    if(phases.length===0){
-      rows.push({type:'job',job:j,start:parseDate(j.started_at),end:parseDate(j.due_date),label:`${j.client||''} · ${j.code||''}`,color:null,phase:null});
-    }else{
-      const pSorted=[...phases].sort((a,b)=>parseDate(a.start_date)-parseDate(b.start_date));
-      pSorted.forEach((p,pi)=>{
+function buildDeadlineMap(jobs){
+  const map={};
+  const today=new Date();today.setHours(0,0,0,0);
+  jobs.forEach(j=>{
+    if(j.due_date){
+      const key=parseDate(j.due_date).toDateString();
+      if(!map[key])map[key]=[];
+      const ci=jobColor(j.id);
+      const hex=COLOR_HEX[ci];
+      const overdue=parseDate(j.due_date)<today&&j.status!=='completata'&&j.status!=='annullata';
+      map[key].push({type:'job-due',job:j,label:`${j.client||''} · ${j.code||''}`,color:hex,overdue,isSelected:j.id===SELECTED_JOB_ID});
+    }
+    const phases=ALL_PHASES[j.id]||[];
+    phases.forEach(p=>{
+      if(p.due_date){
+        const key=parseDate(p.due_date).toDateString();
+        if(!map[key])map[key]=[];
         const cat=(p.task_type_category||'').toUpperCase();
         const shades=DEPT_COLORS[cat];
-        const catPhases=pSorted.filter(pp=>(pp.task_type_category||'').toUpperCase()===cat);
-        const catIdx=catPhases.findIndex(pp=>pp.id===p.id);
-        const color=shades?shades[Math.min(catIdx,shades.length-1)]:(p.color||'#6366f1');
-        const label=pi===0?`${j.client||''} · ${j.code||''}`:(p.task_type_name||p.name||'');
-        rows.push({type:'phase',job:j,phase:p,start:parseDate(p.start_date),end:parseDate(p.due_date),label,color,phaseIdx:pi});
-      });
-    }
+        const col=shades?shades[0]:(p.color||'#6366f1');
+        const overdue=parseDate(p.due_date)<today&&!p.completed;
+        map[key].push({type:'phase-due',job:j,phase:p,label:`${p.task_type_name||p.name||''}`,color:col,overdue,isSelected:j.id===SELECTED_JOB_ID});
+      }
+    });
   });
-
-  const lanes=[];
-  const rowLane={};
-  rows.forEach((r,ri)=>{
-    let lane=lanes.findIndex(l=>!l.some(ex=>r.start<=ex.end&&r.end>=ex.start));
-    if(lane===-1){lane=lanes.length;lanes.push([]);}
-    lanes[lane].push(r);
-    rowLane[ri]=lane;
-  });
-  return {rows,lanes,rowLane};
+  return map;
 }
 
 function render(){
@@ -720,7 +647,8 @@ function render(){
   const jobs=filteredJobs();
   document.getElementById('job-count').textContent=jobs.length+' commess'+(jobs.length===1?'a':'e');
 
-  const gantt=buildGanttRows(jobs);
+  const dlMap=buildDeadlineMap(jobs);
+  const MAX_CHIPS=3;
 
   const first=new Date(CURRENT_YEAR,CURRENT_MONTH,1);
   const startDay=first.getDay()===0?6:first.getDay()-1;
@@ -731,92 +659,40 @@ function render(){
   const today=new Date();today.setHours(0,0,0,0);
 
   for(let w=0;w<6;w++){
-    const weekDays=[];
     let cells='';
     for(let i=0;i<7;i++){
       const isOut=d.getMonth()!==CURRENT_MONTH;
       const isWknd=d.getDay()===0||d.getDay()===6;
       const isToday=d.toDateString()===today.toDateString();
+      const key=d.toDateString();
+      const items=dlMap[key]||[];
+
+      let chipsHtml='';
+      const show=items.slice(0,MAX_CHIPS);
+      const extra=items.length-MAX_CHIPS;
+      show.forEach(it=>{
+        const cls=it.type==='phase-due'?'dl-phase':'';
+        const overCls=it.overdue?'dl-overdue':'';
+        const selCls=it.isSelected?'dl-selected':'';
+        chipsHtml+=`<div class="dl-chip ${cls} ${overCls} ${selCls}" style="background:${escAttr(it.color)}" data-job-id="${escAttr(it.job.id)}" data-testid="dl-chip-${escAttr(it.job.id)}" title="${escAttr(it.label)}">
+          <span class="dl-chip-text">${escAttr(it.label)}</span>
+        </div>`;
+      });
+      if(extra>0){
+        const dayKey=d.toISOString().slice(0,10);
+        chipsHtml+=`<div class="dl-more" data-day="${dayKey}">+${extra}</div>`;
+      }
+
       cells+=`<div class="cal-cell ${isOut?'out':''} ${isWknd?'wknd':''}">
         <div class="day-num${isToday?' today':''}${isOut?' out':''}${isWknd&&!isToday?' wknd':''}">${d.getDate()}</div>
+        <div class="cell-deadlines">${chipsHtml}</div>
       </div>`;
-      weekDays.push(new Date(d));
       d.setDate(d.getDate()+1);
     }
-    html+=`<div class="cal-week">
-      <div class="cal-cells-row">${cells}</div>
-      ${renderWeekEvents(weekDays,gantt)}
-    </div>`;
+    html+=`<div class="cal-week"><div class="cal-cells-row">${cells}</div></div>`;
     if(d.getMonth()!==CURRENT_MONTH&&w>=4)break;
   }
   document.getElementById('cal-weeks').innerHTML=html;
-}
-
-function renderWeekEvents(days,gantt){
-  const wStart=days[0],wEnd=days[6];
-
-  const activeRows=[];
-  gantt.rows.forEach((r,ri)=>{
-    if(r.start<=wEnd&&r.end>=wStart)activeRows.push({r,ri});
-  });
-  if(activeRows.length===0)return '<div class="week-events"></div>';
-
-  const activeLaneSet=new Set(activeRows.map(({ri})=>gantt.rowLane[ri]));
-  const sortedLanes=[...activeLaneSet].sort((a,b)=>a-b);
-
-  let evHTML='';
-  for(const laneIdx of sortedLanes){
-    const laneRows=gantt.lanes[laneIdx];
-    const weekItems=laneRows.filter(r=>r.start<=wEnd&&r.end>=wStart);
-    let rowHTML='';
-    for(let di=0;di<7;di++){
-      const day=days[di];
-      const r=weekItems.find(item=>day>=item.start&&day<=item.end);
-      if(!r){rowHTML+='<div class="seg empty"></div>';continue;}
-
-      const realStart=day.toDateString()===r.start.toDateString();
-      const realEnd=day.toDateString()===r.end.toDateString();
-      const isWeekStart=di===0;
-
-      let type='mid';
-      if(realStart&&realEnd)type='solo';
-      else if(realStart||isWeekStart)type='start';
-      else if(realEnd||di===6)type='end';
-
-      const ci=jobColor(r.job.id);
-      const showLabel=realStart||isWeekStart;
-      const isSelected=r.job.id===SELECTED_JOB_ID;
-      const jStr=JSON.stringify(r.job).replace(/'/g,'&apos;');
-
-      const bgStyle=r.color?`background:${r.color};`:'';
-      const useInline=!!r.color;
-
-      const labelParts=[];
-      if(r.type==='phase'&&r.phaseIdx===0){
-        if(r.job.client)labelParts.push(`<span class="seg-client">${r.job.client}</span>`);
-        if(r.job.client&&r.job.code)labelParts.push('<span class="seg-sep">·</span>');
-        if(r.job.code)labelParts.push(`<span class="seg-code">${r.job.code}</span>`);
-        labelParts.push('<span class="seg-sep">—</span>');
-        labelParts.push(`<span class="seg-phase">${r.phase.task_type_name||r.phase.name||''}</span>`);
-      }else if(r.type==='phase'){
-        labelParts.push(`<span class="seg-phase">${r.phase.task_type_name||r.phase.name||''}</span>`);
-      }else{
-        if(r.job.client)labelParts.push(`<span class="seg-client">${r.job.client}</span>`);
-        if(r.job.client&&r.job.code)labelParts.push('<span class="seg-sep">·</span>');
-        if(r.job.code)labelParts.push(`<span class="seg-code">${r.job.code}</span>`);
-      }
-
-      const barId=r.phase?r.phase.id:(r.job.id+'_job');
-      rowHTML+=`<div class="seg ${type}${useInline?'':' jc-'+ci}${isSelected?' active-sel':''}" data-bar="${barId}" onclick='showDetail(${jStr})'>
-        <div class="seg-inner"${useInline?` style="${bgStyle}"`:''}>
-          ${showLabel?`<div class="seg-body">${labelParts.join('')}</div>`:''}
-        </div>
-      </div>`;
-    }
-    evHTML+=`<div class="ev-row">${rowHTML}</div>`;
-  }
-
-  return`<div class="week-events">${evHTML}</div>`;
 }
 
 function parseDate(str){
@@ -1127,6 +1003,7 @@ async function togglePh(jobId,phaseId,completed){
 function initials(name){
   return(name||'').split(' ').map(n=>n[0]||'').join('').toUpperCase().substring(0,2);
 }
+function escAttr(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
 function closePanel(){
   SELECTED_JOB_ID=null;
@@ -1137,25 +1014,20 @@ function closePanel(){
 
 setTimeout(init,200);
 
-let _hoverBar=null;
-document.addEventListener('mouseover',e=>{
-  const seg=e.target.closest('.seg[data-bar]');
-  const barId=seg?seg.dataset.bar:null;
-  if(barId===_hoverBar)return;
-  if(_hoverBar){
-    document.querySelectorAll(`.seg[data-bar="${_hoverBar}"]`).forEach(el=>el.classList.remove('bar-hover'));
+document.addEventListener('click',e=>{
+  const chip=e.target.closest('.dl-chip[data-job-id]');
+  if(chip){
+    const jid=chip.dataset.jobId;
+    const job=JOBS.find(j=>j.id===jid);
+    if(job)showDetail(job);
+    return;
   }
-  _hoverBar=barId;
-  if(_hoverBar){
-    document.querySelectorAll(`.seg[data-bar="${_hoverBar}"]`).forEach(el=>el.classList.add('bar-hover'));
+  const more=e.target.closest('.dl-more');
+  if(more){
+    const cell=more.closest('.cell-deadlines');
+    if(cell){cell.style.maxHeight='none';cell.style.overflow='visible';more.remove();}
   }
 });
-document.addEventListener('mouseleave',()=>{
-  if(_hoverBar){
-    document.querySelectorAll(`.seg[data-bar="${_hoverBar}"]`).forEach(el=>el.classList.remove('bar-hover'));
-    _hoverBar=null;
-  }
-},true);
 
 
 /* ════════════════════════════════════════════════

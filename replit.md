@@ -5,7 +5,7 @@ Project management tool for NuDesign creative studio. Manages jobs (commesse), t
 
 ## Architecture
 - **Frontend**: Static HTML pages served from `client/public/` (vanilla JS, no React)
-  - `preview.html` - Main Gantt calendar view (default page)
+  - `preview.html` - Calendar view with deadline chips (default page, no Gantt bars — bars are in gantt.html)
   - `gantt.html` - Interactive Gantt chart (dhtmlxGantt) with drag/resize/zoom, dark navy blue theme
   - `commesse.html` - Jobs/orders management
   - `team.html` - Team management (areas, departments, collaborators)

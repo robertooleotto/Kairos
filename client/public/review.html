@@ -99,7 +99,8 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
 .comment-shape-icon{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1.5px solid}
 .comment-shape-icon svg{width:11px;height:11px}
 .comment-author{font-size:.65rem;font-weight:600;color:#ddd}
-.comment-dept{font-size:.5rem;font-weight:600;padding:1px 5px;border-radius:3px;background:rgba(255,255,255,.06);color:#999}
+.comment-dept{font-size:.6rem;font-weight:700;padding:2px 6px;border-radius:3px;background:rgba(255,255,255,.08);color:#ccc}
+.comment-from{font-size:.52rem;color:#777;margin-bottom:2px;font-style:italic}
 .comment-time{font-size:.52rem;color:#555;margin-left:auto}
 .comment-body{font-size:.68rem;color:#aaa;line-height:1.45;margin-bottom:3px}
 .comment-tag{display:inline-block;padding:1px 5px;border-radius:3px;font-size:.48rem;font-weight:700;margin-right:3px;vertical-align:middle;text-transform:uppercase;letter-spacing:.03em}
@@ -117,9 +118,20 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
 
 .comment-input-area{padding:8px;border-top:1px solid #222}
 .comment-form-row{display:flex;gap:5px;margin-bottom:5px}
+.comment-form-label{font-size:.5rem;color:#666;text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px;font-weight:600}
 .comment-select{background:rgba(255,255,255,.05);border:1px solid #333;border-radius:4px;padding:3px 6px;color:#bbb;font-family:'Sora',sans-serif;font-size:.58rem;cursor:pointer;outline:none;flex:1}
 .comment-select:focus{border-color:var(--accent)}
 .comment-select option{background:#111;color:#bbb}
+.comment-select.select-lg{font-size:.68rem;padding:5px 8px;font-weight:600}
+.preset-row{display:flex;gap:4px;margin-bottom:6px}
+.preset-btn{padding:3px 8px;border-radius:4px;font-size:.52rem;font-weight:700;cursor:pointer;border:1px solid #333;background:rgba(255,255,255,.04);color:#888;font-family:'Sora',sans-serif;text-transform:uppercase;letter-spacing:.03em;transition:all .15s}
+.preset-btn:hover{border-color:#555;color:#bbb}
+.preset-btn.active{border-color:var(--red);background:rgba(239,68,68,.12);color:var(--red)}
+.preset-btn.active-correzione{border-color:var(--yellow);background:rgba(245,158,11,.12);color:var(--yellow)}
+.preset-btn.active-nota{border-color:var(--accent);background:rgba(99,102,241,.12);color:var(--accent)}
+.preset-btn.active-domanda{border-color:var(--cyan);background:rgba(6,182,212,.12);color:var(--cyan)}
+.preset-btn.active-approvato{border-color:var(--green);background:rgba(34,197,94,.12);color:var(--green)}
+.from-label{font-size:.52rem;color:#666;font-style:italic}
 .comment-textarea{width:100%;background:rgba(255,255,255,.05);border:1px solid #333;border-radius:5px;padding:7px 9px;color:#eee;font-family:'Sora',sans-serif;font-size:.68rem;outline:none;resize:none;min-height:48px}
 .comment-textarea:focus{border-color:var(--accent)}
 .comment-textarea::placeholder{color:#444}
@@ -258,6 +270,28 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
         </div>
         <div class="comments-list" id="comments-list" data-testid="comments-list"></div>
         <div class="comment-input-area" id="comment-input-area">
+          <div class="comment-form-label">Per reparto</div>
+          <div class="comment-form-row">
+            <select class="comment-select select-lg" id="comment-dept" data-testid="select-comment-dept">
+              <option value="">— Seleziona reparto —</option>
+            </select>
+          </div>
+          <div class="preset-row" data-testid="preset-row">
+            <button class="preset-btn" data-tag="problema" data-testid="preset-problema" onclick="togglePreset('problema')">Problema</button>
+            <button class="preset-btn" data-tag="correzione" data-testid="preset-correzione" onclick="togglePreset('correzione')">Correzione</button>
+            <button class="preset-btn" data-tag="nota" data-testid="preset-nota" onclick="togglePreset('nota')">Nota</button>
+            <button class="preset-btn" data-tag="domanda" data-testid="preset-domanda" onclick="togglePreset('domanda')">Domanda</button>
+            <button class="preset-btn" data-tag="approvato" data-testid="preset-approvato" onclick="togglePreset('approvato')">Approvato</button>
+          </div>
+          <select class="comment-select" id="comment-tag" data-testid="select-comment-tag" style="display:none">
+            <option value="">Nessun tag</option>
+            <option value="correzione">Correzione</option>
+            <option value="problema">Problema</option>
+            <option value="nota">Nota</option>
+            <option value="domanda">Domanda</option>
+            <option value="approvato">Approvato</option>
+          </select>
+          <div class="comment-form-label from-label">Da:</div>
           <div class="comment-form-row">
             <select class="comment-select" id="comment-author" data-testid="select-comment-author">
               <option value="Art Director">Art Director</option>
@@ -266,19 +300,6 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
               <option value="PM">PM</option>
               <option value="Fotografo">Fotografo</option>
               <option value="Post-produzione">Post-produzione</option>
-            </select>
-            <select class="comment-select" id="comment-tag" data-testid="select-comment-tag">
-              <option value="">Nessun tag</option>
-              <option value="correzione">Correzione</option>
-              <option value="problema">Problema</option>
-              <option value="nota">Nota</option>
-              <option value="domanda">Domanda</option>
-              <option value="approvato">Approvato</option>
-            </select>
-          </div>
-          <div class="comment-form-row">
-            <select class="comment-select" id="comment-dept" data-testid="select-comment-dept">
-              <option value="">— Reparto —</option>
             </select>
           </div>
           <textarea class="comment-textarea" id="comment-input" data-testid="input-comment" placeholder="Scrivi una nota di revisione..."></textarea>
@@ -311,6 +332,32 @@ let imageLoaded=false;
 
 const SHAPE_LABELS={circle:'Cerchio',rect:'Rettangolo',arrow:'Freccia',freehand:'Libero'};
 const TAG_LABELS={correzione:'Correzione',problema:'Problema',nota:'Nota',domanda:'Domanda',approvato:'Approvato'};
+
+function togglePreset(tag){
+  const tagSel=document.getElementById('comment-tag');
+  const btns=document.querySelectorAll('.preset-btn');
+  if(tagSel.value===tag){
+    tagSel.value='';
+    btns.forEach(b=>b.className='preset-btn');
+  } else {
+    tagSel.value=tag;
+    btns.forEach(b=>{
+      if(b.dataset.tag===tag){
+        const cls=tag==='problema'?'active':'active-'+tag;
+        b.className='preset-btn '+cls;
+      } else {b.className='preset-btn'}
+    });
+  }
+}
+function syncPresetButtons(){
+  const tag=document.getElementById('comment-tag').value;
+  document.querySelectorAll('.preset-btn').forEach(b=>{
+    if(b.dataset.tag===tag){
+      const cls=tag==='problema'?'active':'active-'+tag;
+      b.className='preset-btn '+cls;
+    } else {b.className='preset-btn'}
+  });
+}
 const PHASE_LABELS={'location_bozza':'Location Bozza','location_def':'Location Def','fotografia':'Fotografia','styling':'Styling','revisioni':'Revisioni','render':'Render','post':'Post','finiture':'Finiture','rifacimenti':'Rifacimenti','recupero_render':'Render (Rec.)','recupero_post':'Post (Rec.)','recupero_finiture':'Finiture (Rec.)','recupero':'Recupero','fatturato':'Fatturato','_finale':'Definitiva'};
 
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500)}
@@ -372,6 +419,7 @@ async function openViewer(revId){
   document.getElementById('btn-submit-comment').disabled=true;
   document.getElementById('comment-tag').value='';
   document.getElementById('comment-dept').value='';
+  syncPresetButtons();
   updateToolButtons();
   document.getElementById('viewer-panel').classList.add('open');
   const imgData=allImages.find(i=>i.id===rev.foglio_image_id);
@@ -634,11 +682,11 @@ function renderComments(){
       <div class="comment-head">
         ${hp?'<div class="comment-pin-num'+(c.resolved?' resolved':'')+'">'+pn+'</div>':''}
         ${shapeIcon}
-        <span class="comment-author">${esc(c.author_name)}</span>
         ${deptName?'<span class="comment-dept">'+esc(deptName)+'</span>':''}
         <span class="comment-time">${fmtTime(c.created_at)}</span>
       </div>
       <div class="comment-body">${tg.html}${esc(tg.text)}</div>
+      <div class="comment-from">Da: ${esc(c.author_name)}</div>
       <div class="comment-actions">
         ${c.sent?'<span class="comment-action-btn sent-badge">Inviato</span>':'<button class="comment-action-btn send-btn" data-testid="btn-send-'+c.id+'" onclick="sendComment('+c.id+')">Invia al reparto</button>'}
         <button class="comment-action-btn" data-testid="btn-resolve-${c.id}" onclick="resolveComment(${c.id},${!c.resolved})">${c.resolved?'Riapri':'Risolvi'}</button>
@@ -681,7 +729,6 @@ async function submitComment(){
     if(!res.ok){const err=await res.json().catch(()=>({}));showToast(err.error||'Errore nel salvataggio');return}
     document.getElementById('comment-input').value='';pendingPin=null;pendingShape=null;replyToId=null;
     document.getElementById('pin-hint').textContent='';document.getElementById('btn-submit-comment').disabled=true;
-    document.getElementById('comment-tag').value='';document.getElementById('comment-dept').value='';
     await refreshComments();
   }catch(e){console.error(e);showToast('Errore nel salvataggio')}
 }

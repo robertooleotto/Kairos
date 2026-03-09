@@ -60,7 +60,7 @@ table.sheet td.col-nome .cell{font-weight:600;color:var(--paper-s)}
 table.sheet td.col-frame .cell{text-align:center;font-family:'JetBrains Mono',monospace;font-size:.65rem}
 table.sheet td.col-tipo .cell,
 table.sheet td.col-orient .cell{text-align:center;font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--paper-m)}
-table.sheet td.col-image-name .cell{font-family:'Sora',sans-serif;font-size:1rem;font-weight:700;color:var(--paper-t);max-width:500px;overflow:hidden;text-overflow:ellipsis;letter-spacing:.01em;padding:8px 10px;min-height:44px;gap:10px;line-height:1.2}
+table.sheet td.col-image-name .cell{font-family:'Sora',sans-serif;font-size:.72rem;font-weight:600;color:var(--paper-t);max-width:500px;overflow:hidden;text-overflow:ellipsis;letter-spacing:.01em;padding:4px 8px;min-height:28px;gap:8px;line-height:1.3}
 table.sheet td.col-phase .cell{text-align:center;font-family:'JetBrains Mono',monospace;font-size:.65rem}
 table.sheet td.col-phase .cell.val-0{color:var(--paper-l)}
 table.sheet td.col-phase .cell.val-pos{color:#22c55e}
@@ -615,7 +615,7 @@ function renderElencoImmagini() {
     if (latestThumb) {
       thumbHtml = `<img src="${latestThumb}" class="thumb-mini" onclick="event.stopPropagation();openLightboxFor(${img.id})" data-testid="thumb-latest-${img.id}">`;
     }
-    const nameLabel = detailsCollapsed && img.location ? `<span style="color:var(--paper-m);font-size:.56rem;font-weight:400">${esc(img.location)}${img.sub_location ? ' / '+esc(img.sub_location) : ''}${img.frame ? ' #'+esc(img.frame) : ''}</span> ` : '';
+    const nameLabel = '';
     b += `<td class="col-image-name editable" data-field="image_name" data-id="${img.id}" data-api="images"><div class="cell">${thumbHtml}${nameLabel}${esc(img.image_name)}</div></td>`;
 
     columns.forEach(c => {
@@ -643,26 +643,6 @@ function toggleDetailColumns() {
   detailsCollapsed = !detailsCollapsed;
   document.querySelectorAll('.col-detail').forEach(el => el.classList.toggle('collapsed', detailsCollapsed));
   document.getElementById('btn-toggle-details').classList.toggle('active', !detailsCollapsed);
-
-  if (detailsCollapsed) {
-    images.forEach(img => {
-      const nameCell = document.querySelector(`td.col-image-name[data-id="${img.id}"] .cell`);
-      if (nameCell && !nameCell.querySelector('.detail-prefix')) {
-        const prefix = document.createElement('span');
-        prefix.className = 'detail-prefix';
-        prefix.style.cssText = 'color:var(--paper-m);font-size:.56rem;font-weight:400';
-        prefix.textContent = (img.location || '') + (img.sub_location ? ' / '+img.sub_location : '') + (img.frame ? ' #'+img.frame : '');
-        const firstText = nameCell.childNodes[nameCell.querySelector('.thumb-mini') ? 1 : 0];
-        nameCell.insertBefore(document.createTextNode(' '), firstText);
-        nameCell.insertBefore(prefix, firstText);
-      }
-    });
-  } else {
-    document.querySelectorAll('.detail-prefix').forEach(el => {
-      if (el.previousSibling && el.previousSibling.nodeType === 3) el.previousSibling.remove();
-      el.remove();
-    });
-  }
 }
 
 function getLatestThumb(imgRevs) {

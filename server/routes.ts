@@ -29,6 +29,19 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  await query(`CREATE TABLE IF NOT EXISTS revision_comments (
+    id SERIAL PRIMARY KEY,
+    revision_id INTEGER NOT NULL REFERENCES foglio_revisions(id) ON DELETE CASCADE,
+    author_id INTEGER,
+    author_name VARCHAR(255),
+    content TEXT,
+    pin_x REAL,
+    pin_y REAL,
+    resolved BOOLEAN DEFAULT false,
+    parent_comment_id INTEGER,
+    created_at TIMESTAMP DEFAULT NOW()
+  )`);
+
   app.get("/", (req, res) => {
     const publicPath = path.resolve(process.cwd(), "client/public");
     res.sendFile(path.join(publicPath, "preview.html"));
@@ -946,6 +959,34 @@ export async function registerRoutes(
       ORDER BY t.table_name
     `);
     res.json(tables);
+  });
+
+  app.get("/api/revision-comments/:revisionId", async (req, res) => {
+    const rows = await query("SELECT * FROM revision_comments WHERE revision_id=$1 ORDER BY created_at ASC", [req.params.revisionId]);
+    res.json(rows);
+  });
+
+  app.post("/api/revision-comments/:revisionId", async (req, res) => {
+    const { author_name, content, pin_x, pin_y, parent_comment_id } = req.body;
+    if (!content || !content.trim()) return res.status(400).json({ error: "Content is required" });
+    const revCheck = await query("SELECT id FROM foglio_revisions WHERE id=$1", [req.params.revisionId]);
+    if (!revCheck.length) return res.status(404).json({ error: "Revision not found" });
+    const rows = await query(
+      `INSERT INTO revision_comments (revision_id, author_name, content, pin_x, pin_y, parent_comment_id)
+       VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
+      [req.params.revisionId, author_name || 'Reviewer', content.trim(), pin_x ?? null, pin_y ?? null, parent_comment_id ?? null]
+    );
+    res.json(rows[0]);
+  });
+
+  app.put("/api/revision-comments/:id/resolve", async (req, res) => {
+    const rows = await query("UPDATE revision_comments SET resolved=$1 WHERE id=$2 RETURNING *", [req.body.resolved ?? true, req.params.id]);
+    res.json(rows[0]);
+  });
+
+  app.delete("/api/revision-comments/:id", async (req, res) => {
+    await query("DELETE FROM revision_comments WHERE id=$1", [req.params.id]);
+    res.json({ ok: true });
   });
 
   return httpServer;

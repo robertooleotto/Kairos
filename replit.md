@@ -43,6 +43,7 @@ Project management tool for NuDesign creative studio. Manages jobs (commesse), t
 - `review_assets` - Uploaded creative assets for review (job_id TEXT, file_url, status: pending/in_review/approved/changes_requested/rejected, versioning via parent_asset_id)
 - `review_comments` - Comments/annotations on review assets (pin_x, pin_y for image coordinates, resolved flag, parent_comment_id for replies)
 - `review_approvals` - Approval decisions on assets (decision: approved/changes_requested/rejected, reviewer_name, note)
+- `revision_comments` - Comments/annotations on foglio_revisions (revision_id FK→foglio_revisions.id, pin_x, pin_y, resolved, parent_comment_id for replies)
 
 ## Key Files
 - `server/db.ts` - PostgreSQL connection pool
@@ -58,7 +59,7 @@ Project management tool for NuDesign creative studio. Manages jobs (commesse), t
 - Job phases / Focus view: clicking a job opens a detail panel with a timeline of work phases. Phases support hierarchy: Reparto (area) → Lavorazione (task_type) → Sottolavorazione (sub-phase via parent_phase_id).
 - Gantt bar rendering: each phase gets its own row in the Gantt, colored by department (DEPT_COLORS map). Bars are continuous with grouped hover effect.
 - dhtmlxGantt page (gantt.html): Full interactive Gantt chart. Dark navy blue theme. Week scale shows W1-W5 per month. Phase CRUD via modal (double-click edit, right-click context menu). Drag/resize auto-save.
-- Review/Proofing (review.html): Upload creative assets (images, PDFs, videos) linked to jobs. Pin annotations on images with comments. Approval workflow (approve/request changes/reject). Version management. 3-panel layout: asset list sidebar, central image viewer with annotation pins, right comments panel.
+- Review/Proofing (review.html): Gallery-style review tool integrated with foglio_revisions. Light theme. Select commessa → select phase → see all revision images in a grid gallery. Click image to open viewer panel (dark background) with annotation pins, comments sidebar, and prev/next navigation (arrows + keyboard). "Apri in Review" button in foglio-lavoro lightbox opens review.html?jobId=...&imageId=... to deep-link to specific images. Comments stored in `revision_comments` table.
 - Foglio Lavoro (foglio-lavoro.html): Spreadsheet-like production tracker with Google Sheets-style tab bar at bottom. Tab system includes:
   - **Elenco Immagini** tab: Image production tracking per commessa. Custom phase columns configurable per job (default: Location Bozza, Location Def, Fotografia, Styling, Revisioni, Render, Post, Finiture, Rifacimenti, Recupero, Fatturato). Phase values displayed as checkmark icons (click to toggle 0/1). Row selection via checkboxes for batch color assignment. Delete mode toggled via toolbar button (hidden by default). Image names displayed at 1rem bold. Row colors saved in `row_color` column (red/orange/yellow/green/blue/purple/pink/gray). Columns config modal with add/delete.
   - **Locations** tab: Location list per commessa with Nome location, Tipologia (dropdown with 22 predefined values like "Architettura interni moderna", "Set studio complesso", "Moodboard" etc.), Descrizione, Note. Inline editing with dropdown for tipologia field.
@@ -89,7 +90,7 @@ Project management tool for NuDesign creative studio. Manages jobs (commesse), t
 - POST /api/foglio-revisions/batch-upload/:jobId - Batch upload multiple files with auto-matching by filename (exact match → substring → 3+ common parts)
 - DELETE /api/foglio-revisions/:id - Delete revision + file
 
-## Review API Endpoints
+## Review API Endpoints (legacy review_assets)
 - POST /api/review-assets/upload - Upload file (multipart, max 20MB, JPG/PNG/GIF/WebP/PDF/MP4)
 - GET /api/review-assets - List all assets (filter by job_id, status)
 - GET /api/review-assets/:id - Get single asset
@@ -100,6 +101,12 @@ Project management tool for NuDesign creative studio. Manages jobs (commesse), t
 - DELETE /api/review-comments/:id - Delete comment
 - GET/POST /api/review-assets/:id/approvals - List/add approval decisions
 - GET /api/review-assets/:id/versions - List all versions of an asset
+
+## Revision Comments API (used by review.html gallery)
+- GET /api/revision-comments/:revisionId - List comments for a foglio revision
+- POST /api/revision-comments/:revisionId - Add comment (author_name, content, pin_x, pin_y, parent_comment_id)
+- PUT /api/revision-comments/:id/resolve - Toggle resolved
+- DELETE /api/revision-comments/:id - Delete comment
 
 ## Notes
 - Originally used Supabase auth (login page still references it) - not active

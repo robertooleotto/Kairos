@@ -7,139 +7,97 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Sora:wght@400;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --paper:#0f0f17;--paper-h:#16161f;--paper-l:#24242d;
-  --paper-s:#cdd0de;--paper-m:#737889;--paper-t:#f9fafb;
+  --paper:#f5f5f0;--paper-h:#ebebdf;--paper-l:#d5d5ca;
+  --paper-s:#3a3a42;--paper-m:#8a8a95;--paper-t:#1a1a24;
   --accent:#6366f1;--accent-h:#5558e3;
   --green:#22c55e;--yellow:#f59e0b;--red:#ef4444;--cyan:#06b6d4;
 }
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);min-height:100vh;overflow:hidden}
+body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);min-height:100vh;display:flex;flex-direction:column;overflow:hidden}
 
-.header{padding:14px 24px;border-bottom:1px solid var(--paper-l);display:flex;align-items:center;gap:16px;position:sticky;top:0;background:var(--paper);z-index:100}
+.header{padding:14px 24px;border-bottom:1px solid var(--paper-l);display:flex;align-items:center;gap:16px;background:var(--paper);z-index:100;flex-shrink:0}
 .brand{flex-shrink:0;display:flex;align-items:center;gap:10px}
-.nav-pills{display:flex;gap:2px;background:rgba(255,255,255,.05);border-radius:10px;padding:3px;position:absolute;left:50%;transform:translateX(-50%)}
+.nav-pills{display:flex;gap:2px;background:rgba(0,0,0,.04);border-radius:10px;padding:3px;position:absolute;left:50%;transform:translateX(-50%)}
 .nav-pill{padding:5px 16px;border-radius:8px;font-size:.72rem;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--paper-m);font-family:'Sora',sans-serif;transition:all .15s}
-.nav-pill.active{background:#1c1f30;color:var(--paper-t)}
+.nav-pill.active{background:#fff;color:var(--paper-t);box-shadow:0 1px 3px rgba(0,0,0,.08)}
 .nav-pill:hover:not(.active){color:var(--paper-s)}
 
-::-webkit-scrollbar{width:6px;height:6px}
-::-webkit-scrollbar-track{background:var(--paper)}
-::-webkit-scrollbar-thumb{background:var(--paper-l);border-radius:3px}
+.toolbar{padding:10px 24px;border-bottom:1px solid var(--paper-l);display:flex;align-items:center;gap:12px;background:var(--paper-h);flex-shrink:0}
+.toolbar select{background:#fff;color:var(--paper-t);border:1px solid var(--paper-l);border-radius:6px;padding:6px 12px;font-size:.72rem;font-family:'Sora',sans-serif;cursor:pointer;min-width:200px}
+.toolbar select:focus{outline:none;border-color:var(--accent)}
+.toolbar-label{font-size:.62rem;color:var(--paper-m);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.toolbar-info{font-size:.62rem;color:var(--paper-m);margin-left:auto}
 
-.main-layout{display:flex;height:calc(100vh - 60px)}
+.main-area{flex:1;display:flex;overflow:hidden}
 
-.sidebar{width:340px;min-width:340px;border-right:1px solid var(--paper-l);display:flex;flex-direction:column;background:var(--paper-h)}
-.sidebar-header{padding:16px 18px;border-bottom:1px solid var(--paper-l);display:flex;align-items:center;gap:10px}
-.sidebar-header h2{font-family:'Fraunces',serif;font-size:1rem;font-weight:600;flex:1}
-.sidebar-search{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--paper-l);border-radius:8px;padding:8px 12px;color:var(--paper-t);font-family:'Sora',sans-serif;font-size:.78rem;outline:none;margin:0 18px 0 0}
-.sidebar-search:focus{border-color:var(--accent)}
-.sidebar-search::placeholder{color:var(--paper-m)}
+.gallery-panel{flex:1;overflow-y:auto;padding:20px 24px}
+.gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+.gallery-card{background:#fff;border:1px solid var(--paper-l);border-radius:10px;overflow:hidden;cursor:pointer;transition:all .15s;position:relative}
+.gallery-card:hover{border-color:var(--accent);box-shadow:0 4px 16px rgba(99,102,241,.1)}
+.gallery-card.active{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.gallery-thumb{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:var(--paper-h)}
+.gallery-info{padding:8px 10px}
+.gallery-title{font-size:.7rem;font-weight:600;color:var(--paper-t);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gallery-meta{font-size:.58rem;color:var(--paper-m);margin-top:2px}
+.gallery-phase{display:inline-block;padding:1px 6px;border-radius:4px;font-size:.52rem;font-weight:600;background:rgba(99,102,241,.08);color:var(--accent);margin-top:3px}
 
-.sidebar-filters{padding:10px 18px;border-bottom:1px solid var(--paper-l);display:flex;gap:6px;flex-wrap:wrap}
-.filter-tag{padding:4px 10px;border-radius:6px;font-size:.65rem;font-weight:600;cursor:pointer;border:1px solid var(--paper-l);background:transparent;color:var(--paper-m);font-family:'Sora',sans-serif;transition:all .15s}
-.filter-tag.active{background:rgba(99,102,241,.15);color:var(--accent);border-color:rgba(99,102,241,.3)}
-.filter-tag:hover:not(.active){color:var(--paper-s);border-color:var(--paper-m)}
+.gallery-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;color:var(--paper-m);gap:12px}
+.gallery-empty svg{width:48px;height:48px;opacity:.3}
+.gallery-empty h3{font-family:'Fraunces',serif;font-size:1.1rem;color:var(--paper-s)}
 
-.asset-list{flex:1;overflow-y:auto;padding:8px}
-.asset-card{padding:10px 14px;border-radius:10px;cursor:pointer;transition:all .15s;border:1px solid transparent;margin-bottom:4px}
-.asset-card:hover{background:rgba(255,255,255,.03);border-color:var(--paper-l)}
-.asset-card.active{background:rgba(99,102,241,.08);border-color:rgba(99,102,241,.25)}
-.asset-thumb{width:100%;aspect-ratio:16/10;border-radius:8px;overflow:hidden;background:var(--paper-l);margin-bottom:8px}
-.asset-thumb img{width:100%;height:100%;object-fit:cover}
-.asset-info{display:flex;align-items:start;gap:8px}
-.asset-title{font-size:.78rem;font-weight:600;color:var(--paper-t);flex:1;line-height:1.3}
-.asset-meta{font-size:.65rem;color:var(--paper-m);margin-top:2px}
-.asset-status-badge{padding:2px 8px;border-radius:4px;font-size:.6rem;font-weight:700;letter-spacing:.03em;flex-shrink:0}
-.status-pending{background:rgba(245,158,11,.12);color:var(--yellow)}
-.status-in_review{background:rgba(6,182,212,.12);color:var(--cyan)}
-.status-approved{background:rgba(34,197,94,.12);color:var(--green)}
-.status-changes_requested{background:rgba(239,68,68,.12);color:var(--red)}
-.status-rejected{background:rgba(239,68,68,.12);color:var(--red)}
+.viewer-panel{width:0;min-width:0;overflow:hidden;transition:width .25s,min-width .25s;background:#0a0a12;display:flex;flex-direction:column;position:relative}
+.viewer-panel.open{width:55%;min-width:500px}
+.viewer-body{flex:1;display:flex;overflow:hidden;min-height:0}
 
-.viewer{flex:1;display:flex;flex-direction:column;background:#0a0a12;position:relative}
-.viewer-toolbar{padding:10px 18px;background:var(--paper);border-bottom:1px solid var(--paper-l);display:flex;align-items:center;gap:12px;z-index:10}
-.viewer-title{font-size:.82rem;font-weight:600;flex:1}
-.viewer-job{font-size:.65rem;color:var(--paper-m)}
-.tool-btn{padding:6px 12px;border-radius:7px;font-size:.7rem;font-weight:600;cursor:pointer;border:1px solid var(--paper-l);background:transparent;color:var(--paper-s);font-family:'Sora',sans-serif;transition:all .15s;display:inline-flex;align-items:center;gap:5px}
+.viewer-toolbar{padding:10px 18px;background:#111;border-bottom:1px solid #222;display:flex;align-items:center;gap:12px;z-index:10;flex-shrink:0}
+.viewer-title{font-size:.82rem;font-weight:600;flex:1;color:#fff}
+.viewer-meta{font-size:.62rem;color:#888}
+.tool-btn{padding:6px 12px;border-radius:7px;font-size:.7rem;font-weight:600;cursor:pointer;border:1px solid #333;background:transparent;color:#ccc;font-family:'Sora',sans-serif;transition:all .15s;display:inline-flex;align-items:center;gap:5px}
 .tool-btn:hover{border-color:var(--accent);color:var(--accent)}
 .tool-btn.active{background:rgba(99,102,241,.15);border-color:var(--accent);color:var(--accent)}
 .tool-btn svg{width:14px;height:14px}
-.approve-btn{background:var(--green);color:#fff;border-color:var(--green)}
-.approve-btn:hover{background:#16a34a;border-color:#16a34a;color:#fff}
-.changes-btn{background:var(--yellow);color:#000;border-color:var(--yellow)}
-.changes-btn:hover{background:#d97706;border-color:#d97706;color:#000}
-.version-select{background:rgba(255,255,255,.05);border:1px solid var(--paper-l);border-radius:7px;padding:5px 10px;color:var(--paper-t);font-family:'Sora',sans-serif;font-size:.7rem;cursor:pointer;outline:none}
-.version-select option{background:var(--paper);color:var(--paper-t)}
+.close-viewer-btn{padding:6px 10px;border-radius:7px;font-size:1rem;cursor:pointer;border:1px solid #333;background:transparent;color:#ccc;font-family:'Sora',sans-serif;transition:all .15s;line-height:1}
+.close-viewer-btn:hover{color:#fff;border-color:#666}
 
 .viewer-canvas{flex:1;position:relative;overflow:auto;display:flex;align-items:center;justify-content:center}
-.canvas-image{max-width:90%;max-height:90%;object-fit:contain;user-select:none;border-radius:4px;cursor:crosshair;position:relative;z-index:1}
-.empty-viewer{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:var(--paper-m);height:100%}
-.empty-viewer svg{width:64px;height:64px;opacity:.3}
-.empty-viewer p{font-size:.85rem}
+.canvas-image{max-width:90%;max-height:90%;object-fit:contain;user-select:none;border-radius:4px;cursor:default;position:relative;z-index:1}
 
 .pin-marker{position:absolute;width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;cursor:pointer;transform:translate(-50%,-50%);z-index:5;box-shadow:0 2px 8px rgba(99,102,241,.5);border:2px solid #fff;transition:transform .15s}
 .pin-marker:hover{transform:translate(-50%,-50%) scale(1.2)}
 .pin-marker.resolved{background:var(--green);box-shadow:0 2px 8px rgba(34,197,94,.5)}
 .pin-marker.active-pin{background:#fff;color:var(--accent);transform:translate(-50%,-50%) scale(1.25)}
 
-.comments-panel{width:340px;min-width:340px;border-left:1px solid var(--paper-l);display:flex;flex-direction:column;background:var(--paper-h)}
-.comments-header{padding:14px 18px;border-bottom:1px solid var(--paper-l);display:flex;align-items:center;gap:8px}
-.comments-header h3{font-size:.82rem;font-weight:600;flex:1}
+.comments-sidebar{width:300px;min-width:300px;border-left:1px solid #222;display:flex;flex-direction:column;background:#111;flex-shrink:0;overflow:hidden}
+.comments-sidebar.hidden{display:none}
+.comments-header{padding:12px 16px;border-bottom:1px solid #222;display:flex;align-items:center;gap:8px}
+.comments-header h3{font-size:.78rem;font-weight:600;flex:1;color:#fff}
 .comment-count{background:rgba(99,102,241,.15);color:var(--accent);padding:2px 8px;border-radius:10px;font-size:.65rem;font-weight:700}
 
-.comments-list{flex:1;overflow-y:auto;padding:12px}
-.comment-item{padding:12px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid var(--paper-l);margin-bottom:8px;transition:all .15s}
-.comment-item:hover{border-color:rgba(99,102,241,.2)}
+.comments-list{flex:1;overflow-y:auto;padding:10px}
+.comment-item{padding:10px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid #222;margin-bottom:6px}
 .comment-item.highlighted{border-color:rgba(99,102,241,.4);background:rgba(99,102,241,.06)}
 .comment-item.resolved-comment{opacity:.5}
-.comment-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
-.comment-pin-num{width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0}
-.comment-author{font-size:.72rem;font-weight:600;flex:1}
-.comment-time{font-size:.6rem;color:var(--paper-m)}
-.comment-body{font-size:.75rem;color:var(--paper-s);line-height:1.5;margin-bottom:6px}
-.comment-actions{display:flex;gap:6px}
-.comment-action-btn{padding:3px 8px;border-radius:5px;font-size:.6rem;font-weight:600;cursor:pointer;border:1px solid var(--paper-l);background:transparent;color:var(--paper-m);font-family:'Sora',sans-serif;transition:all .12s}
-.comment-action-btn:hover{color:var(--paper-t);border-color:var(--paper-m)}
+.comment-head{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.comment-pin-num{width:18px;height:18px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0}
+.comment-author{font-size:.68rem;font-weight:600;flex:1;color:#ddd}
+.comment-time{font-size:.56rem;color:#666}
+.comment-body{font-size:.7rem;color:#aaa;line-height:1.5;margin-bottom:4px}
+.comment-actions{display:flex;gap:4px}
+.comment-action-btn{padding:2px 6px;border-radius:4px;font-size:.56rem;font-weight:600;cursor:pointer;border:1px solid #333;background:transparent;color:#888;font-family:'Sora',sans-serif}
+.comment-action-btn:hover{color:#ddd;border-color:#555}
 
-.comment-input-area{padding:14px;border-top:1px solid var(--paper-l)}
-.comment-textarea{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--paper-l);border-radius:8px;padding:10px 12px;color:var(--paper-t);font-family:'Sora',sans-serif;font-size:.75rem;outline:none;resize:none;min-height:70px;transition:border-color .15s}
+.comment-input-area{padding:10px;border-top:1px solid #222}
+.comment-textarea{width:100%;background:rgba(255,255,255,.05);border:1px solid #333;border-radius:6px;padding:8px 10px;color:#eee;font-family:'Sora',sans-serif;font-size:.7rem;outline:none;resize:none;min-height:56px}
 .comment-textarea:focus{border-color:var(--accent)}
-.comment-textarea::placeholder{color:var(--paper-m)}
-.comment-submit-row{display:flex;align-items:center;gap:8px;margin-top:8px}
-.comment-submit-btn{padding:7px 16px;border-radius:7px;font-size:.72rem;font-weight:600;cursor:pointer;border:none;background:var(--accent);color:#fff;font-family:'Sora',sans-serif;transition:all .15s;margin-left:auto}
-.comment-submit-btn:hover{background:var(--accent-h)}
+.comment-textarea::placeholder{color:#555}
+.comment-submit-row{display:flex;align-items:center;gap:6px;margin-top:6px}
+.comment-submit-btn{padding:6px 14px;border-radius:6px;font-size:.68rem;font-weight:600;cursor:pointer;border:none;background:var(--accent);color:#fff;font-family:'Sora',sans-serif;margin-left:auto}
 .comment-submit-btn:disabled{opacity:.4;cursor:not-allowed}
-.pin-hint{font-size:.6rem;color:var(--paper-m);font-style:italic}
+.pin-hint{font-size:.56rem;color:#666;font-style:italic}
 
-.upload-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
-.upload-box{background:var(--paper-h);border:1px solid var(--paper-l);border-radius:14px;width:480px;max-width:94vw;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
-.upload-box h3{font-family:'Fraunces',serif;font-size:1rem;margin-bottom:18px}
-.uf-row{margin-bottom:14px}
-.uf-label{display:block;font-size:.68rem;font-weight:600;color:var(--paper-m);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
-.uf-input{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--paper-l);border-radius:8px;padding:9px 12px;color:var(--paper-t);font-family:'Sora',sans-serif;font-size:.78rem;outline:none}
-.uf-input:focus{border-color:var(--accent)}
-select.uf-input{cursor:pointer;-webkit-appearance:auto}
-select.uf-input option{background:var(--paper-h);color:var(--paper-t)}
-.uf-dropzone{border:2px dashed var(--paper-l);border-radius:10px;padding:30px;text-align:center;cursor:pointer;transition:all .15s;color:var(--paper-m);font-size:.78rem}
-.uf-dropzone:hover,.uf-dropzone.dragover{border-color:var(--accent);color:var(--accent);background:rgba(99,102,241,.05)}
-.uf-dropzone svg{width:40px;height:40px;margin-bottom:8px;opacity:.5}
-.uf-file-info{margin-top:10px;font-size:.7rem;color:var(--green)}
-.uf-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
-.uf-btn{padding:8px 18px;border-radius:8px;font-family:'Sora',sans-serif;font-size:.74rem;font-weight:600;cursor:pointer;transition:all .15s;border:none}
-.uf-btn-cancel{background:rgba(255,255,255,.05);border:1px solid var(--paper-l);color:var(--paper-m)}
-.uf-btn-cancel:hover{color:var(--paper-t)}
-.uf-btn-upload{background:var(--accent);color:#fff}
-.uf-btn-upload:hover{background:var(--accent-h)}
-.uf-btn-upload:disabled{opacity:.4;cursor:not-allowed}
-
-.approval-history{margin-top:12px;padding:12px;border-radius:10px;background:rgba(255,255,255,.02);border:1px solid var(--paper-l)}
-.approval-history h4{font-size:.7rem;font-weight:600;color:var(--paper-m);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
-.approval-entry{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.03);font-size:.7rem}
-.approval-entry:last-child{border-bottom:none}
-.approval-decision{padding:2px 8px;border-radius:4px;font-size:.58rem;font-weight:700}
-.decision-approved{background:rgba(34,197,94,.12);color:var(--green)}
-.decision-changes_requested{background:rgba(245,158,11,.12);color:var(--yellow)}
-.decision-rejected{background:rgba(239,68,68,.12);color:var(--red)}
+.nav-arrows{position:absolute;top:50%;display:flex;justify-content:space-between;width:100%;padding:0 8px;z-index:6;transform:translateY(-50%);pointer-events:none}
+.nav-arrow{pointer-events:auto;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.15);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;transition:all .15s}
+.nav-arrow:hover{background:rgba(0,0,0,.8);border-color:rgba(255,255,255,.3)}
 </style>
 </head>
 <body>
@@ -147,554 +105,491 @@ select.uf-input option{background:var(--paper-h);color:var(--paper-t)}
 <div class="header">
   <div class="brand">
     <img src="nudesign-logo.png" alt="NuDesign" style="height:56px;object-fit:contain" data-testid="img-logo">
-    <span style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:1.15rem;font-weight:500;letter-spacing:.04em;color:#fff;opacity:.92">Kairos</span>
+    <span style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:1.15rem;font-weight:500;letter-spacing:.04em;color:var(--paper-t);opacity:.92">Kairos</span>
   </div>
   <div class="nav-pills">
-    <button class="nav-pill" data-testid="nav-calendario" onclick="location.href='preview.html'">Calendario</button>
-    <button class="nav-pill" data-testid="nav-stato" onclick="location.href='status.html'">Stato</button>
-    <button class="nav-pill" data-testid="nav-report" onclick="location.href='report.html'">Report</button>
-    <button class="nav-pill" data-testid="nav-team" onclick="location.href='team.html'">Team</button>
-    <button class="nav-pill" data-testid="nav-commesse" onclick="location.href='commesse.html'">Commesse</button>
-    <button class="nav-pill" data-testid="nav-foglio" onclick="location.href='foglio-lavoro.html'">Foglio Lavoro</button>
-    <button class="nav-pill" data-testid="nav-clienti" onclick="location.href='clienti.html'">Clienti</button>
-    <button class="nav-pill" data-testid="nav-gantt" onclick="location.href='gantt.html'">Gantt</button>
-    <button class="nav-pill active" data-testid="nav-review" onclick="location.href='review.html'">Review</button>
+    <button class="nav-pill" onclick="location.href='preview.html'" data-testid="nav-calendario">Calendario</button>
+    <button class="nav-pill" onclick="location.href='status.html'" data-testid="nav-stato">Stato</button>
+    <button class="nav-pill" onclick="location.href='commesse.html'" data-testid="nav-commesse">Commesse</button>
+    <button class="nav-pill" onclick="location.href='foglio-lavoro.html'" data-testid="nav-foglio">Foglio Lavoro</button>
+    <button class="nav-pill" onclick="location.href='gantt.html'" data-testid="nav-gantt">Gantt</button>
+    <button class="nav-pill" onclick="location.href='team.html'" data-testid="nav-team">Team</button>
+    <button class="nav-pill" onclick="location.href='clienti.html'" data-testid="nav-clienti">Clienti</button>
+    <button class="nav-pill" onclick="location.href='report.html'" data-testid="nav-report">Report</button>
+    <button class="nav-pill active" data-testid="nav-review">Review</button>
   </div>
+  <div style="margin-left:auto"></div>
 </div>
 
-<div class="main-layout">
-  <div class="sidebar">
-    <div class="sidebar-header">
-      <h2>Review</h2>
-      <button class="tool-btn" data-testid="btn-upload-asset" onclick="openUploadModal()" style="font-size:.68rem">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        Carica
-      </button>
+<div class="toolbar" id="toolbar">
+  <span class="toolbar-label">Commessa</span>
+  <select id="job-select" data-testid="select-job" onchange="onJobChange()">
+    <option value="">— Seleziona commessa —</option>
+  </select>
+  <span class="toolbar-label">Fase</span>
+  <select id="phase-select" data-testid="select-phase" onchange="onPhaseChange()">
+    <option value="">Tutte le fasi</option>
+  </select>
+  <span class="toolbar-info" id="toolbar-info"></span>
+</div>
+
+<div class="main-area">
+  <div class="gallery-panel" id="gallery-panel">
+    <div class="gallery-empty" id="gallery-empty" data-testid="gallery-empty">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      <h3>Review & Proofing</h3>
+      <p style="font-size:.72rem">Seleziona una commessa per visualizzare le revisioni</p>
     </div>
-    <div style="padding:10px 18px 0">
-      <input type="text" class="sidebar-search" id="search-assets" data-testid="input-search-assets" placeholder="Cerca asset..." oninput="filterAssets()">
-    </div>
-    <div class="sidebar-filters">
-      <button class="filter-tag active" data-testid="filter-all" data-filter="" onclick="setFilter(this,'')">Tutti</button>
-      <button class="filter-tag" data-testid="filter-pending" data-filter="pending" onclick="setFilter(this,'pending')">In attesa</button>
-      <button class="filter-tag" data-testid="filter-in_review" data-filter="in_review" onclick="setFilter(this,'in_review')">In revisione</button>
-      <button class="filter-tag" data-testid="filter-approved" data-filter="approved" onclick="setFilter(this,'approved')">Approvati</button>
-      <button class="filter-tag" data-testid="filter-changes" data-filter="changes_requested" onclick="setFilter(this,'changes_requested')">Modifiche</button>
-    </div>
-    <div class="asset-list" id="asset-list" data-testid="asset-list"></div>
+    <div class="gallery-grid" id="gallery-grid" style="display:none" data-testid="gallery-grid"></div>
   </div>
 
-  <div class="viewer" id="viewer">
-    <div class="viewer-toolbar" id="viewer-toolbar" style="display:none">
+  <div class="viewer-panel" id="viewer-panel">
+    <div class="viewer-toolbar" id="viewer-toolbar">
       <div>
         <div class="viewer-title" id="viewer-title" data-testid="text-viewer-title"></div>
-        <div class="viewer-job" id="viewer-job" data-testid="text-viewer-job"></div>
+        <div class="viewer-meta" id="viewer-meta"></div>
       </div>
-      <select class="version-select" id="version-select" data-testid="select-version" onchange="switchVersion(this.value)" style="display:none"></select>
       <div style="flex:1"></div>
       <button class="tool-btn" id="btn-pin-mode" data-testid="btn-pin-mode" onclick="togglePinMode()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
         Annota
       </button>
-      <button class="tool-btn changes-btn" data-testid="btn-request-changes" onclick="submitApproval('changes_requested')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        Modifiche
-      </button>
-      <button class="tool-btn approve-btn" data-testid="btn-approve" onclick="submitApproval('approved')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-        Approva
-      </button>
+      <button class="close-viewer-btn" onclick="closeViewer()" data-testid="btn-close-viewer">&times;</button>
     </div>
-
-    <div class="viewer-canvas" id="viewer-canvas">
-      <div class="empty-viewer" id="empty-viewer" data-testid="empty-viewer">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-        <p>Seleziona un asset dalla lista o caricane uno nuovo</p>
+    <div class="viewer-body">
+      <div class="viewer-canvas" id="viewer-canvas">
+        <div class="nav-arrows">
+          <button class="nav-arrow" onclick="navImage(-1)" data-testid="btn-prev-image">&larr;</button>
+          <button class="nav-arrow" onclick="navImage(1)" data-testid="btn-next-image">&rarr;</button>
+        </div>
       </div>
-    </div>
-  </div>
-
-  <div class="comments-panel" id="comments-panel" style="display:none">
-    <div class="comments-header">
-      <h3>Commenti</h3>
-      <span class="comment-count" id="comment-count" data-testid="text-comment-count">0</span>
-    </div>
-    <div class="comments-list" id="comments-list" data-testid="comments-list"></div>
-    <div class="comment-input-area">
-      <textarea class="comment-textarea" id="comment-input" data-testid="input-comment" placeholder="Scrivi un commento... Clicca sull'immagine per aggiungere un pin"></textarea>
-      <div class="comment-submit-row">
-        <span class="pin-hint" id="pin-hint"></span>
-        <button class="comment-submit-btn" id="btn-submit-comment" data-testid="btn-submit-comment" onclick="submitComment()" disabled>Invia</button>
+      <div class="comments-sidebar" id="comments-sidebar">
+        <div class="comments-header">
+          <h3>Commenti</h3>
+          <span class="comment-count" id="comment-count" data-testid="text-comment-count">0</span>
+        </div>
+        <div class="comments-list" id="comments-list" data-testid="comments-list"></div>
+        <div class="comment-input-area">
+          <textarea class="comment-textarea" id="comment-input" data-testid="input-comment" placeholder="Clicca sull'immagine per aggiungere un pin, poi scrivi qui..."></textarea>
+          <div class="comment-submit-row">
+            <span class="pin-hint" id="pin-hint"></span>
+            <button class="comment-submit-btn" id="btn-submit-comment" data-testid="btn-submit-comment" onclick="submitComment()" disabled>Invia</button>
+          </div>
+        </div>
       </div>
-    </div>
-    <div id="approval-history-area"></div>
-  </div>
-</div>
-
-<div class="upload-modal" id="upload-modal" data-testid="modal-upload">
-  <div class="upload-box">
-    <h3>Carica Asset per Review</h3>
-    <div class="uf-row">
-      <label class="uf-label">Commessa *</label>
-      <select id="uf-job" class="uf-input" data-testid="select-upload-job"></select>
-    </div>
-    <div class="uf-row">
-      <label class="uf-label">Titolo *</label>
-      <input type="text" id="uf-title" class="uf-input" data-testid="input-upload-title" placeholder="es. Render cucina v2">
-    </div>
-    <div class="uf-row">
-      <label class="uf-label">File *</label>
-      <div class="uf-dropzone" id="uf-dropzone" data-testid="dropzone-upload" onclick="document.getElementById('uf-file').click()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        <div>Clicca o trascina un file qui</div>
-        <div style="font-size:.65rem;margin-top:4px">JPG, PNG, WebP, GIF, PDF, MP4 — max 20MB</div>
-      </div>
-      <input type="file" id="uf-file" data-testid="input-upload-file" style="display:none" accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,application/pdf" onchange="onFileSelected(this)">
-      <div class="uf-file-info" id="uf-file-info"></div>
-    </div>
-    <div class="uf-actions">
-      <button class="uf-btn uf-btn-cancel" onclick="closeUploadModal()">Annulla</button>
-      <button class="uf-btn uf-btn-upload" id="btn-do-upload" data-testid="btn-do-upload" onclick="doUpload()" disabled>Carica</button>
     </div>
   </div>
 </div>
 
+<script src="api-client.js"></script>
 <script>
-const STATUS_LABELS={pending:'In attesa',in_review:'In revisione',approved:'Approvato',changes_requested:'Modifiche richieste',rejected:'Rifiutato'};
+let allJobs = [];
+let currentJobId = null;
+let currentPhase = '';
+let allRevisions = [];
+let filteredRevisions = [];
+let allImages = [];
+let allColumns = [];
+let currentRevision = null;
+let currentComments = [];
+let pinMode = false;
+let pendingPin = null;
+let replyToId = null;
 
-let allAssets=[];
-let allJobs=[];
-let allCollabs=[];
-let currentAsset=null;
-let currentComments=[];
-let currentVersions=[];
-let pinMode=false;
-let pendingPin=null;
-let activeFilter='';
-let searchQuery='';
+const PHASE_LABELS = {
+  'location_bozza': 'Location Bozza',
+  'location_def': 'Location Def',
+  'fotografia': 'Fotografia',
+  'styling': 'Styling',
+  'revisioni': 'Revisioni',
+  'render': 'Render',
+  'post': 'Post',
+  'finiture': 'Finiture',
+  'rifacimenti': 'Rifacimenti',
+  'recupero_render': 'Render (Rec.)',
+  'recupero_post': 'Post (Rec.)',
+  'recupero_finiture': 'Finiture (Rec.)',
+  'recupero': 'Recupero',
+  'fatturato': 'Fatturato',
+  '_finale': 'Definitiva'
+};
 
-async function init(){
-  try{
-    const [assets,jobs,collabs]=await Promise.all([
-      fetch('/api/review-assets').then(r=>r.json()),
-      fetch('/api/jobs').then(r=>r.json()),
-      fetch('/api/collaborators').then(r=>r.json()).catch(()=>[])
-    ]);
-    allAssets=assets;
-    allJobs=jobs;
-    allCollabs=collabs;
-    renderAssetList();
-  }catch(e){console.error('Init error:',e)}
+async function init() {
+  try {
+    const res = await fetch('/api/jobs');
+    allJobs = await res.json();
+    const sel = document.getElementById('job-select');
+    allJobs.forEach(j => {
+      const o = document.createElement('option');
+      o.value = j.id;
+      o.textContent = (j.code || '') + ' — ' + (j.title || j.name);
+      sel.appendChild(o);
+    });
+
+    const params = new URLSearchParams(location.search);
+    const jobId = params.get('jobId');
+    const revisionId = params.get('revisionId');
+    const imageId = params.get('imageId');
+    if (jobId) {
+      sel.value = jobId;
+      await onJobChange();
+      if (revisionId) {
+        const rev = filteredRevisions.find(r => r.id == revisionId);
+        if (rev) openViewer(rev.id);
+      } else if (imageId) {
+        const rev = filteredRevisions.find(r => r.foglio_image_id == imageId);
+        if (rev) openViewer(rev.id);
+      }
+    }
+  } catch(e) { console.error(e); }
 }
 
-function renderAssetList(){
-  const list=document.getElementById('asset-list');
-  let filtered=allAssets;
-  if(activeFilter) filtered=filtered.filter(a=>a.status===activeFilter);
-  if(searchQuery){
-    const q=searchQuery.toLowerCase();
-    filtered=filtered.filter(a=>(a.title||'').toLowerCase().includes(q)||(a.job_code||'').toLowerCase().includes(q)||(a.job_client||'').toLowerCase().includes(q));
-  }
+function resetViewerState() {
+  closeViewer();
+  currentRevision = null;
+  currentComments = [];
+  pendingPin = null;
+  replyToId = null;
+  pinMode = false;
+  document.getElementById('btn-pin-mode').classList.remove('active');
+}
 
-  if(!filtered.length){
-    list.innerHTML='<div style="padding:30px;text-align:center;color:var(--paper-m);font-size:.78rem">Nessun asset trovato</div>';
+async function onJobChange() {
+  resetViewerState();
+  currentJobId = document.getElementById('job-select').value;
+  if (!currentJobId) {
+    allRevisions = [];
+    allImages = [];
+    allColumns = [];
+    filteredRevisions = [];
+    renderGallery();
+    return;
+  }
+  try {
+    const [revRes, imgRes, colRes] = await Promise.all([
+      fetch(`/api/foglio-revisions-batch/${currentJobId}`),
+      fetch(`/api/foglio-images/${currentJobId}`),
+      fetch(`/api/foglio-columns/${currentJobId}`)
+    ]);
+    allRevisions = revRes.ok ? await revRes.json() : [];
+    allImages = imgRes.ok ? await imgRes.json() : [];
+    allColumns = colRes.ok ? await colRes.json() : [];
+
+    const phaseSel = document.getElementById('phase-select');
+    const phases = new Set(allRevisions.map(r => r.phase_key));
+    phaseSel.innerHTML = '<option value="">Tutte le fasi</option>';
+    phases.forEach(p => {
+      const o = document.createElement('option');
+      o.value = p;
+      o.textContent = PHASE_LABELS[p] || p;
+      phaseSel.appendChild(o);
+    });
+
+    currentPhase = '';
+    filterAndRender();
+  } catch(e) { console.error(e); }
+}
+
+function onPhaseChange() {
+  resetViewerState();
+  currentPhase = document.getElementById('phase-select').value;
+  filterAndRender();
+}
+
+function filterAndRender() {
+  filteredRevisions = allRevisions.filter(r => r.file_type === 'image');
+  if (currentPhase) filteredRevisions = filteredRevisions.filter(r => r.phase_key === currentPhase);
+  filteredRevisions.sort((a, b) => {
+    const imgA = allImages.find(i => i.id === a.foglio_image_id);
+    const imgB = allImages.find(i => i.id === b.foglio_image_id);
+    const nameA = imgA ? imgA.image_name : '';
+    const nameB = imgB ? imgB.image_name : '';
+    return nameA.localeCompare(nameB) || a.id - b.id;
+  });
+  renderGallery();
+}
+
+function renderGallery() {
+  const grid = document.getElementById('gallery-grid');
+  const empty = document.getElementById('gallery-empty');
+  const info = document.getElementById('toolbar-info');
+
+  if (!currentJobId) {
+    grid.style.display = 'none';
+    empty.style.display = 'flex';
+    info.textContent = '';
     return;
   }
 
-  list.innerHTML=filtered.map(a=>{
-    const isActive=currentAsset&&currentAsset.id===a.id;
-    const isImage=a.file_type==='image';
-    return `<div class="asset-card${isActive?' active':''}" data-testid="asset-card-${a.id}" onclick="selectAsset(${a.id})">
-      <div class="asset-thumb">${isImage?'<img src="'+escHtml(a.file_url)+'" alt="" loading="lazy">':'<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:2rem;opacity:.3">'+(a.file_type==='video'?'&#9654;':'&#128196;')+'</div>'}</div>
-      <div class="asset-info">
-        <div>
-          <div class="asset-title">${escHtml(a.title)}</div>
-          <div class="asset-meta">${escHtml(a.job_code||'')}${a.job_client?' · '+escHtml(a.job_client):''} · v${a.version}</div>
-        </div>
-        <span class="asset-status-badge status-${a.status}">${STATUS_LABELS[a.status]||a.status}</span>
+  if (!filteredRevisions.length) {
+    grid.style.display = 'none';
+    empty.style.display = 'flex';
+    empty.querySelector('h3').textContent = 'Nessuna revisione';
+    empty.querySelector('p').textContent = 'Non ci sono immagini di revisione per questa selezione';
+    info.textContent = '0 immagini';
+    return;
+  }
+
+  empty.style.display = 'none';
+  grid.style.display = 'grid';
+  info.textContent = filteredRevisions.length + ' immagini';
+
+  grid.innerHTML = filteredRevisions.map(rev => {
+    const img = allImages.find(i => i.id === rev.foglio_image_id);
+    const imageName = img ? img.image_name : '';
+    const phaseLabel = PHASE_LABELS[rev.phase_key] || rev.phase_key;
+    const isActive = currentRevision && currentRevision.id === rev.id;
+    return `<div class="gallery-card${isActive ? ' active' : ''}" onclick="openViewer(${rev.id})" data-testid="gallery-card-${rev.id}">
+      <img class="gallery-thumb" src="${esc(rev.file_url)}" alt="${esc(rev.title)}" loading="lazy">
+      <div class="gallery-info">
+        <div class="gallery-title" data-testid="gallery-title-${rev.id}">${esc(imageName || rev.title)}</div>
+        <div class="gallery-meta">v${rev.version} · ${esc(rev.title)}</div>
+        <span class="gallery-phase">${esc(phaseLabel)}</span>
       </div>
     </div>`;
   }).join('');
 }
 
-function escHtml(s){
-  if(!s)return '';
-  const d=document.createElement('div');d.textContent=s;return d.innerHTML;
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
-function setFilter(btn,f){
-  activeFilter=f;
-  document.querySelectorAll('.filter-tag').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  renderAssetList();
+async function openViewer(revId) {
+  const rev = filteredRevisions.find(r => r.id === revId);
+  if (!rev) return;
+  currentRevision = rev;
+
+  const panel = document.getElementById('viewer-panel');
+  panel.classList.add('open');
+
+  const img = allImages.find(i => i.id === rev.foglio_image_id);
+  document.getElementById('viewer-title').textContent = img ? img.image_name : rev.title;
+  document.getElementById('viewer-meta').textContent = (PHASE_LABELS[rev.phase_key] || rev.phase_key) + ' · v' + rev.version;
+
+  const canvas = document.getElementById('viewer-canvas');
+  let imgEl = canvas.querySelector('.canvas-image');
+  if (!imgEl) {
+    imgEl = document.createElement('img');
+    imgEl.className = 'canvas-image';
+    imgEl.id = 'review-image';
+    imgEl.setAttribute('data-testid', 'review-image');
+    imgEl.onclick = onCanvasClick;
+    canvas.appendChild(imgEl);
+  }
+  imgEl.src = rev.file_url;
+  imgEl.style.cursor = pinMode ? 'crosshair' : 'default';
+
+  canvas.querySelectorAll('.pin-marker').forEach(p => p.remove());
+  const wrapper = document.getElementById('pin-wrapper');
+  if (wrapper) wrapper.remove();
+
+  try {
+    const commentsRes = await fetch('/api/revision-comments/' + rev.id);
+    currentComments = commentsRes.ok ? await commentsRes.json() : [];
+  } catch(e) { currentComments = []; }
+
+  renderComments();
+  renderPins();
+  renderGallery();
 }
 
-function filterAssets(){
-  searchQuery=document.getElementById('search-assets').value.trim();
-  renderAssetList();
+function closeViewer() {
+  document.getElementById('viewer-panel').classList.remove('open');
+  currentRevision = null;
+  renderGallery();
 }
 
-async function selectAsset(id){
-  try{
-    const [asset,comments,approvals]=await Promise.all([
-      fetch('/api/review-assets/'+id).then(r=>r.json()),
-      fetch('/api/review-assets/'+id+'/comments').then(r=>r.json()),
-      fetch('/api/review-assets/'+id+'/approvals').then(r=>r.json())
-    ]);
-    currentAsset=asset;
-    currentComments=comments;
-
-    document.getElementById('viewer-toolbar').style.display='flex';
-    document.getElementById('comments-panel').style.display='flex';
-    document.getElementById('viewer-title').textContent=asset.title;
-    document.getElementById('viewer-job').textContent=(asset.job_code||'')+(asset.job_client?' · '+asset.job_client:'');
-
-    const canvas=document.getElementById('viewer-canvas');
-    document.getElementById('empty-viewer')?.remove();
-
-    const existingImg=canvas.querySelector('.canvas-image');
-    if(existingImg) existingImg.remove();
-    canvas.querySelectorAll('.pin-marker').forEach(p=>p.remove());
-
-    if(asset.file_type==='image'){
-      const img=document.createElement('img');
-      img.className='canvas-image';
-      img.src=asset.file_url;
-      img.id='review-image';
-      img.setAttribute('data-testid','review-image');
-      img.onclick=onCanvasClick;
-      canvas.appendChild(img);
-    }else{
-      const placeholder=document.createElement('div');
-      placeholder.className='empty-viewer';
-      placeholder.innerHTML='<p>Anteprima non disponibile per questo formato</p>';
-      canvas.appendChild(placeholder);
-    }
-
-    renderPins();
-    renderComments();
-    renderApprovals(approvals);
-    loadVersions(asset);
-    renderAssetList();
-
-    if(asset.status==='pending'){
-      fetch('/api/review-assets/'+id+'/status',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'in_review'})});
-      asset.status='in_review';
-      const idx=allAssets.findIndex(a=>a.id===id);
-      if(idx>=0) allAssets[idx].status='in_review';
-      renderAssetList();
-    }
-  }catch(e){console.error('Select asset error:',e)}
+function navImage(dir) {
+  if (!currentRevision) return;
+  const idx = filteredRevisions.findIndex(r => r.id === currentRevision.id);
+  if (idx < 0) return;
+  const next = idx + dir;
+  if (next >= 0 && next < filteredRevisions.length) {
+    openViewer(filteredRevisions[next].id);
+  }
 }
 
-async function loadVersions(asset){
-  try{
-    const versions=await fetch('/api/review-assets/'+asset.id+'/versions').then(r=>r.json());
-    currentVersions=versions;
-    const sel=document.getElementById('version-select');
-    if(versions.length>1){
-      sel.style.display='inline';
-      sel.innerHTML=versions.map(v=>`<option value="${v.id}"${v.id===asset.id?' selected':''}>Versione ${v.version}</option>`).join('');
-    }else{
-      sel.style.display='none';
-    }
-  }catch(e){console.error(e)}
+document.addEventListener('keydown', (e) => {
+  if (!currentRevision) return;
+  if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+  if (e.key === 'ArrowLeft') navImage(-1);
+  if (e.key === 'ArrowRight') navImage(1);
+  if (e.key === 'Escape') closeViewer();
+});
+
+function togglePinMode() {
+  pinMode = !pinMode;
+  document.getElementById('btn-pin-mode').classList.toggle('active', pinMode);
+  const img = document.getElementById('review-image');
+  if (img) img.style.cursor = pinMode ? 'crosshair' : 'default';
+  document.getElementById('pin-hint').textContent = pinMode ? "Clicca sull'immagine per posizionare un pin" : '';
 }
 
-function switchVersion(id){selectAsset(parseInt(id))}
+function onCanvasClick(e) {
+  if (!pinMode) return;
+  const img = document.getElementById('review-image');
+  if (!img) return;
+  const rect = img.getBoundingClientRect();
+  const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(2);
+  const y = ((e.clientY - rect.top) / rect.height * 100).toFixed(2);
+  pendingPin = { x: parseFloat(x), y: parseFloat(y) };
+  document.getElementById('pin-hint').textContent = 'Pin a (' + x + '%, ' + y + '%). Scrivi il commento.';
+  document.getElementById('comment-input').focus();
+  document.getElementById('btn-submit-comment').disabled = false;
+}
 
-function renderPins(){
-  const canvas=document.getElementById('viewer-canvas');
-  canvas.querySelectorAll('.pin-marker').forEach(p=>p.remove());
-  let pinNum=0;
-  currentComments.filter(c=>c.pin_x!=null&&c.pin_y!=null&&!c.parent_comment_id).forEach(c=>{
+function renderPins() {
+  const canvas = document.getElementById('viewer-canvas');
+  canvas.querySelectorAll('.pin-marker').forEach(p => p.remove());
+  const img = document.getElementById('review-image');
+  if (!img) return;
+
+  let wrapper = document.getElementById('pin-wrapper');
+  if (!wrapper) {
+    wrapper = document.createElement('div');
+    wrapper.id = 'pin-wrapper';
+    wrapper.style.cssText = 'position:absolute;pointer-events:auto';
+    canvas.appendChild(wrapper);
+  }
+  const updatePos = () => {
+    const r = img.getBoundingClientRect();
+    const p = canvas.getBoundingClientRect();
+    wrapper.style.left = (r.left - p.left) + 'px';
+    wrapper.style.top = (r.top - p.top) + 'px';
+    wrapper.style.width = r.width + 'px';
+    wrapper.style.height = r.height + 'px';
+  };
+  img.onload = updatePos;
+  setTimeout(updatePos, 100);
+
+  let pinNum = 0;
+  currentComments.filter(c => c.pin_x != null && c.pin_y != null && !c.parent_comment_id).forEach(c => {
     pinNum++;
-    const pin=document.createElement('div');
-    pin.className='pin-marker'+(c.resolved?' resolved':'');
-    pin.setAttribute('data-testid','pin-'+c.id);
-    pin.textContent=pinNum;
-    pin.style.left=c.pin_x+'%';
-    pin.style.top=c.pin_y+'%';
-    pin.onclick=(e)=>{e.stopPropagation();highlightComment(c.id)};
-
-    const img=document.getElementById('review-image');
-    if(img){
-      const wrapper=getOrCreatePinWrapper();
-      wrapper.appendChild(pin);
-    }
+    const pin = document.createElement('div');
+    pin.className = 'pin-marker' + (c.resolved ? ' resolved' : '');
+    pin.setAttribute('data-testid', 'pin-' + c.id);
+    pin.textContent = pinNum;
+    pin.style.left = c.pin_x + '%';
+    pin.style.top = c.pin_y + '%';
+    pin.onclick = (ev) => { ev.stopPropagation(); highlightComment(c.id); };
+    wrapper.appendChild(pin);
   });
 }
 
-function getOrCreatePinWrapper(){
-  let wrapper=document.getElementById('pin-wrapper');
-  if(wrapper) return wrapper;
-  wrapper=document.createElement('div');
-  wrapper.id='pin-wrapper';
-  wrapper.style.cssText='position:absolute;inset:0;pointer-events:none';
-  const img=document.getElementById('review-image');
-  if(img){
-    wrapper.style.cssText='position:absolute;pointer-events:none';
-    const updatePos=()=>{
-      const r=img.getBoundingClientRect();
-      const p=img.parentElement.getBoundingClientRect();
-      wrapper.style.left=(r.left-p.left)+'px';
-      wrapper.style.top=(r.top-p.top)+'px';
-      wrapper.style.width=r.width+'px';
-      wrapper.style.height=r.height+'px';
-    };
-    img.onload=updatePos;
-    setTimeout(updatePos,100);
-    new ResizeObserver(updatePos).observe(img.parentElement);
-  }
-  document.getElementById('viewer-canvas').appendChild(wrapper);
-  wrapper.style.pointerEvents='auto';
-  return wrapper;
-}
+function renderComments() {
+  const list = document.getElementById('comments-list');
+  document.getElementById('comment-count').textContent = currentComments.length;
 
-function renderComments(){
-  const list=document.getElementById('comments-list');
-  document.getElementById('comment-count').textContent=currentComments.length;
-
-  if(!currentComments.length){
-    list.innerHTML='<div style="padding:20px;text-align:center;color:var(--paper-m);font-size:.75rem">Nessun commento ancora. Clicca sull\'immagine per aggiungere un pin.</div>';
+  if (!currentComments.length) {
+    list.innerHTML = '<div style="padding:16px;text-align:center;color:#666;font-size:.7rem">Nessun commento. Clicca sull\'immagine per aggiungere un pin.</div>';
     return;
   }
 
-  let pinNum=0;
-  const topLevel=currentComments.filter(c=>!c.parent_comment_id);
-  list.innerHTML=topLevel.map(c=>{
-    const hasPin=c.pin_x!=null&&c.pin_y!=null;
-    if(hasPin)pinNum++;
-    const replies=currentComments.filter(r=>r.parent_comment_id===c.id);
-    const timeStr=formatTime(c.created_at);
-    return `<div class="comment-item${c.resolved?' resolved-comment':''}" id="comment-${c.id}" data-testid="comment-${c.id}">
+  let pinNum = 0;
+  const topLevel = currentComments.filter(c => !c.parent_comment_id);
+  list.innerHTML = topLevel.map(c => {
+    const hasPin = c.pin_x != null && c.pin_y != null;
+    if (hasPin) pinNum++;
+    const replies = currentComments.filter(r => r.parent_comment_id === c.id);
+    return `<div class="comment-item${c.resolved ? ' resolved-comment' : ''}" id="comment-${c.id}" data-testid="comment-${c.id}">
       <div class="comment-head">
-        ${hasPin?'<div class="comment-pin-num'+(c.resolved?' resolved':'')+'">'+pinNum+'</div>':''}
-        <span class="comment-author">${escHtml(c.author_name)}</span>
-        <span class="comment-time">${timeStr}</span>
+        ${hasPin ? '<div class="comment-pin-num' + (c.resolved ? ' resolved' : '') + '">' + pinNum + '</div>' : ''}
+        <span class="comment-author">${esc(c.author_name)}</span>
+        <span class="comment-time">${formatTime(c.created_at)}</span>
       </div>
-      <div class="comment-body">${escHtml(c.content)}</div>
+      <div class="comment-body">${esc(c.content)}</div>
       <div class="comment-actions">
-        <button class="comment-action-btn" data-testid="btn-resolve-${c.id}" onclick="resolveComment(${c.id},${!c.resolved})">${c.resolved?'Riapri':'Risolvi'}</button>
+        <button class="comment-action-btn" data-testid="btn-resolve-${c.id}" onclick="resolveComment(${c.id},${!c.resolved})">${c.resolved ? 'Riapri' : 'Risolvi'}</button>
         <button class="comment-action-btn" data-testid="btn-reply-${c.id}" onclick="startReply(${c.id})">Rispondi</button>
         <button class="comment-action-btn" data-testid="btn-delete-comment-${c.id}" onclick="deleteComment(${c.id})">Elimina</button>
       </div>
-      ${replies.map(r=>`<div style="margin:8px 0 0 28px;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.02);border:1px solid var(--paper-l)">
-        <div class="comment-head"><span class="comment-author">${escHtml(r.author_name)}</span><span class="comment-time">${formatTime(r.created_at)}</span></div>
-        <div class="comment-body">${escHtml(r.content)}</div>
+      ${replies.map(r => `<div style="margin:6px 0 0 24px;padding:6px 8px;border-radius:6px;background:rgba(255,255,255,.02);border:1px solid #222">
+        <div class="comment-head"><span class="comment-author">${esc(r.author_name)}</span><span class="comment-time">${formatTime(r.created_at)}</span></div>
+        <div class="comment-body">${esc(r.content)}</div>
       </div>`).join('')}
     </div>`;
   }).join('');
 }
 
-function formatTime(t){
-  if(!t)return '';
-  const d=new Date(t);
-  const now=new Date();
-  const diff=now-d;
-  if(diff<60000)return 'Ora';
-  if(diff<3600000)return Math.floor(diff/60000)+'m fa';
-  if(diff<86400000)return Math.floor(diff/3600000)+'h fa';
-  return d.toLocaleDateString('it-IT',{day:'numeric',month:'short'});
+function formatTime(t) {
+  if (!t) return '';
+  const d = new Date(t);
+  const now = new Date();
+  const diff = now - d;
+  if (diff < 60000) return 'Ora';
+  if (diff < 3600000) return Math.floor(diff / 60000) + 'm fa';
+  if (diff < 86400000) return Math.floor(diff / 3600000) + 'h fa';
+  return d.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
 }
 
-function renderApprovals(approvals){
-  const area=document.getElementById('approval-history-area');
-  if(!approvals||!approvals.length){area.innerHTML='';return;}
-  area.innerHTML=`<div class="approval-history" style="margin:12px">
-    <h4>Storico approvazioni</h4>
-    ${approvals.map(a=>`<div class="approval-entry">
-      <span class="approval-decision decision-${a.decision}">${a.decision==='approved'?'Approvato':a.decision==='changes_requested'?'Modifiche':a.decision==='rejected'?'Rifiutato':a.decision}</span>
-      <span style="flex:1;color:var(--paper-s)">${escHtml(a.reviewer_name)}</span>
-      <span style="color:var(--paper-m);font-size:.6rem">${formatTime(a.created_at)}</span>
-    </div>${a.note?'<div style="font-size:.68rem;color:var(--paper-m);padding:2px 0 4px 8px">'+escHtml(a.note)+'</div>':''}`).join('')}
-  </div>`;
+function highlightComment(id) {
+  document.querySelectorAll('.comment-item').forEach(c => c.classList.remove('highlighted'));
+  const el = document.getElementById('comment-' + id);
+  if (el) { el.classList.add('highlighted'); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+  document.querySelectorAll('.pin-marker').forEach(p => p.classList.remove('active-pin'));
+  const pin = document.querySelector('[data-testid="pin-' + id + '"]');
+  if (pin) pin.classList.add('active-pin');
 }
 
-function highlightComment(id){
-  document.querySelectorAll('.comment-item').forEach(c=>c.classList.remove('highlighted'));
-  const el=document.getElementById('comment-'+id);
-  if(el){el.classList.add('highlighted');el.scrollIntoView({behavior:'smooth',block:'center'})}
-  document.querySelectorAll('.pin-marker').forEach(p=>p.classList.remove('active-pin'));
-  const pin=document.querySelector('[data-testid="pin-'+id+'"]');
-  if(pin) pin.classList.add('active-pin');
-}
-
-function togglePinMode(){
-  pinMode=!pinMode;
-  const btn=document.getElementById('btn-pin-mode');
-  btn.classList.toggle('active',pinMode);
-  const img=document.getElementById('review-image');
-  if(img) img.style.cursor=pinMode?'crosshair':'default';
-  document.getElementById('pin-hint').textContent=pinMode?'Clicca sull\'immagine per posizionare un pin':'';
-}
-
-function onCanvasClick(e){
-  if(!pinMode)return;
-  const img=document.getElementById('review-image');
-  if(!img)return;
-  const rect=img.getBoundingClientRect();
-  const x=((e.clientX-rect.left)/rect.width*100).toFixed(2);
-  const y=((e.clientY-rect.top)/rect.height*100).toFixed(2);
-  pendingPin={x:parseFloat(x),y:parseFloat(y)};
-  document.getElementById('pin-hint').textContent='Pin posizionato a ('+x+'%, '+y+'%). Scrivi il commento.';
+function startReply(id) {
+  replyToId = id;
+  const c = currentComments.find(cc => cc.id === id);
+  document.getElementById('pin-hint').textContent = 'Rispondendo a ' + esc(c?.author_name || '') + '...';
   document.getElementById('comment-input').focus();
-  document.getElementById('btn-submit-comment').disabled=false;
+  document.getElementById('btn-submit-comment').disabled = false;
 }
 
-let replyToId=null;
-function startReply(id){
-  replyToId=id;
-  const c=currentComments.find(cc=>cc.id===id);
-  document.getElementById('pin-hint').textContent='Rispondendo a '+escHtml(c?.author_name||'')+'...';
-  document.getElementById('comment-input').focus();
-  document.getElementById('btn-submit-comment').disabled=false;
-}
-
-async function submitComment(){
-  const content=document.getElementById('comment-input').value.trim();
-  if(!content||!currentAsset)return;
-  try{
-    const body={
-      author_name:'Reviewer',
-      content:content,
-      pin_x:pendingPin?pendingPin.x:null,
-      pin_y:pendingPin?pendingPin.y:null,
-      parent_comment_id:replyToId||null
+async function submitComment() {
+  const content = document.getElementById('comment-input').value.trim();
+  if (!content || !currentRevision) return;
+  try {
+    const body = {
+      author_name: 'Reviewer',
+      content,
+      pin_x: pendingPin ? pendingPin.x : null,
+      pin_y: pendingPin ? pendingPin.y : null,
+      parent_comment_id: replyToId || null
     };
-    const res=await fetch('/api/review-assets/'+currentAsset.id+'/comments',{
-      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)
+    const res = await fetch('/api/revision-comments/' + currentRevision.id, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
     });
-    if(!res.ok) throw new Error('Errore');
-    document.getElementById('comment-input').value='';
-    pendingPin=null;
-    replyToId=null;
-    document.getElementById('pin-hint').textContent='';
-    document.getElementById('btn-submit-comment').disabled=true;
-    const comments=await fetch('/api/review-assets/'+currentAsset.id+'/comments').then(r=>r.json());
-    currentComments=comments;
+    if (!res.ok) throw new Error('Errore');
+    document.getElementById('comment-input').value = '';
+    pendingPin = null;
+    replyToId = null;
+    document.getElementById('pin-hint').textContent = '';
+    document.getElementById('btn-submit-comment').disabled = true;
+    const comments = await fetch('/api/revision-comments/' + currentRevision.id).then(r => r.json());
+    currentComments = comments;
     renderComments();
     renderPins();
-  }catch(e){console.error('Submit comment error:',e)}
+  } catch(e) { console.error(e); }
 }
 
-async function resolveComment(id,resolved){
-  try{
-    await fetch('/api/review-comments/'+id+'/resolve',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({resolved})});
-    const comments=await fetch('/api/review-assets/'+currentAsset.id+'/comments').then(r=>r.json());
-    currentComments=comments;
+async function resolveComment(id, resolved) {
+  try {
+    await fetch('/api/revision-comments/' + id + '/resolve', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ resolved }) });
+    const comments = await fetch('/api/revision-comments/' + currentRevision.id).then(r => r.json());
+    currentComments = comments;
     renderComments();
     renderPins();
-  }catch(e){console.error(e)}
+  } catch(e) { console.error(e); }
 }
 
-async function deleteComment(id){
-  if(!confirm('Eliminare questo commento?'))return;
-  try{
-    await fetch('/api/review-comments/'+id,{method:'DELETE'});
-    const comments=await fetch('/api/review-assets/'+currentAsset.id+'/comments').then(r=>r.json());
-    currentComments=comments;
+async function deleteComment(id) {
+  if (!confirm('Eliminare questo commento?')) return;
+  try {
+    await fetch('/api/revision-comments/' + id, { method: 'DELETE' });
+    const comments = await fetch('/api/revision-comments/' + currentRevision.id).then(r => r.json());
+    currentComments = comments;
     renderComments();
     renderPins();
-  }catch(e){console.error(e)}
+  } catch(e) { console.error(e); }
 }
 
-async function submitApproval(decision){
-  if(!currentAsset)return;
-  const note=decision==='changes_requested'?prompt('Nota per le modifiche richieste:'):'';
-  if(decision==='changes_requested'&&note===null)return;
-  try{
-    await fetch('/api/review-assets/'+currentAsset.id+'/approvals',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({reviewer_name:'Art Director',decision,note:note||null})
-    });
-    const [asset,approvals,assets]=await Promise.all([
-      fetch('/api/review-assets/'+currentAsset.id).then(r=>r.json()),
-      fetch('/api/review-assets/'+currentAsset.id+'/approvals').then(r=>r.json()),
-      fetch('/api/review-assets').then(r=>r.json())
-    ]);
-    currentAsset=asset;
-    allAssets=assets;
-    renderApprovals(approvals);
-    renderAssetList();
-  }catch(e){console.error(e)}
-}
-
-function openUploadModal(){
-  const sel=document.getElementById('uf-job');
-  sel.innerHTML='<option value="">-- Seleziona commessa --</option>';
-  allJobs.forEach(j=>{
-    const opt=document.createElement('option');
-    opt.value=j.id;
-    opt.textContent=(j.code||'')+' – '+(j.title||j.name);
-    sel.appendChild(opt);
-  });
-  document.getElementById('uf-title').value='';
-  document.getElementById('uf-file').value='';
-  document.getElementById('uf-file-info').textContent='';
-  document.getElementById('btn-do-upload').disabled=true;
-  document.getElementById('upload-modal').style.display='flex';
-}
-
-function closeUploadModal(){document.getElementById('upload-modal').style.display='none'}
-
-function onFileSelected(input){
-  if(input.files&&input.files[0]){
-    const f=input.files[0];
-    document.getElementById('uf-file-info').textContent=f.name+' ('+Math.round(f.size/1024)+'KB)';
-    checkUploadReady();
-  }
-}
-
-function checkUploadReady(){
-  const hasJob=document.getElementById('uf-job').value;
-  const hasTitle=document.getElementById('uf-title').value.trim();
-  const hasFile=document.getElementById('uf-file').files.length>0;
-  document.getElementById('btn-do-upload').disabled=!(hasJob&&hasTitle&&hasFile);
-}
-
-document.getElementById('uf-job').addEventListener('change',checkUploadReady);
-document.getElementById('uf-title').addEventListener('input',checkUploadReady);
-
-async function doUpload(){
-  const btn=document.getElementById('btn-do-upload');
-  btn.disabled=true;
-  btn.textContent='Caricamento...';
-  try{
-    const formData=new FormData();
-    formData.append('file',document.getElementById('uf-file').files[0]);
-    formData.append('job_id',document.getElementById('uf-job').value);
-    formData.append('title',document.getElementById('uf-title').value.trim());
-    const res=await fetch('/api/review-assets/upload',{method:'POST',body:formData});
-    if(!res.ok){const err=await res.json();throw new Error(err.error||'Upload failed')}
-    const asset=await res.json();
-    closeUploadModal();
-    const assets=await fetch('/api/review-assets').then(r=>r.json());
-    allAssets=assets;
-    renderAssetList();
-    selectAsset(asset.id);
-  }catch(e){
-    console.error('Upload error:',e);
-    alert('Errore: '+e.message);
-  }finally{
-    btn.disabled=false;
-    btn.textContent='Carica';
-  }
-}
-
-const dropzone=document.getElementById('uf-dropzone');
-dropzone.addEventListener('dragover',(e)=>{e.preventDefault();dropzone.classList.add('dragover')});
-dropzone.addEventListener('dragleave',()=>dropzone.classList.remove('dragover'));
-dropzone.addEventListener('drop',(e)=>{
-  e.preventDefault();dropzone.classList.remove('dragover');
-  if(e.dataTransfer.files.length){
-    document.getElementById('uf-file').files=e.dataTransfer.files;
-    onFileSelected(document.getElementById('uf-file'));
-  }
-});
-
-document.getElementById('comment-input').addEventListener('input',function(){
-  document.getElementById('btn-submit-comment').disabled=!this.value.trim();
+document.getElementById('comment-input').addEventListener('input', function() {
+  document.getElementById('btn-submit-comment').disabled = !this.value.trim();
 });
 
 init();

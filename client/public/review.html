@@ -61,7 +61,7 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
 .close-viewer-btn:hover{color:#fff;border-color:#666}
 
 .viewer-canvas-wrap{flex:1;position:relative;overflow:hidden;background:#0a0a12}
-.viewer-canvas{position:absolute;inset:0;overflow:auto}
+.viewer-canvas{position:absolute;inset:0;overflow:auto;cursor:grab}
 .canvas-container{position:relative;transform-origin:0 0;display:block}
 .canvas-container img{display:block;user-select:none;-webkit-user-drag:none}
 .draw-svg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:4}
@@ -350,11 +350,10 @@ function closeViewer(){document.getElementById('viewer-panel').classList.remove(
 function zoomFit(){
   const cv=document.getElementById('viewer-canvas'),img=document.getElementById('review-image');
   if(!cv||!img||!img.naturalWidth)return;
-  const cw=cv.clientWidth,ch=cv.clientHeight;
-  zoomScale=Math.min(cw/img.naturalWidth,ch/img.naturalHeight,1);
+  const vw=cv.clientWidth,vh=cv.clientHeight;
+  zoomScale=Math.min(vw/img.naturalWidth,vh/img.naturalHeight,1);
   applyZoom();
-  cv.scrollLeft=(cv.scrollWidth-cw)/2;
-  cv.scrollTop=(cv.scrollHeight-ch)/2;
+  cv.scrollLeft=0;cv.scrollTop=0;
 }
 function zoomSet(s){
   const cv=document.getElementById('viewer-canvas'),img=document.getElementById('review-image');
@@ -399,6 +398,27 @@ document.getElementById('viewer-canvas').addEventListener('wheel',function(e){
   cv.scrollTop=imgPtY*zoomScale+newPadY-(e.clientY-rect.top);
 },{passive:false});
 
+let isPanning=false,panStartX=0,panStartY=0,panScrollX=0,panScrollY=0;
+(function setupPan(){
+  const cv=document.getElementById('viewer-canvas');
+  cv.addEventListener('mousedown',e=>{
+    if(currentTool)return;
+    if(e.button!==0)return;
+    if(e.target.closest('.nav-arrow,.zoom-bar,.pin-marker'))return;
+    isPanning=true;panStartX=e.clientX;panStartY=e.clientY;
+    panScrollX=cv.scrollLeft;panScrollY=cv.scrollTop;
+    cv.style.cursor='grabbing';e.preventDefault();
+  });
+  window.addEventListener('mousemove',e=>{
+    if(!isPanning)return;
+    cv.scrollLeft=panScrollX-(e.clientX-panStartX);
+    cv.scrollTop=panScrollY-(e.clientY-panStartY);
+  });
+  window.addEventListener('mouseup',()=>{
+    if(!isPanning)return;isPanning=false;cv.style.cursor='';
+  });
+})();
+
 function navImage(dir){if(!currentRevision)return;const idx=filteredRevisions.findIndex(r=>r.id===currentRevision.id);const n=idx+dir;if(n>=0&&n<filteredRevisions.length)openViewer(filteredRevisions[n].id)}
 document.addEventListener('keydown',e=>{
   if(!currentRevision)return;if(e.target.tagName==='TEXTAREA'||e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;
@@ -415,7 +435,9 @@ function updateToolButtons(){
   const svg=document.getElementById('draw-svg');
   if(svg)svg.classList.toggle('drawing',currentTool&&currentTool!=='pin');
   const img=document.getElementById('review-image');
-  if(img)img.style.cursor=currentTool==='pin'?'crosshair':'default';
+  if(img)img.style.cursor=currentTool==='pin'?'crosshair':'';
+  const cv=document.getElementById('viewer-canvas');
+  if(cv)cv.style.cursor=currentTool?'default':'grab';
   document.getElementById('pin-hint').textContent=currentTool==='pin'?"Clicca sull'immagine per posizionare un pin":currentTool?'Disegna sull\'immagine':'';
 }
 function setDrawColor(c,el){drawColor=c;document.querySelectorAll('.draw-color-swatch').forEach(s=>s.classList.remove('active'));if(el)el.classList.add('active')}

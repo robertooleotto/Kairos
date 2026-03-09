@@ -64,6 +64,7 @@ table.sheet td.col-image-name .cell{font-family:'Sora',sans-serif;font-size:.72r
 table.sheet td.col-phase .cell{text-align:center;font-family:'JetBrains Mono',monospace;font-size:.65rem}
 table.sheet td.col-phase .cell.val-0{color:var(--paper-l)}
 table.sheet td.col-phase .cell.val-pos{color:#22c55e}
+table.sheet td.col-phase.phase-done{background:rgba(34,197,94,.12)!important}
 table.sheet td.col-note .cell,
 table.sheet td.col-desc .cell{max-width:350px;overflow:hidden;text-overflow:ellipsis;color:var(--paper-m);font-size:.62rem}
 table.sheet td.col-pct .cell{text-align:center;font-family:'JetBrains Mono',monospace;font-size:.62rem}
@@ -149,10 +150,20 @@ tr[data-color="gray"] td{background:rgba(107,114,128,.12)!important;border-color
 tr.selected td{outline:2px solid var(--accent);outline-offset:-2px}
 .row-select-cb{width:14px;height:14px;accent-color:var(--accent);cursor:pointer}
 
-.phase-check{width:18px;height:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:4px;margin:0 auto;transition:all .15s}
-.phase-check.checked{color:#22c55e}
+.phase-check{width:22px;height:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:5px;margin:0 auto;transition:all .15s}
+.phase-check.checked{background:#22c55e;color:#fff;box-shadow:0 1px 4px rgba(34,197,94,.3)}
 .phase-check.unchecked{color:var(--paper-l)}
-.phase-check svg{width:16px;height:16px}
+.phase-check svg{width:18px;height:18px}
+
+.phase-count{display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:700;cursor:pointer;margin:0 auto;min-width:22px;height:22px;border-radius:5px;transition:all .15s}
+.phase-count.has-val{color:var(--accent);background:rgba(99,102,241,.08)}
+.phase-count.no-val{color:var(--paper-l)}
+.phase-count:hover{background:rgba(99,102,241,.15)}
+
+.note-badge{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;border-radius:10px;font-size:.58rem;font-weight:700;font-family:'JetBrains Mono',monospace;cursor:default}
+.note-badge.has-note{background:rgba(245,158,11,.12);color:#d97706;border:1px solid rgba(245,158,11,.2)}
+.note-badge.no-note{color:var(--paper-l)}
+.note-tooltip{display:none;position:fixed;z-index:200;background:#fff;border:1px solid var(--paper-l);border-radius:8px;padding:8px 12px;box-shadow:0 6px 24px rgba(0,0,0,.12);font-size:.65rem;color:var(--paper-s);max-width:280px;white-space:pre-wrap;line-height:1.5;pointer-events:none}
 
 .delete-mode tr[data-id] .row-actions{opacity:1!important;display:flex!important}
 table.sheet:not(.delete-mode) tr[data-id] .row-actions{display:none}
@@ -421,6 +432,7 @@ th.col-detail.collapsed .th-inner{display:none}
 </div>
 
 <!-- Lightbox -->
+<div class="note-tooltip" id="note-tooltip"></div>
 <div class="lightbox-overlay" id="lightbox">
   <button class="lb-close" onclick="closeLightbox()" data-testid="button-close-lightbox">&times;</button>
   <img id="lb-img" src="" alt="">
@@ -561,7 +573,7 @@ function renderElencoImmagini() {
   document.getElementById('stats-bar').style.display = 'flex';
 
   const dc = detailsCollapsed ? ' collapsed' : '';
-  const totalCols = 11 + columns.length + 2;
+  const totalCols = 11 + columns.length + 3;
   const groups = {};
   columns.forEach(c => {
     if (!groups[c.column_group]) groups[c.column_group] = [];
@@ -570,7 +582,7 @@ function renderElencoImmagini() {
 
   let gh = '<tr><th colspan="4"></th><th class="col-detail' + dc + '" colspan="5"></th><th></th>';
   Object.keys(groups).forEach(g => { gh += `<th class="group-header" colspan="${groups[g].length}">${g}</th>`; });
-  gh += '<th colspan="2"></th><th></th></tr>';
+  gh += '<th colspan="3"></th><th></th></tr>';
 
   let h = '<tr>';
   h += '<th><div class="th-inner"><input type="checkbox" class="row-select-cb" onchange="toggleSelectAll(this)" data-testid="checkbox-select-all" title="Seleziona tutto"></div></th>';
@@ -583,7 +595,7 @@ function renderElencoImmagini() {
   h += `<th class="col-detail${dc}"><div class="th-inner">Or.</div></th>`;
   h += '<th><div class="th-inner">Immagini</div></th>';
   columns.forEach(c => { h += `<th><div class="th-inner" title="${c.column_group}: ${c.name}">${c.name}</div></th>`; });
-  h += '<th><div class="th-inner">% Mod.</div></th><th><div class="th-inner">Note</div></th><th><div class="th-inner"></div></th></tr>';
+  h += '<th><div class="th-inner">% Mod.</div></th><th style="width:30px"><div class="th-inner" title="Numero note">📝</div></th><th><div class="th-inner">Note</div></th><th><div class="th-inner"></div></th></tr>';
   thead.innerHTML = gh + h;
 
   const btn = document.getElementById('btn-toggle-details');
@@ -618,12 +630,22 @@ function renderElencoImmagini() {
     const nameLabel = '';
     b += `<td class="col-image-name editable" data-field="image_name" data-id="${img.id}" data-api="images"><div class="cell">${thumbHtml}${nameLabel}${esc(img.image_name)}</div></td>`;
 
+    const COUNT_COLS = ['revisioni', 'rifacimenti'];
     columns.forEach(c => {
       const val = pv[c.column_key] !== undefined ? pv[c.column_key] : 0;
-      const checked = val == 1;
-      b += `<td class="col-phase" data-field="${esc(c.column_key)}" data-id="${img.id}" data-type="phase" data-api="images"><div class="cell" style="justify-content:center"><div class="phase-check ${checked ? 'checked' : 'unchecked'}" onclick="togglePhaseCheck(${img.id},'${esc(c.column_key)}',${val})" data-testid="check-${c.column_key}-${img.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">${checked ? '<path d="M20 6L9 17l-5-5"/>' : '<path d="M20 6L9 17l-5-5" opacity=".2"/>'}</svg></div></div></td>`;
+      if (COUNT_COLS.includes(c.column_key)) {
+        const numVal = parseInt(val) || 0;
+        b += `<td class="col-phase" data-field="${esc(c.column_key)}" data-id="${img.id}" data-type="phase" data-api="images"><div class="cell" style="justify-content:center"><div class="phase-count ${numVal > 0 ? 'has-val' : 'no-val'}" onclick="promptPhaseCount(${img.id},'${esc(c.column_key)}',${numVal})" data-testid="count-${c.column_key}-${img.id}">${numVal > 0 ? numVal : '—'}</div></div></td>`;
+      } else {
+        const checked = val >= 1;
+        b += `<td class="col-phase${checked ? ' phase-done' : ''}" data-field="${esc(c.column_key)}" data-id="${img.id}" data-type="phase" data-api="images"><div class="cell" style="justify-content:center"><div class="phase-check ${checked ? 'checked' : 'unchecked'}" onclick="togglePhaseCheck(${img.id},'${esc(c.column_key)}',${val})" data-testid="check-${c.column_key}-${img.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">${checked ? '<path d="M20 6L9 17l-5-5"/>' : '<path d="M20 6L9 17l-5-5" opacity=".2"/>'}</svg></div></div></td>`;
+      }
     });
     b += `<td class="col-pct editable" data-field="percentuale_modifica" data-id="${img.id}" data-type="number" data-api="images"><div class="cell">${img.percentuale_modifica || ''}</div></td>`;
+    const noteText = img.note || '';
+    const noteLines = noteText ? noteText.split(/\n/).filter(Boolean).length : 0;
+    const noteCount = noteText ? (noteLines || 1) : 0;
+    b += `<td style="width:30px;text-align:center"><div class="cell" style="justify-content:center"><span class="note-badge ${noteCount > 0 ? 'has-note' : 'no-note'}" data-note="${esc(noteText)}" data-testid="note-badge-${img.id}">${noteCount > 0 ? noteCount : ''}</span></div></td>`;
     b += `<td class="col-note editable" data-field="note" data-id="${img.id}" data-api="images"><div class="cell">${esc(img.note)}</div></td>`;
     b += '<td></td></tr>';
 
@@ -819,6 +841,27 @@ document.addEventListener('keydown', function(e) {
   if (e.key === 'ArrowLeft') lbPrev();
   if (e.key === 'ArrowRight') lbNext();
 });
+
+(function() {
+  const tip = document.getElementById('note-tooltip');
+  document.addEventListener('mouseover', function(e) {
+    const badge = e.target.closest('.note-badge.has-note');
+    if (badge) {
+      const noteText = badge.getAttribute('data-note') || '';
+      if (!noteText) return;
+      tip.textContent = noteText;
+      tip.style.display = 'block';
+      const r = badge.getBoundingClientRect();
+      tip.style.left = Math.min(r.left, window.innerWidth - 300) + 'px';
+      tip.style.top = (r.bottom + 6) + 'px';
+    }
+  });
+  document.addEventListener('mouseout', function(e) {
+    if (e.target.closest('.note-badge')) {
+      tip.style.display = 'none';
+    }
+  });
+})();
 
 // ──── BATCH UPLOAD ────────────────────────────
 
@@ -1238,7 +1281,22 @@ function toggleDeleteMode() {
 // ──── PHASE CHECK TOGGLE ────────────────────────────
 
 async function togglePhaseCheck(imageId, fieldKey, currentVal) {
-  const newVal = currentVal == 1 ? 0 : 1;
+  const newVal = currentVal >= 1 ? 0 : 1;
+  const img = images.find(i => i.id === imageId);
+  if (img) {
+    if (!img.phase_values) img.phase_values = {};
+    img.phase_values[fieldKey] = newVal;
+  }
+  try {
+    await fetch(`/api/foglio-images/${imageId}/cell`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ field: fieldKey, value: newVal }) });
+  } catch(e) { console.error(e); }
+  renderElencoImmagini();
+}
+
+async function promptPhaseCount(imageId, fieldKey, currentVal) {
+  const input = prompt(`Numero di ${fieldKey}:`, currentVal || 0);
+  if (input === null) return;
+  const newVal = Math.max(0, parseInt(input) || 0);
   const img = images.find(i => i.id === imageId);
   if (img) {
     if (!img.phase_values) img.phase_values = {};

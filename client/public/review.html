@@ -63,7 +63,7 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
 .viewer-canvas-wrap{flex:1;position:relative;overflow:hidden;background:#0a0a12}
 .viewer-canvas{position:absolute;inset:0;overflow:auto;cursor:grab}
 .canvas-container{position:relative;transform-origin:0 0;display:block}
-.canvas-container img{display:block;user-select:none;-webkit-user-drag:none}
+.canvas-container img{display:block;user-select:none;-webkit-user-drag:none;width:100%;height:100%}
 .draw-svg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:4}
 .draw-svg.drawing{pointer-events:auto;cursor:crosshair}
 .draw-svg line,.draw-svg rect,.draw-svg ellipse,.draw-svg polyline,.draw-svg path{stroke-linecap:round;stroke-linejoin:round}
@@ -340,7 +340,11 @@ async function openViewer(revId){
   const container=document.getElementById('canvas-container');
   container.innerHTML=`<img id="review-image" data-testid="review-image" src="${esc(rev.file_url)}"><svg class="draw-svg" id="draw-svg" xmlns="http://www.w3.org/2000/svg"></svg>`;
   const imgEl=document.getElementById('review-image');
-  imgEl.onload=()=>{zoomFit();renderPins();renderDrawShapes()};
+  imgEl.onload=()=>{
+    container.style.width=imgEl.naturalWidth+'px';
+    container.style.height=imgEl.naturalHeight+'px';
+    zoomFit();renderPins();renderDrawShapes();
+  };
   zoomScale=1;
   try{const cr=await fetch('/api/revision-comments/'+rev.id);currentComments=cr.ok?await cr.json():[];}catch(e){currentComments=[]}
   renderComments();renderGallery();
@@ -443,10 +447,11 @@ function updateToolButtons(){
 function setDrawColor(c,el){drawColor=c;document.querySelectorAll('.draw-color-swatch').forEach(s=>s.classList.remove('active'));if(el)el.classList.add('active')}
 
 function getImgCoords(e){
-  const img=document.getElementById('review-image');if(!img)return null;
+  const img=document.getElementById('review-image');if(!img||!img.naturalWidth)return null;
   const r=img.getBoundingClientRect();
-  return{x:e.clientX-r.left,y:e.clientY-r.top,px:(e.clientX-r.left)/r.width*100,py:(e.clientY-r.top)/r.height*100,
-    imgX:(e.clientX-r.left)/zoomScale,imgY:(e.clientY-r.top)/zoomScale};
+  const rx=(e.clientX-r.left)/r.width, ry=(e.clientY-r.top)/r.height;
+  if(rx<0||rx>1||ry<0||ry>1)return null;
+  return{px:rx*100, py:ry*100, imgX:rx*img.naturalWidth, imgY:ry*img.naturalHeight};
 }
 
 

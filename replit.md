@@ -13,6 +13,7 @@ Project management tool for NuDesign creative studio. Manages jobs (commesse), t
   - `clienti.html` - Client management
   - `review.html` - Wrike-style proofing/review with side-by-side version comparison
   - `foglio-lavoro.html` - Production tracker with drag & drop reorder, quick filters, CSV/PDF export
+  - `sprint.html` - Sprint board: weekly planning board with 18 department columns, editable cards (drag & drop between columns), week navigation, duplicate sprint, CSV export, print
   - `report.html` - Reports
   - `status.html` - Status overview
   - `database.html` - Database schema viewer
@@ -61,6 +62,7 @@ Project management tool for NuDesign creative studio. Manages jobs (commesse), t
 - `review_approvals` - Approval decisions on assets
 - `revision_comments` - Comments on foglio revisions (shape_type, shape_data JSONB, department_id, sent)
 - `calendar_sync_events` - Tracks Google Calendar sync state per phase
+- `sprint_items` - Sprint board cards (sprint_date, column_key, job_id, title, assignees, content, sort_order)
 - `foglio_revisions` - Revision files for foglio images
 - `foglio_images` - Image rows in foglio lavoro
 - `foglio_columns` - Custom phase columns per job

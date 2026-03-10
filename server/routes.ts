@@ -1210,5 +1210,87 @@ export async function registerRoutes(
     res.json({ ok: true });
   });
 
+  await query(`CREATE TABLE IF NOT EXISTS sprint_items (
+    id SERIAL PRIMARY KEY,
+    sprint_date DATE NOT NULL,
+    column_key TEXT NOT NULL,
+    job_id TEXT,
+    title TEXT NOT NULL DEFAULT '',
+    assignees TEXT DEFAULT '',
+    content TEXT DEFAULT '',
+    sort_order INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+  )`);
+  await query(`CREATE INDEX IF NOT EXISTS idx_sprint_items_date ON sprint_items(sprint_date, column_key, sort_order)`);
+
+  app.get("/api/sprint", async (req, res) => {
+    const { date } = req.query;
+    if (!date) return res.status(400).json({ error: "date required" });
+    const rows = await query(
+      "SELECT * FROM sprint_items WHERE sprint_date=$1 ORDER BY column_key, sort_order",
+      [date]
+    );
+    res.json(rows);
+  });
+
+  app.post("/api/sprint", async (req, res) => {
+    const { sprint_date, column_key, job_id, title, assignees, content, sort_order } = req.body;
+    if (!sprint_date || !column_key) return res.status(400).json({ error: "sprint_date and column_key required" });
+    const rows = await query(
+      `INSERT INTO sprint_items (sprint_date, column_key, job_id, title, assignees, content, sort_order)
+       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+      [sprint_date, column_key, job_id || null, title || '', assignees || '', content || '', sort_order || 0]
+    );
+    res.json(rows[0]);
+  });
+
+  app.patch("/api/sprint/:id", async (req, res) => {
+    const { title, assignees, content, sort_order, column_key, job_id } = req.body;
+    const sets: string[] = [];
+    const vals: any[] = [];
+    let idx = 1;
+    if (title !== undefined) { sets.push(`title=$${idx++}`); vals.push(title); }
+    if (assignees !== undefined) { sets.push(`assignees=$${idx++}`); vals.push(assignees); }
+    if (content !== undefined) { sets.push(`content=$${idx++}`); vals.push(content); }
+    if (sort_order !== undefined) { sets.push(`sort_order=$${idx++}`); vals.push(sort_order); }
+    if (column_key !== undefined) { sets.push(`column_key=$${idx++}`); vals.push(column_key); }
+    if (job_id !== undefined) { sets.push(`job_id=$${idx++}`); vals.push(job_id); }
+    sets.push(`updated_at=NOW()`);
+    vals.push(req.params.id);
+    const rows = await query(
+      `UPDATE sprint_items SET ${sets.join(',')} WHERE id=$${idx} RETURNING *`,
+      vals
+    );
+    res.json(rows[0] || { error: "not found" });
+  });
+
+  app.delete("/api/sprint/:id", async (req, res) => {
+    await query("DELETE FROM sprint_items WHERE id=$1", [req.params.id]);
+    res.json({ ok: true });
+  });
+
+  app.post("/api/sprint/duplicate", async (req, res) => {
+    const { from_date, to_date } = req.body;
+    if (!from_date || !to_date) return res.status(400).json({ error: "from_date and to_date required" });
+    const existing = await query("SELECT COUNT(*) as c FROM sprint_items WHERE sprint_date=$1", [to_date]);
+    if (parseInt(existing[0].c) > 0) return res.status(409).json({ error: "Target sprint already has items" });
+    await query(
+      `INSERT INTO sprint_items (sprint_date, column_key, job_id, title, assignees, content, sort_order)
+       SELECT $2, column_key, job_id, title, assignees, content, sort_order
+       FROM sprint_items WHERE sprint_date=$1`,
+      [from_date, to_date]
+    );
+    const rows = await query("SELECT * FROM sprint_items WHERE sprint_date=$1 ORDER BY column_key, sort_order", [to_date]);
+    res.json(rows);
+  });
+
+  app.get("/api/sprint/dates", async (_req, res) => {
+    const rows = await query(
+      "SELECT DISTINCT sprint_date FROM sprint_items ORDER BY sprint_date DESC LIMIT 52"
+    );
+    res.json(rows.map((r: any) => r.sprint_date));
+  });
+
   return httpServer;
 }

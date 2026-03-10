@@ -77,6 +77,56 @@ export async function getEvents(calendarId: string, timeMin: string, timeMax: st
   }));
 }
 
+export async function createEvent(calendarId: string, event: {
+  summary: string;
+  description?: string;
+  start: string;
+  end: string;
+  allDay?: boolean;
+}) {
+  const calendar = await getUncachableGoogleCalendarClient();
+  const startEnd = event.allDay
+    ? { start: { date: event.start }, end: { date: event.end } }
+    : { start: { dateTime: event.start, timeZone: 'Europe/Rome' }, end: { dateTime: event.end, timeZone: 'Europe/Rome' } };
+  const res = await calendar.events.insert({
+    calendarId,
+    requestBody: {
+      summary: event.summary,
+      description: event.description || '',
+      ...startEnd,
+    },
+  });
+  return res.data;
+}
+
+export async function updateEvent(calendarId: string, eventId: string, event: {
+  summary: string;
+  description?: string;
+  start: string;
+  end: string;
+  allDay?: boolean;
+}) {
+  const calendar = await getUncachableGoogleCalendarClient();
+  const startEnd = event.allDay
+    ? { start: { date: event.start }, end: { date: event.end } }
+    : { start: { dateTime: event.start, timeZone: 'Europe/Rome' }, end: { dateTime: event.end, timeZone: 'Europe/Rome' } };
+  const res = await calendar.events.update({
+    calendarId,
+    eventId,
+    requestBody: {
+      summary: event.summary,
+      description: event.description || '',
+      ...startEnd,
+    },
+  });
+  return res.data;
+}
+
+export async function deleteEvent(calendarId: string, eventId: string) {
+  const calendar = await getUncachableGoogleCalendarClient();
+  await calendar.events.delete({ calendarId, eventId });
+}
+
 export async function checkAvailability(calendarIds: string[], date: string) {
   const timeMin = `${date}T00:00:00+01:00`;
   const timeMax = `${date}T23:59:59+01:00`;

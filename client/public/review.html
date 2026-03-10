@@ -155,7 +155,35 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
 
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;padding:10px 20px;border-radius:8px;font-size:.75rem;font-weight:600;z-index:999;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.show{opacity:1}
+
+.compare-overlay{position:fixed;inset:0;background:#0a0a12;z-index:200;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .15s}
+.compare-overlay.open{opacity:1;pointer-events:auto}
+.compare-toolbar{padding:8px 18px;background:#111;border-bottom:1px solid #222;display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex-shrink:0}
+.compare-toolbar .viewer-title{margin-right:8px}
+.compare-toolbar select{background:rgba(255,255,255,.05);border:1px solid #333;border-radius:5px;padding:4px 8px;color:#bbb;font-family:'Sora',sans-serif;font-size:.65rem;cursor:pointer;outline:none;min-width:120px}
+.compare-toolbar select:focus{border-color:var(--accent)}
+.compare-toolbar select option{background:#111;color:#bbb}
+.compare-toolbar .compare-mode-btns{display:flex;gap:3px;margin-left:auto}
+.compare-body{flex:1;display:flex;overflow:hidden;min-height:0;position:relative}
+.compare-pane{flex:1;position:relative;overflow:hidden;border-right:1px solid #333}
+.compare-pane:last-child{border-right:none}
+.compare-pane-label{position:absolute;top:8px;left:8px;z-index:10;background:rgba(0,0,0,.65);color:#ccc;padding:3px 10px;border-radius:5px;font-size:.6rem;font-weight:600;backdrop-filter:blur(6px);pointer-events:none}
+.compare-pane-scroll{width:100%;height:100%;overflow:auto;cursor:grab}
+.compare-pane-scroll.grabbing{cursor:grabbing}
+.compare-pane-container{transform-origin:0 0;position:relative;display:block}
+.compare-pane-container img{display:block;user-select:none;-webkit-user-drag:none;width:100%;height:100%}
+.compare-zoom-bar{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:3px;z-index:15;background:rgba(0,0,0,.65);border-radius:8px;padding:4px;backdrop-filter:blur(8px)}
+.compare-divider{width:3px;background:#333;cursor:col-resize;flex-shrink:0;position:relative;z-index:5}
+.compare-divider:hover,.compare-divider.dragging{background:var(--accent)}
+.compare-overlay-mode{position:relative;flex:1;overflow:hidden}
+.compare-overlay-mode .compare-pane-scroll{position:absolute;inset:0}
+.compare-overlay-mode .compare-pane-scroll:last-child{mix-blend-mode:difference}
+.overlay-slider-wrap{position:absolute;bottom:50px;left:50%;transform:translateX(-50%);z-index:20;background:rgba(0,0,0,.65);border-radius:8px;padding:6px 14px;backdrop-filter:blur(8px);display:flex;align-items:center;gap:8px}
+.overlay-slider-wrap label{color:#888;font-size:.58rem;font-weight:600;white-space:nowrap}
+.overlay-slider-wrap input[type=range]{width:120px;cursor:pointer}
 </style>
+<script src="auth-guard.js"></script>
+<script src="notifications.js" defer></script>
 </head>
 <body>
 
@@ -241,6 +269,11 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
         <button class="stroke-opt" onclick="setStrokeWidth(7,this)" data-testid="stroke-thick" title="Spesso"><div class="stroke-line" style="height:4px"></div></button>
         <button class="stroke-opt" onclick="setStrokeWidth(12,this)" data-testid="stroke-extra" title="Extra"><div class="stroke-line" style="height:6px"></div></button>
       </div>
+      <div class="tool-sep"></div>
+      <button class="tool-btn" id="btn-compare" data-testid="btn-compare" onclick="openCompare()" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="8" height="18" rx="1"/><rect x="14" y="3" width="8" height="18" rx="1"/></svg>
+        Confronta
+      </button>
       <div style="flex:1"></div>
       <button class="close-viewer-btn" onclick="closeViewer()" data-testid="btn-close-viewer">&times;</button>
     </div>
@@ -310,6 +343,55 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+<div class="compare-overlay" id="compare-overlay">
+  <div class="compare-toolbar">
+    <div class="viewer-title" data-testid="text-compare-title">Confronto versioni</div>
+    <div class="tool-sep"></div>
+    <span style="color:#888;font-size:.62rem">Sinistra:</span>
+    <select id="compare-left-select" data-testid="select-compare-left" onchange="onCompareVersionChange()"></select>
+    <span style="color:#888;font-size:.62rem">Destra:</span>
+    <select id="compare-right-select" data-testid="select-compare-right" onchange="onCompareVersionChange()"></select>
+    <div class="tool-sep"></div>
+    <div class="compare-mode-btns">
+      <button class="tool-btn active" id="btn-mode-side" data-testid="btn-mode-side" onclick="setCompareMode('side')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="8" height="18" rx="1"/><rect x="14" y="3" width="8" height="18" rx="1"/></svg>
+        Affiancato
+      </button>
+      <button class="tool-btn" id="btn-mode-overlay" data-testid="btn-mode-overlay" onclick="setCompareMode('overlay')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="12" x2="21" y2="12"/></svg>
+        Sovrapposizione
+      </button>
+      <button class="tool-btn" id="btn-sync-scroll" data-testid="btn-sync-scroll" onclick="toggleSyncScroll()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7l4-4 4 4"/><path d="M8 17l4 4 4-4"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
+        Sync
+      </button>
+    </div>
+    <button class="close-viewer-btn" onclick="closeCompare()" data-testid="btn-close-compare">&times;</button>
+  </div>
+  <div class="compare-body" id="compare-body">
+    <div class="compare-pane" id="compare-pane-left">
+      <div class="compare-pane-label" id="compare-label-left" data-testid="text-compare-label-left"></div>
+      <div class="compare-pane-scroll" id="compare-scroll-left">
+        <div class="compare-pane-container" id="compare-container-left"></div>
+      </div>
+    </div>
+    <div class="compare-divider" id="compare-divider"></div>
+    <div class="compare-pane" id="compare-pane-right">
+      <div class="compare-pane-label" id="compare-label-right" data-testid="text-compare-label-right"></div>
+      <div class="compare-pane-scroll" id="compare-scroll-right">
+        <div class="compare-pane-container" id="compare-container-right"></div>
+      </div>
+    </div>
+  </div>
+  <div class="compare-zoom-bar" data-testid="compare-zoom-controls">
+    <button class="zoom-btn" onclick="doCompareZoom(-1)" data-testid="btn-compare-zoom-out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+    <span class="zoom-label" id="compare-zoom-label" data-testid="text-compare-zoom">100%</span>
+    <button class="zoom-btn" onclick="doCompareZoom(1)" data-testid="btn-compare-zoom-in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+    <button class="zoom-btn" onclick="compareZoomFit()" data-testid="btn-compare-zoom-fit">Fit</button>
+    <button class="zoom-btn" onclick="compareZoomSet(1)" data-testid="btn-compare-zoom-100">1:1</button>
   </div>
 </div>
 
@@ -436,7 +518,7 @@ async function openViewer(revId){
   };
   zoomScale=1;
   try{const cr=await fetch('/api/revision-comments/'+rev.id);currentComments=cr.ok?await cr.json():[];}catch(e){currentComments=[]}
-  renderComments();renderGallery();
+  renderComments();renderGallery();updateCompareButton();
   if(imageLoaded){renderPins();renderDrawShapes()}
 }
 function closeViewer(){document.getElementById('viewer-panel').classList.remove('open');currentRevision=null;imageLoaded=false;hideTooltip();renderGallery()}
@@ -506,6 +588,7 @@ let isPanning=false,panStartX=0,panStartY=0,panScrollX=0,panScrollY=0;
 
 function navImage(dir){if(!currentRevision)return;const idx=filteredRevisions.findIndex(r=>r.id===currentRevision.id);const n=idx+dir;if(n>=0&&n<filteredRevisions.length)openViewer(filteredRevisions[n].id)}
 document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&document.getElementById('compare-overlay').classList.contains('open')){closeCompare();return}
   if(!currentRevision)return;if(e.target.tagName==='TEXTAREA'||e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;
   if(e.key==='ArrowLeft')navImage(-1);if(e.key==='ArrowRight')navImage(1);if(e.key==='Escape'){if(pendingShape){cancelPendingShape();return}closeViewer()}
   if(e.key==='+'||e.key==='='){e.preventDefault();doZoom(1)}if(e.key==='-'){e.preventDefault();doZoom(-1)}
@@ -770,6 +853,212 @@ document.addEventListener('click',function(e){
     document.getElementById('comment-input').focus();document.getElementById('btn-submit-comment').disabled=false;
   }
 });
+
+let compareMode='side';
+let compareSyncScroll=true;
+let compareZoomScale=1;
+let compareVersions=[];
+let compareSyncing=false;
+let compareOverlayOpacity=0.5;
+
+function getVersionsForImage(rev){
+  if(!rev)return[];
+  return allRevisions.filter(r=>r.foglio_image_id===rev.foglio_image_id&&r.file_type==='image').sort((a,b)=>a.version-b.version);
+}
+
+function updateCompareButton(){
+  const btn=document.getElementById('btn-compare');
+  if(!currentRevision){btn.style.display='none';return}
+  const versions=getVersionsForImage(currentRevision);
+  btn.style.display=versions.length>1?'':'none';
+}
+
+function openCompare(){
+  if(!currentRevision)return;
+  compareVersions=getVersionsForImage(currentRevision);
+  if(compareVersions.length<2)return;
+  const leftSel=document.getElementById('compare-left-select');
+  const rightSel=document.getElementById('compare-right-select');
+  leftSel.innerHTML='';rightSel.innerHTML='';
+  const imgData=allImages.find(i=>i.id===currentRevision.foglio_image_id);
+  const imgName=imgData?imgData.image_name:'Immagine';
+  document.getElementById('compare-overlay').querySelector('.viewer-title').textContent='Confronto: '+esc(imgName);
+  compareVersions.forEach(v=>{
+    const txt='v'+v.version+' — '+esc(v.title);
+    const oL=document.createElement('option');oL.value=v.id;oL.textContent=txt;leftSel.appendChild(oL);
+    const oR=document.createElement('option');oR.value=v.id;oR.textContent=txt;rightSel.appendChild(oR);
+  });
+  const curIdx=compareVersions.findIndex(v=>v.id===currentRevision.id);
+  if(curIdx>0){leftSel.value=compareVersions[curIdx-1].id;rightSel.value=compareVersions[curIdx].id}
+  else{leftSel.value=compareVersions[0].id;rightSel.value=compareVersions[compareVersions.length-1].id}
+  compareMode='side';compareSyncScroll=true;compareZoomScale=1;
+  document.getElementById('btn-mode-side').classList.add('active');
+  document.getElementById('btn-mode-overlay').classList.remove('active');
+  document.getElementById('btn-sync-scroll').classList.add('active');
+  document.getElementById('compare-overlay').classList.add('open');
+  onCompareVersionChange();
+  setupComparePanning();
+  setupCompareWheelZoom();
+}
+
+function closeCompare(){
+  document.getElementById('compare-overlay').classList.remove('open');
+}
+
+function onCompareVersionChange(){
+  const leftId=parseInt(document.getElementById('compare-left-select').value);
+  const rightId=parseInt(document.getElementById('compare-right-select').value);
+  const leftRev=compareVersions.find(v=>v.id===leftId);
+  const rightRev=compareVersions.find(v=>v.id===rightId);
+  if(!leftRev||!rightRev)return;
+  document.getElementById('compare-label-left').textContent='v'+leftRev.version+' — '+leftRev.title;
+  document.getElementById('compare-label-right').textContent='v'+rightRev.version+' — '+rightRev.title;
+  const lc=document.getElementById('compare-container-left');
+  const rc=document.getElementById('compare-container-right');
+  lc.innerHTML='<img id="compare-img-left" data-testid="compare-img-left" src="'+esc(leftRev.file_url)+'">';
+  rc.innerHTML='<img id="compare-img-right" data-testid="compare-img-right" src="'+esc(rightRev.file_url)+'">';
+  let loaded=0;
+  const onLoad=()=>{loaded++;if(loaded===2){compareZoomFit();applyCompareMode()}};
+  document.getElementById('compare-img-left').onload=function(){
+    lc.style.width=this.naturalWidth+'px';lc.style.height=this.naturalHeight+'px';onLoad();
+  };
+  document.getElementById('compare-img-right').onload=function(){
+    rc.style.width=this.naturalWidth+'px';rc.style.height=this.naturalHeight+'px';onLoad();
+  };
+}
+
+function setCompareMode(mode){
+  compareMode=mode;
+  document.getElementById('btn-mode-side').classList.toggle('active',mode==='side');
+  document.getElementById('btn-mode-overlay').classList.toggle('active',mode==='overlay');
+  applyCompareMode();
+}
+
+function applyCompareMode(){
+  const body=document.getElementById('compare-body');
+  const divider=document.getElementById('compare-divider');
+  const leftPane=document.getElementById('compare-pane-left');
+  const rightPane=document.getElementById('compare-pane-right');
+  const existingSlider=document.querySelector('.overlay-slider-wrap');
+  if(existingSlider)existingSlider.remove();
+  if(compareMode==='side'){
+    body.className='compare-body';
+    divider.style.display='';
+    leftPane.style.display='';rightPane.style.display='';
+    leftPane.className='compare-pane';rightPane.className='compare-pane';
+  } else {
+    body.className='compare-body compare-overlay-mode';
+    divider.style.display='none';
+    leftPane.className='compare-pane';rightPane.className='compare-pane';
+    leftPane.style.display='';rightPane.style.display='';
+    const rightScroll=document.getElementById('compare-scroll-right');
+    rightScroll.style.opacity=compareOverlayOpacity;
+    const slider=document.createElement('div');
+    slider.className='overlay-slider-wrap';
+    slider.innerHTML='<label>Opacit&agrave;</label><input type="range" min="0" max="100" value="'+Math.round(compareOverlayOpacity*100)+'" data-testid="input-overlay-opacity" oninput="setOverlayOpacity(this.value)">';
+    body.appendChild(slider);
+  }
+  applyCompareZoom();
+}
+
+function setOverlayOpacity(val){
+  compareOverlayOpacity=val/100;
+  const rightScroll=document.getElementById('compare-scroll-right');
+  if(rightScroll)rightScroll.style.opacity=compareOverlayOpacity;
+}
+
+function toggleSyncScroll(){
+  compareSyncScroll=!compareSyncScroll;
+  document.getElementById('btn-sync-scroll').classList.toggle('active',compareSyncScroll);
+}
+
+function compareZoomFit(){
+  const leftScroll=document.getElementById('compare-scroll-left');
+  const leftImg=document.getElementById('compare-img-left');
+  if(!leftScroll||!leftImg||!leftImg.naturalWidth)return;
+  const vw=leftScroll.clientWidth,vh=leftScroll.clientHeight;
+  compareZoomScale=Math.min(vw/leftImg.naturalWidth,vh/leftImg.naturalHeight,1);
+  applyCompareZoom();
+  document.getElementById('compare-scroll-left').scrollLeft=0;
+  document.getElementById('compare-scroll-left').scrollTop=0;
+  document.getElementById('compare-scroll-right').scrollLeft=0;
+  document.getElementById('compare-scroll-right').scrollTop=0;
+}
+
+function compareZoomSet(s){compareZoomScale=s;applyCompareZoom()}
+function doCompareZoom(dir){compareZoomScale=Math.max(0.05,Math.min(compareZoomScale*(dir>0?1.3:1/1.3),10));applyCompareZoom()}
+
+function applyCompareZoom(){
+  ['left','right'].forEach(side=>{
+    const container=document.getElementById('compare-container-'+side);
+    const scroll=document.getElementById('compare-scroll-'+side);
+    const img=document.getElementById('compare-img-'+side);
+    if(!container||!scroll||!img||!img.naturalWidth)return;
+    const iw=img.naturalWidth*compareZoomScale,ih=img.naturalHeight*compareZoomScale;
+    const vw=scroll.clientWidth,vh=scroll.clientHeight;
+    const padX=Math.max(0,(vw-iw)/2),padY=Math.max(0,(vh-ih)/2);
+    container.style.transform='scale('+compareZoomScale+')';
+    container.style.marginLeft=padX+'px';container.style.marginTop=padY+'px';
+    container.style.marginRight=padX+'px';container.style.marginBottom=padY+'px';
+  });
+  document.getElementById('compare-zoom-label').textContent=Math.round(compareZoomScale*100)+'%';
+}
+
+function setupComparePanning(){
+  let panSide=null,pStartX=0,pStartY=0,pScrollX=0,pScrollY=0;
+  ['left','right'].forEach(side=>{
+    const scroll=document.getElementById('compare-scroll-'+side);
+    scroll.addEventListener('mousedown',e=>{
+      if(e.button!==0)return;
+      e.preventDefault();
+      panSide=side;pStartX=e.clientX;pStartY=e.clientY;
+      pScrollX=scroll.scrollLeft;pScrollY=scroll.scrollTop;
+      scroll.classList.add('grabbing');
+    });
+  });
+  window.addEventListener('mousemove',e=>{
+    if(!panSide)return;
+    const dx=e.clientX-pStartX,dy=e.clientY-pStartY;
+    const scroll=document.getElementById('compare-scroll-'+panSide);
+    scroll.scrollLeft=pScrollX-dx;scroll.scrollTop=pScrollY-dy;
+    if(compareSyncScroll){
+      const other=panSide==='left'?'right':'left';
+      const otherScroll=document.getElementById('compare-scroll-'+other);
+      otherScroll.scrollLeft=pScrollX-dx;otherScroll.scrollTop=pScrollY-dy;
+    }
+  });
+  window.addEventListener('mouseup',()=>{
+    if(panSide){
+      document.getElementById('compare-scroll-'+panSide).classList.remove('grabbing');
+      panSide=null;
+    }
+  });
+  ['left','right'].forEach(side=>{
+    const scroll=document.getElementById('compare-scroll-'+side);
+    scroll.addEventListener('scroll',()=>{
+      if(compareSyncing)return;
+      if(!compareSyncScroll)return;
+      compareSyncing=true;
+      const other=side==='left'?'right':'left';
+      const otherScroll=document.getElementById('compare-scroll-'+other);
+      otherScroll.scrollLeft=scroll.scrollLeft;
+      otherScroll.scrollTop=scroll.scrollTop;
+      compareSyncing=false;
+    });
+  });
+}
+
+function setupCompareWheelZoom(){
+  ['left','right'].forEach(side=>{
+    const scroll=document.getElementById('compare-scroll-'+side);
+    scroll.addEventListener('wheel',e=>{
+      if(!document.getElementById('compare-overlay').classList.contains('open'))return;
+      e.preventDefault();
+      compareZoomScale=Math.max(0.05,Math.min(compareZoomScale*(e.deltaY<0?1.15:1/1.15),10));
+      applyCompareZoom();
+    },{passive:false});
+  });
+}
 
 init();
 </script>

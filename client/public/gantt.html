@@ -245,6 +245,18 @@ textarea.mf-input{resize:vertical;min-height:50px}
         <option value="annullata">Annullata</option>
       </select>
     </div>
+    <div class="filter-chip">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/><path d="M3 9h6"/><path d="M3 15h6"/></svg>
+      <select id="filter-department" data-testid="select-filter-department" onchange="applyFilters()">
+        <option value="">Tutti i reparti</option>
+      </select>
+    </div>
+    <div class="filter-chip">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <select id="filter-person" data-testid="select-filter-person" onchange="applyFilters()">
+        <option value="">Tutte le persone</option>
+      </select>
+    </div>
     <span id="job-count" class="counter-badge" data-testid="text-job-count">0</span>
   </div>
 
@@ -1026,6 +1038,8 @@ function applyFilters(){
   const client=document.getElementById('filter-client').value;
   const status=document.getElementById('filter-status').value;
   const search=document.getElementById('search-input').value.toLowerCase().trim();
+  const department=document.getElementById('filter-department').value;
+  const person=document.getElementById('filter-person').value;
 
   let jobs=[...ALL_JOBS];
   if(client) jobs=jobs.filter(j=>j.client===client);
@@ -1043,9 +1057,26 @@ function applyFilters(){
     jobs=jobs.filter(j=>matchingJobIds.has(j.id));
   }
 
+  let filteredPhases=ALL_PHASES_RAW;
+  if(department){
+    const area=ALL_AREAS.find(a=>a.id===department);
+    const cats=area?AREA_TO_CATEGORIES[area.id]||[]:[];
+    if(cats.length){
+      filteredPhases=filteredPhases.filter(p=>cats.includes(p.task_type_category));
+    }
+  }
+  if(person){
+    filteredPhases=filteredPhases.filter(p=>String(p.assigned_to)===String(person));
+  }
+
+  if(department||person){
+    const jobIdsWithPhases=new Set(filteredPhases.map(p=>p.job_id));
+    jobs=jobs.filter(j=>jobIdsWithPhases.has(j.id));
+  }
+
   document.getElementById('job-count').textContent=jobs.length;
 
-  const data=buildGanttData(jobs,ALL_PHASES_RAW);
+  const data=buildGanttData(jobs,filteredPhases);
   gantt.clearAll();
   gantt.parse(data);
   addTodayMarker();
@@ -1090,6 +1121,23 @@ async function init(){
       const opt=document.createElement('option');
       opt.value=c;opt.textContent=c;
       clientSel.appendChild(opt);
+    });
+
+    try{ALL_AREAS=await fetch('/api/areas').then(r=>r.json())}catch(e){ALL_AREAS=[]}
+    const deptSel=document.getElementById('filter-department');
+    deptSel.innerHTML='<option value="">Tutti i reparti</option>';
+    ALL_AREAS.forEach(a=>{
+      const opt=document.createElement('option');
+      opt.value=a.id;opt.textContent=(a.icon||'')+' '+a.name;
+      deptSel.appendChild(opt);
+    });
+
+    const personSel=document.getElementById('filter-person');
+    personSel.innerHTML='<option value="">Tutte le persone</option>';
+    ALL_COLLABS_LIST.forEach(c=>{
+      const opt=document.createElement('option');
+      opt.value=c.id;opt.textContent=c.name;
+      personSel.appendChild(opt);
     });
 
     document.getElementById('job-count').textContent=jobs.length;

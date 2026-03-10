@@ -14,7 +14,7 @@ PORT = "5000"
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["node", "./dist/index.cjs"]
+run = ["npm", "run", "start"]
 build = ["npm", "run", "build"]
 
 [workflows]
@@ -39,4 +39,4 @@ args = "npm run dev"
 waitForPort = 5000
 
 [agent]
-integrations = ["google-calendar:1.0.0"]
+integrations = ["google-calendar:1.0.0", "javascript_log_in_with_replit:2.0.0"]

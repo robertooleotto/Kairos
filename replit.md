@@ -1,23 +1,28 @@
-# Planning Studio - NuDesign
+# Kairos — NuDesign Project Management
 
 ## Overview
-Project management tool for NuDesign creative studio. Manages jobs (commesse), team, clients, Gantt-style calendar planning, and creative asset review/proofing.
+Project management tool for NuDesign creative studio. Manages jobs (commesse), team, clients, Gantt-style calendar planning, foglio lavoro (image production tracking), and creative asset review/proofing.
 
 ## Architecture
 - **Frontend**: Static HTML pages served from `client/public/` (vanilla JS, no React)
-  - `preview.html` - Calendar view with deadline chips (default page, no Gantt bars — bars are in gantt.html)
-  - `gantt.html` - Interactive Gantt chart (dhtmlxGantt) with drag/resize/zoom, dark navy blue theme
-  - `commesse.html` - Jobs/orders management
+  - `dashboard.html` - KPI dashboard (landing page after login): active jobs, overdue deadlines, phase completion, workload by department, upcoming deadlines, activity feed
+  - `preview.html` - Calendar view with deadline chips, overdue indicators (red pulsing), daily summary popup on cell click
+  - `gantt.html` - Interactive Gantt chart (dhtmlxGantt) with filters by department, person, client, status, search
+  - `commesse.html` - Jobs/orders management with CSV/PDF export, Google Calendar sync
   - `team.html` - Team management (areas, departments, collaborators)
   - `clienti.html` - Client management
-  - `review.html` - Wrike-style proofing/review page (upload assets, annotate, approve)
+  - `review.html` - Wrike-style proofing/review with side-by-side version comparison
+  - `foglio-lavoro.html` - Production tracker with drag & drop reorder, quick filters, CSV/PDF export
   - `report.html` - Reports
   - `status.html` - Status overview
   - `database.html` - Database schema viewer
   - `admin-assegna-ruoli.html` - Role assignment admin
-- **Backend**: Express.js with raw SQL queries via `server/db.ts`
+- **Backend**: Express.js with raw SQL queries via `server/db.ts` + Drizzle ORM for auth
 - **Database**: PostgreSQL (Replit built-in)
+- **Auth**: Replit Auth (OpenID Connect) via `server/replit_integrations/auth/` — supports Google login
 - **API Client**: `client/public/api-client.js` - REST API wrapper used by all pages
+- **Auth Guard**: `client/public/auth-guard.js` - Client-side session check, redirects to /api/login if unauthorized
+- **Notifications**: `client/public/notifications.js` - Global notification bell component injected into all page headers
 
 ## Design
 - Light theme on foglio-lavoro.html (warm off-white #f5f5f0 background, white #fff table cells)
@@ -26,7 +31,18 @@ Project management tool for NuDesign creative studio. Manages jobs (commesse), t
 - Fonts: Fraunces (serif headings), Sora (body), JetBrains Mono (monospace)
 - Custom CSS variables for consistent palette
 
+## Authentication
+- Replit Auth (OIDC) with passport — session-based via express-session stored in PostgreSQL `sessions` table
+- Login page (`index.html`) shows "Accedi con Google" button
+- Server middleware protects all .html pages (except index.html) — redirects to login
+- Auth routes: `/api/login`, `/api/callback`, `/api/logout`, `/api/auth/user`
+- User data stored in `users` table (id, email, first_name, last_name, profile_image_url)
+- Schema defined in `shared/models/auth.ts`, exported from `shared/schema.ts`
+
 ## Database Tables
+- `sessions` - Express session storage (sid, sess JSONB, expire)
+- `users` - Auth users (id, email, first_name, last_name, profile_image_url)
+- `notifications` - Internal notification system (user_email, type, title, message, link, read)
 - `areas` - 11 work areas (Art Direction, Grafica, Video, etc.)
 - `departments` - 16 departments under areas
 - `task_types` - Types of tasks with units
@@ -36,89 +52,44 @@ Project management tool for NuDesign creative studio. Manages jobs (commesse), t
 - `person_departments` - Many-to-many: person ↔ department
 - `clients` - Client companies
 - `jobs` - Commesse/orders with status, dates, assignments (name and title both NOT NULL, id is TEXT)
-- `job_phases` - Phases within a job (start_date, due_date, task_type_id, color, notes, assigned_to, completed, parent_phase_id for sub-phases)
+- `job_phases` - Phases within a job (start_date, due_date, task_type_id, color, notes, assigned_to, completed, parent_phase_id)
 - `job_departments` - Many-to-many: job ↔ department
 - `job_assignments` - Assignments of people to jobs
 - `spans` - Gantt chart time spans
-- `review_assets` - Uploaded creative assets for review (job_id TEXT, file_url, status: pending/in_review/approved/changes_requested/rejected, versioning via parent_asset_id)
-- `review_comments` - Comments/annotations on review assets (pin_x, pin_y for image coordinates, resolved flag, parent_comment_id for replies)
-- `review_approvals` - Approval decisions on assets (decision: approved/changes_requested/rejected, reviewer_name, note)
-- `revision_comments` - Comments/annotations on foglio_revisions (revision_id FK→foglio_revisions.id, pin_x, pin_y, resolved, parent_comment_id for replies)
+- `review_assets` - Uploaded creative assets for review
+- `review_comments` - Comments/annotations on review assets
+- `review_approvals` - Approval decisions on assets
+- `revision_comments` - Comments on foglio revisions (shape_type, shape_data JSONB, department_id, sent)
+- `calendar_sync_events` - Tracks Google Calendar sync state per phase
+- `foglio_revisions` - Revision files for foglio images
+- `foglio_images` - Image rows in foglio lavoro
+- `foglio_columns` - Custom phase columns per job
+- `foglio_locations` - Location entries per job
 
 ## Key Files
-- `server/db.ts` - PostgreSQL connection pool
-- `server/routes.ts` - All REST API endpoints (/api/*), includes multer for avatar and review file uploads
-- `server/googleCalendar.ts` - Google Calendar integration (Replit Connector) for availability checking
-- `server/index.ts` - Express server setup, static file serving
+- `server/db.ts` - PostgreSQL connection pool + Drizzle ORM instance
+- `server/routes.ts` - All REST API endpoints
+- `server/googleCalendar.ts` - Google Calendar integration (create/update/delete events, freebusy)
+- `server/index.ts` - Express server setup, auth wiring, static file serving with auth protection
+- `server/replit_integrations/auth/` - Replit Auth OIDC integration
+- `shared/models/auth.ts` - Drizzle schema for users/sessions tables
+- `shared/schema.ts` - Re-exports auth models
 - `client/public/api-client.js` - Frontend API helper
-- `uploads/` - Stored avatar images and review assets, served statically at /uploads/
+- `client/public/auth-guard.js` - Client-side auth check
+- `client/public/notifications.js` - Global notification bell component
+- `uploads/` - Stored avatar images and review assets
 
 ## Features
-- Team photo upload: collaborators can have avatar photos uploaded via the team form. Files stored in /uploads/, URL saved in collaborators.avatar column. Max 5MB, supports JPG/PNG/GIF/WebP.
-- Google Calendar integration: each collaborator can have a `google_calendar_id` (their Google email) stored in the DB. The app uses the Replit Google Calendar connector to check freebusy/events for availability.
-- Job phases / Focus view: clicking a job opens a detail panel with a timeline of work phases. Phases support hierarchy: Reparto (area) → Lavorazione (task_type) → Sottolavorazione (sub-phase via parent_phase_id).
-- Gantt bar rendering: each phase gets its own row in the Gantt, colored by department (DEPT_COLORS map). Bars are continuous with grouped hover effect.
-- dhtmlxGantt page (gantt.html): Full interactive Gantt chart. Dark navy blue theme. Week scale shows W1-W5 per month. Phase CRUD via modal (double-click edit, right-click context menu). Drag/resize auto-save.
-- Review/Proofing (review.html): Gallery-style review tool integrated with foglio_revisions. Light theme gallery, dark viewer. Select commessa → select phase → see all revision images in a grid gallery. Click image to open full-screen viewer with:
-  - **Zoom**: Mouse wheel (cursor-relative), Fit/1:1/2x buttons, +/- buttons, keyboard (+/-/0). Uses CSS transform:scale() on .canvas-container with transform-origin:0 0, native overflow:auto scrolling.
-  - **Drawing tools**: SVG overlay for Circle, Rectangle, Arrow, Freehand annotations. Color picker (red/yellow/green/blue/white). Draw shape → pendingShape (dashed) → user writes comment + selects department → submit saves shape_data JSONB to DB. Shapes from DB rendered in SVG with resolved shapes at 0.3 opacity.
-  - **Pin annotations**: Click to place numbered pins on image, linked to comments. Pins zoom/pan with image inside canvas-container.
-  - **Comments sidebar**: Author selector, tag system (Correzione/Problema/Nota/Domanda/Approvato), department selector (from /api/areas), replies, resolve/delete.
-  - **Department assignment & send**: Each comment has "Invia al reparto" button. "Invia tutti ai reparti" header button marks all unsent. Toast notifications on send. Sent comments shown with green left border badge.
-  - Navigation: prev/next arrows + keyboard (Left/Right/Escape).
-  - Deep-link: review.html?jobId=...&revisionId=... or &imageId=... from foglio-lavoro "Apri in Review".
-- Foglio Lavoro (foglio-lavoro.html): Spreadsheet-like production tracker with Google Sheets-style tab bar at bottom. Tab system includes:
-  - **Elenco Immagini** tab: Image production tracking per commessa. Custom phase columns configurable per job (default: Location Bozza, Location Def, Fotografia, Styling, Revisioni, Render, Post, Finiture, Rifacimenti, Recupero, Fatturato). Phase values displayed as checkmark icons (click to toggle 0/1). Row selection via checkboxes for batch color assignment. Delete mode toggled via toolbar button (hidden by default). Image names displayed at 1rem bold. Row colors saved in `row_color` column (red/orange/yellow/green/blue/purple/pink/gray). Columns config modal with add/delete.
-  - **Locations** tab: Location list per commessa with Nome location, Tipologia (dropdown with 22 predefined values like "Architettura interni moderna", "Set studio complesso", "Moodboard" etc.), Descrizione, Note. Inline editing with dropdown for tipologia field.
-- `foglio_locations` table: id(serial), job_id(text), nome_location, tipologia, descrizione, note, sort_order
-  - **Expandable Revision Rows**: Each image row has an expand toggle (▶) that reveals per-phase revision slots. Users can upload revision files (images/videos/PDFs, max 20MB) directly into phase cells, see thumbnails, and click to open a lightbox with prev/next navigation and keyboard support (Escape/Arrow keys). The latest revision thumbnail also appears inline in the image name column.
-- `foglio_revisions` table: id(serial), foglio_image_id(int FK→foglio_images.id), phase_key(text), file_url(text), file_type(text: image/video/document), title(text), version(int), notes(text), uploaded_by(text), created_at(timestamp). Index on (foglio_image_id, phase_key).
-- AREA_TO_CATEGORIES maps area IDs to task_type categories for filtering in the phase form.
-
-## Foglio Lavoro API Endpoints
-- GET /api/foglio-columns/:jobId - List columns for a job
-- POST /api/foglio-columns/:jobId - Add column
-- PUT /api/foglio-columns/:id - Update column
-- DELETE /api/foglio-columns/:id - Delete column
-- POST /api/foglio-columns/:jobId/init-default - Initialize default phase columns
-- GET /api/foglio-images/:jobId - List image rows for a job
-- POST /api/foglio-images/:jobId - Add image row
-- PUT /api/foglio-images/:id - Update full image row
-- PATCH /api/foglio-images/:id/cell - Update single cell (direct field or JSONB phase value)
-- DELETE /api/foglio-images/:id - Delete image row
-- GET /api/foglio-locations/:jobId - List locations for a job
-- POST /api/foglio-locations/:jobId - Add location
-- PUT /api/foglio-locations/:id - Update location
-- PATCH /api/foglio-locations/:id/cell - Update single cell
-- DELETE /api/foglio-locations/:id - Delete location
-- GET /api/foglio-revisions/:imageId - List revisions for an image (optional ?phase_key filter)
-- GET /api/foglio-revisions-batch/:jobId - Batch fetch all revisions for a job
-- POST /api/foglio-revisions/:imageId/upload - Upload revision file (multipart, max 20MB)
-- POST /api/foglio-revisions/batch-upload/:jobId - Batch upload multiple files with auto-matching by filename (exact match → substring → 3+ common parts)
-- DELETE /api/foglio-revisions/:id - Delete revision + file
-
-## Review API Endpoints (legacy review_assets)
-- POST /api/review-assets/upload - Upload file (multipart, max 20MB, JPG/PNG/GIF/WebP/PDF/MP4)
-- GET /api/review-assets - List all assets (filter by job_id, status)
-- GET /api/review-assets/:id - Get single asset
-- PUT /api/review-assets/:id/status - Update status
-- DELETE /api/review-assets/:id - Delete asset
-- GET/POST /api/review-assets/:id/comments - List/add comments (with pin_x, pin_y)
-- PUT /api/review-comments/:id/resolve - Toggle resolved
-- DELETE /api/review-comments/:id - Delete comment
-- GET/POST /api/review-assets/:id/approvals - List/add approval decisions
-- GET /api/review-assets/:id/versions - List all versions of an asset
-
-## Revision Comments API (used by review.html gallery)
-- GET /api/revision-comments/:revisionId - List comments for a foglio revision
-- POST /api/revision-comments/:revisionId - Add comment (author_name, content, pin_x, pin_y, parent_comment_id, shape_type, shape_data, department_id)
-- PUT /api/revision-comments/:id/resolve - Toggle resolved
-- PUT /api/revision-comments/:id/send - Mark comment as sent to department
-- PUT /api/revision-comments/send-all/:revisionId - Mark all unsent top-level comments as sent
-- DELETE /api/revision-comments/:id - Delete comment
-- `revision_comments` table extended with: shape_type TEXT, shape_data JSONB (stores drawing annotation coordinates/color), department_id TEXT (area ID), sent BOOLEAN
+- **Dashboard**: KPI cards (active jobs, overdue phases, completed phases, due within 7 days), status overview bar, upcoming deadlines list, department workload chart, activity feed
+- **Notifications**: Bell icon with unread badge on all pages. Notifications generated on comment send to department. API: GET /api/notifications, PATCH /api/notifications/:id/read, POST /api/notifications/mark-all-read
+- **Calendar overdue indicators**: Red pulsing border + warning icon on overdue deadline chips. Daily summary popup on cell click
+- **Gantt filters**: Department dropdown + person/assignee dropdown in toolbar, combinable with existing search/client/status filters
+- **Foglio Lavoro**: Drag & drop row reorder (HTML5 drag API), quick filter bar (search, location, status), CSV export, print-friendly CSS for PDF
+- **Review comparison**: "Confronta" button for side-by-side or overlay version comparison with sync scroll/zoom
+- **CSV/PDF export**: Export buttons on foglio-lavoro and commesse pages. Browser-side CSV generation with BOM. Print CSS for PDF
+- **Google Calendar sync**: Sync job phase deadlines to Google Calendar. createEvent/updateEvent/deleteEvent in googleCalendar.ts. Sync status indicator on job detail
+- Team photo upload, Google Calendar availability checking, Gantt with dhtmlxGantt, Review/Proofing with drawing tools and department workflow
 
 ## Notes
-- Originally used Supabase auth (login page still references it) - not active
 - The React/Vite setup exists but is not used; app is static HTML
-- Default route (/) serves preview.html (Gantt calendar)
+- Default route (/) serves dashboard.html for authenticated users, index.html for unauthenticated

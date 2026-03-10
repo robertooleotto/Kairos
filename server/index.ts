@@ -1,5 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
+import { setupAuth, registerAuthRoutes } from "./replit_integrations/auth";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 import path from "path";
@@ -63,6 +64,20 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  await setupAuth(app);
+  registerAuthRoutes(app);
+
+  const publicApiPaths = ['/api/login', '/api/callback', '/api/logout', '/api/auth/user'];
+  app.use((req: any, res, next) => {
+    const reqPath = req.path;
+    if (reqPath.startsWith('/api/') && !publicApiPaths.includes(reqPath)) {
+      if (!req.isAuthenticated || !req.isAuthenticated()) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+    }
+    next();
+  });
+
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
@@ -78,9 +93,16 @@ app.use((req, res, next) => {
     return res.status(status).json({ message });
   });
 
-  // Serve static files from client/public (the actual app pages)
-  // This must come before Vite's catch-all
   const publicPath = path.resolve(process.cwd(), "client/public");
+  app.use((req: any, res, next) => {
+    const reqPath = req.path;
+    if (reqPath.endsWith('.html') && reqPath !== '/index.html' && reqPath !== '/login.html') {
+      if (!req.isAuthenticated || !req.isAuthenticated()) {
+        return res.redirect('/');
+      }
+    }
+    next();
+  });
   app.use(expressModule.static(publicPath));
 
   if (process.env.NODE_ENV === "production") {

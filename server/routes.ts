@@ -4,7 +4,7 @@ import path from "path";
 import fs from "fs";
 import multer from "multer";
 import { query, pool } from "./db";
-import { getFreeBusy, getEvents, checkAvailability } from "./googleCalendar";
+import { getFreeBusy, getEvents, checkAvailability, createEvent, updateEvent } from "./googleCalendar";
 
 const uploadsDir = path.resolve(process.cwd(), "uploads");
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
@@ -50,9 +50,13 @@ export async function registerRoutes(
   await query(`ALTER TABLE revision_comments ADD COLUMN IF NOT EXISTS department_id TEXT`);
   await query(`ALTER TABLE revision_comments ADD COLUMN IF NOT EXISTS sent BOOLEAN DEFAULT false`);
 
-  app.get("/", (req, res) => {
+  app.get("/", (req: any, res) => {
     const publicPath = path.resolve(process.cwd(), "client/public");
-    res.sendFile(path.join(publicPath, "preview.html"));
+    if (req.isAuthenticated && req.isAuthenticated()) {
+      res.sendFile(path.join(publicPath, "dashboard.html"));
+    } else {
+      res.sendFile(path.join(publicPath, "index.html"));
+    }
   });
 
   app.use("/uploads", (await import("express")).default.static(uploadsDir));
@@ -687,6 +691,25 @@ export async function registerRoutes(
   });
 
   // --- Image rows ---
+  app.put("/api/foglio-images/reorder", async (req, res) => {
+    const { orders } = req.body;
+    if (!Array.isArray(orders) || !orders.length) return res.status(400).json({ error: "orders array required" });
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      for (const { id, sort_order } of orders) {
+        await client.query("UPDATE foglio_images SET sort_order=$1 WHERE id=$2", [sort_order, id]);
+      }
+      await client.query("COMMIT");
+    } catch (e) {
+      await client.query("ROLLBACK");
+      throw e;
+    } finally {
+      client.release();
+    }
+    res.json({ ok: true });
+  });
+
   app.get("/api/foglio-images/:jobId", async (req, res) => {
     const rows = await query(
       "SELECT * FROM foglio_images WHERE job_id=$1 ORDER BY sort_order, id",
@@ -1016,6 +1039,14 @@ export async function registerRoutes(
     if (!rows[0].department_id) return res.status(400).json({ error: "Comment has no department assigned" });
     if (rows[0].parent_comment_id) return res.status(400).json({ error: "Cannot send reply comments" });
     const updated = await query("UPDATE revision_comments SET sent=true WHERE id=$1 RETURNING *", [req.params.id]);
+    try {
+      const deptRows = await query("SELECT name FROM areas WHERE id=$1", [rows[0].department_id]);
+      const deptName = deptRows.length ? deptRows[0].name : rows[0].department_id;
+      await query(
+        "INSERT INTO notifications (user_email, type, title, message, link) VALUES (NULL, $1, $2, $3, $4)",
+        ['comment_sent', `Commento inviato a ${deptName}`, (rows[0].content || '').substring(0, 100), 'review.html']
+      );
+    } catch(e) { console.error('Notification create error:', e); }
     res.json(updated[0]);
   });
 
@@ -1031,6 +1062,151 @@ export async function registerRoutes(
 
   app.delete("/api/revision-comments/:id", async (req, res) => {
     await query("DELETE FROM revision_comments WHERE id=$1", [req.params.id]);
+    res.json({ ok: true });
+  });
+
+  await query(`CREATE TABLE IF NOT EXISTS calendar_sync_events (
+    id SERIAL PRIMARY KEY,
+    job_id INTEGER NOT NULL,
+    phase_id INTEGER NOT NULL,
+    calendar_id TEXT NOT NULL,
+    google_event_id TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+  )`);
+
+  app.post("/api/calendar/sync-job/:jobId", async (req, res) => {
+    try {
+      const jobId = req.params.jobId;
+      const { calendar_id } = req.body;
+      if (!calendar_id) return res.status(400).json({ message: "calendar_id required" });
+
+      const jobs = await query("SELECT * FROM jobs WHERE id=$1", [jobId]);
+      if (!jobs.length) return res.status(404).json({ message: "Job not found" });
+      const job = jobs[0];
+
+      const phases = await query(
+        "SELECT * FROM job_phases WHERE job_id=$1 ORDER BY order_index, start_date",
+        [jobId]
+      );
+
+      if (phases.length === 0) {
+        return res.status(400).json({ message: "No phases to sync" });
+      }
+
+      const existingSyncs = await query(
+        "SELECT * FROM calendar_sync_events WHERE job_id=$1 AND calendar_id=$2",
+        [jobId, calendar_id]
+      );
+      const syncMap: Record<number, { google_event_id: string; id: number }> = {};
+      for (const s of existingSyncs) {
+        syncMap[s.phase_id] = { google_event_id: s.google_event_id, id: s.id };
+      }
+
+      const results: any[] = [];
+
+      for (const phase of phases) {
+        if (!phase.due_date) continue;
+
+        const summary = `[${job.code || job.title}] ${phase.name}`;
+        const description = [
+          `Commessa: ${job.code || job.title}`,
+          job.client ? `Cliente: ${job.client}` : '',
+          phase.notes || '',
+        ].filter(Boolean).join('\n');
+
+        const startDate = phase.start_date || phase.due_date;
+        const endDate = phase.due_date;
+
+        const eventData = {
+          summary,
+          description,
+          start: startDate,
+          end: endDate,
+          allDay: true,
+        };
+
+        try {
+          if (syncMap[phase.id]) {
+            const gcEvent = await updateEvent(calendar_id, syncMap[phase.id].google_event_id, eventData);
+            await query(
+              "UPDATE calendar_sync_events SET updated_at=NOW() WHERE id=$1",
+              [syncMap[phase.id].id]
+            );
+            results.push({ phase_id: phase.id, phase_name: phase.name, action: 'updated', event_id: gcEvent.id });
+          } else {
+            const gcEvent = await createEvent(calendar_id, eventData);
+            await query(
+              "INSERT INTO calendar_sync_events (job_id, phase_id, calendar_id, google_event_id) VALUES ($1,$2,$3,$4)",
+              [jobId, phase.id, calendar_id, gcEvent.id]
+            );
+            results.push({ phase_id: phase.id, phase_name: phase.name, action: 'created', event_id: gcEvent.id });
+          }
+        } catch (phaseErr: any) {
+          results.push({ phase_id: phase.id, phase_name: phase.name, action: 'error', error: phaseErr.message });
+        }
+      }
+
+      res.json({
+        job_id: jobId,
+        job_code: job.code || job.title,
+        synced_phases: results.filter(r => r.action !== 'error').length,
+        errors: results.filter(r => r.action === 'error').length,
+        details: results,
+      });
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  app.get("/api/calendar/sync-status/:jobId", async (req, res) => {
+    try {
+      const rows = await query(
+        "SELECT * FROM calendar_sync_events WHERE job_id=$1 ORDER BY updated_at DESC",
+        [req.params.jobId]
+      );
+      res.json({
+        synced: rows.length > 0,
+        count: rows.length,
+        last_sync: rows.length > 0 ? rows[0].updated_at : null,
+        events: rows,
+      });
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  await query(`CREATE TABLE IF NOT EXISTS notifications (
+    id SERIAL PRIMARY KEY,
+    user_email VARCHAR(255),
+    type VARCHAR(50) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    message TEXT,
+    link VARCHAR(500),
+    read BOOLEAN DEFAULT false,
+    created_at TIMESTAMP DEFAULT NOW()
+  )`);
+
+  app.get("/api/notifications", async (req: any, res) => {
+    const email = req.user?.claims?.email || null;
+    const rows = await query(
+      "SELECT * FROM notifications WHERE user_email IS NULL OR user_email=$1 ORDER BY created_at DESC LIMIT 50",
+      [email]
+    );
+    res.json(rows);
+  });
+
+  app.patch("/api/notifications/:id/read", async (req, res) => {
+    await query("UPDATE notifications SET read=true WHERE id=$1", [req.params.id]);
+    res.json({ ok: true });
+  });
+
+  app.post("/api/notifications/mark-all-read", async (req: any, res) => {
+    const email = req.user?.claims?.email || null;
+    await query(
+      "UPDATE notifications SET read=true WHERE (user_email IS NULL OR user_email=$1) AND read=false",
+      [email]
+    );
     res.json({ ok: true });
   });
 

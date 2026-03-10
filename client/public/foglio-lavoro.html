@@ -217,7 +217,40 @@ th.col-detail.collapsed .th-inner{display:none}
 .br-match-name{color:var(--paper-m);font-size:.56rem}
 .batch-summary{font-size:.68rem;display:flex;gap:16px;padding:8px 12px;background:var(--paper);border-radius:6px}
 .batch-summary .bs-num{font-weight:700;font-family:'JetBrains Mono',monospace}
+
+.drag-handle{cursor:grab;color:var(--paper-l);font-size:.7rem;padding:2px 4px;border-radius:3px;transition:color .15s;user-select:none;display:flex;align-items:center}
+.drag-handle:hover{color:var(--paper-s)}
+.drag-handle:active{cursor:grabbing}
+.drag-handle svg{width:14px;height:14px}
+tr.dragging{opacity:.4;background:rgba(99,102,241,.08)!important}
+tr.drag-over td{border-top:2px solid var(--accent)!important}
+tr.drag-over-below td{border-bottom:2px solid var(--accent)!important}
+
+.filter-bar{padding:6px 24px;border-bottom:1px solid var(--paper-l);display:flex;align-items:center;gap:10px;background:var(--paper);flex-shrink:0;flex-wrap:wrap}
+.filter-bar input,.filter-bar select{background:#fff;color:var(--paper-t);border:1px solid var(--paper-l);border-radius:6px;padding:5px 10px;font-size:.68rem;font-family:'Sora',sans-serif;min-width:140px}
+.filter-bar input:focus,.filter-bar select:focus{outline:none;border-color:var(--accent)}
+.filter-bar label{font-size:.62rem;font-weight:600;color:var(--paper-m);text-transform:uppercase;letter-spacing:.04em}
+.filter-bar .filter-group{display:flex;align-items:center;gap:4px}
+.filter-bar .filter-clear{background:transparent;border:1px solid var(--paper-l);color:var(--paper-m);cursor:pointer;font-size:.6rem;padding:4px 8px;border-radius:5px;font-family:'Sora',sans-serif;transition:all .15s}
+.filter-bar .filter-clear:hover{color:var(--paper-s);border-color:var(--paper-m)}
 </style>
+<style>
+@media print {
+  body { overflow: visible !important; height: auto !important; }
+  .header, .toolbar, .tab-bar, .stats-bar, .modal-overlay, .lightbox-overlay, .color-picker-popup, .note-tooltip, .filter-bar { display: none !important; }
+  .sheet-wrap { overflow: visible !important; height: auto !important; flex: none !important; }
+  table.sheet { font-size: 9pt !important; }
+  table.sheet th, table.sheet td { border: 1px solid #ccc !important; background: #fff !important; color: #000 !important; }
+  table.sheet th { background: #f0f0f0 !important; }
+  table.sheet th.group-header { background: #e8e8f8 !important; color: #333 !important; }
+  .row-actions, .expand-toggle, .row-select-cb, .phase-thumb-placeholder { display: none !important; }
+  tr.expand-row { display: none !important; }
+  .col-detail.collapsed { display: none !important; }
+  @page { size: landscape; margin: 10mm; }
+}
+</style>
+<script src="auth-guard.js"></script>
+<script src="notifications.js" defer></script>
 </head>
 <body>
 
@@ -269,8 +302,38 @@ th.col-detail.collapsed .th-inner{display:none}
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
       Elimina
     </button>
+    <button class="btn btn-ghost" id="btn-export-csv" onclick="exportSheetCSV()" data-testid="button-export-csv" style="display:none" title="Esporta dati come CSV">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Esporta CSV
+    </button>
+    <button class="btn btn-ghost" id="btn-print" onclick="window.print()" data-testid="button-print" style="display:none" title="Stampa / Esporta PDF">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Stampa PDF
+    </button>
   </div>
   <span id="toolbar-info" style="font-size:.62rem;color:var(--paper-m);margin-left:auto"></span>
+</div>
+
+<div class="filter-bar" id="filter-bar" style="display:none">
+  <div class="filter-group">
+    <label>Cerca</label>
+    <input type="text" id="filter-search" data-testid="input-filter-search" placeholder="Nome file..." oninput="applyFilters()">
+  </div>
+  <div class="filter-group">
+    <label>Location</label>
+    <select id="filter-location" data-testid="select-filter-location" onchange="applyFilters()">
+      <option value="">Tutte</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>Stato</label>
+    <select id="filter-status" data-testid="select-filter-status" onchange="applyFilters()">
+      <option value="">Tutti</option>
+      <option value="completed">Completate</option>
+      <option value="pending">In corso</option>
+    </select>
+  </div>
+  <button class="filter-clear" onclick="clearFilters()" data-testid="button-clear-filters">Pulisci filtri</button>
 </div>
 
 <div class="sheet-wrap" id="sheet-wrap">
@@ -517,6 +580,9 @@ function switchTab(tab) {
   document.getElementById('btn-toggle-details').style.display = isImg ? '' : 'none';
   document.getElementById('btn-color-selected').style.display = isImg ? '' : 'none';
   document.getElementById('btn-delete-mode').style.display = isImg ? '' : 'none';
+  document.getElementById('filter-bar').style.display = isImg ? 'flex' : 'none';
+  document.getElementById('btn-export-csv').style.display = '';
+  document.getElementById('btn-print').style.display = '';
   if (!isImg && deleteModeOn) { deleteModeOn = false; document.getElementById('sheet-table').classList.remove('delete-mode'); document.getElementById('btn-delete-mode').classList.remove('btn-danger'); document.getElementById('btn-delete-mode').classList.add('btn-ghost'); }
   loadCurrentTab();
 }
@@ -573,19 +639,20 @@ function renderElencoImmagini() {
   document.getElementById('stats-bar').style.display = 'flex';
 
   const dc = detailsCollapsed ? ' collapsed' : '';
-  const totalCols = 11 + columns.length + 3;
+  const totalCols = 12 + columns.length + 3;
   const groups = {};
   columns.forEach(c => {
     if (!groups[c.column_group]) groups[c.column_group] = [];
     groups[c.column_group].push(c);
   });
 
-  let gh = '<tr><th colspan="4"></th><th class="col-detail' + dc + '" colspan="5"></th><th></th>';
+  let gh = '<tr><th colspan="5"></th><th class="col-detail' + dc + '" colspan="5"></th><th></th>';
   Object.keys(groups).forEach(g => { gh += `<th class="group-header" colspan="${groups[g].length}">${g}</th>`; });
   gh += '<th colspan="3"></th><th></th></tr>';
 
   let h = '<tr>';
   h += '<th><div class="th-inner"><input type="checkbox" class="row-select-cb" onchange="toggleSelectAll(this)" data-testid="checkbox-select-all" title="Seleziona tutto"></div></th>';
+  h += '<th><div class="th-inner" style="width:14px"></div></th>';
   h += '<th><div class="th-inner" style="width:20px"></div></th>';
   h += '<th><div class="th-inner">#</div></th><th><div class="th-inner"></div></th>';
   h += `<th class="col-detail${dc}"><div class="th-inner">Location</div></th>`;
@@ -612,8 +679,9 @@ function renderElencoImmagini() {
     const isExpanded = expandedRows.has(img.id);
     const hasRevs = imgRevs.length > 0;
 
-    b += `<tr class="${locBreak && idx > 0 ? 'location-break' : ''}" data-id="${img.id}"${img.row_color ? ' data-color="'+esc(img.row_color)+'"' : ''}>`;
+    b += `<tr class="${locBreak && idx > 0 ? 'location-break' : ''}" data-id="${img.id}" data-idx="${idx}" draggable="true"${img.row_color ? ' data-color="'+esc(img.row_color)+'"' : ''} ondragstart="onDragStart(event)" ondragover="onDragOver(event)" ondragenter="onDragEnter(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)" ondragend="onDragEnd(event)">`;
     b += `<td><div class="cell" style="justify-content:center"><input type="checkbox" class="row-select-cb" data-row-id="${img.id}" onchange="updateSelectionCount()" data-testid="checkbox-row-${img.id}"></div></td>`;
+    b += `<td><div class="cell" style="justify-content:center"><span class="drag-handle" data-testid="drag-handle-${img.id}" title="Trascina per riordinare"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></span></div></td>`;
     b += `<td><div class="cell" style="justify-content:center"><button class="expand-toggle${isExpanded ? ' open' : ''}${hasRevs ? '' : ' no-revs'}" onclick="toggleExpand(${img.id})" title="${hasRevs ? imgRevs.length+' revisioni' : 'Espandi per caricare revisioni'}" data-testid="button-expand-${img.id}">&#9654;</button>${hasRevs ? '<span style="font-size:.46rem;color:var(--accent);margin-left:1px">'+imgRevs.length+'</span>' : ''}</div></td>`;
     b += `<td><div class="cell" style="color:var(--paper-m);font-size:.6rem;text-align:center">${idx+1}</div></td>`;
     b += `<td><div class="row-actions"><button onclick="deleteImageRow(${img.id})" title="Elimina" data-testid="button-delete-row-${img.id}">✕</button></div></td>`;
@@ -659,6 +727,9 @@ function renderElencoImmagini() {
   const locs = new Set(images.map(i => i.location).filter(Boolean));
   document.getElementById('stat-extra').innerHTML = `Location: <span class="stat-val">${locs.size}</span>`;
   document.getElementById('toolbar-info').textContent = images.length ? `${images.length} immagini` : 'Nessuna immagine';
+
+  populateLocationFilter();
+  applyFilters();
 }
 
 function toggleDetailColumns() {
@@ -1394,6 +1465,214 @@ async function initDefaultColumns() {
   const sel = document.getElementById('lm-tipologia');
   TIPOLOGIE.forEach(t => { const o = document.createElement('option'); o.value = t; o.textContent = t; sel.appendChild(o); });
 })();
+
+function exportSheetCSV() {
+  if (!currentJobId) { alert('Seleziona una commessa'); return; }
+  let csvRows = [];
+  if (currentTab === 'elenco_immagini') {
+    const headers = ['#','Location','Sub-location','Frame','Tipo','Orientamento','Nome immagine'];
+    columns.forEach(c => headers.push(c.name));
+    headers.push('% Modifica','Note');
+    csvRows.push(headers);
+    images.forEach((img, idx) => {
+      const pv = img.phase_values || {};
+      const row = [idx+1, img.location||'', img.sub_location||'', img.frame||'', img.tipo||'', img.orientation||'', img.image_name||''];
+      columns.forEach(c => { row.push(pv[c.column_key] !== undefined ? pv[c.column_key] : 0); });
+      row.push(img.percentuale_modifica||'', img.note||'');
+      csvRows.push(row);
+    });
+  } else if (currentTab === 'locations') {
+    csvRows.push(['#','Nome location','Tipologia','Descrizione','Note']);
+    locations.forEach((loc, idx) => {
+      csvRows.push([idx+1, loc.nome_location||'', loc.tipologia||'', loc.descrizione||'', loc.note||'']);
+    });
+  }
+  downloadCSV(csvRows, 'foglio-lavoro-' + currentTab + '.csv');
+}
+
+function downloadCSV(rows, filename) {
+  const csvContent = rows.map(r => r.map(cell => {
+    const s = String(cell == null ? '' : cell);
+    if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+      return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+  }).join(',')).join('\n');
+  const BOM = '\uFEFF';
+  const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ──── DRAG & DROP REORDER ────────────────────────────
+
+let dragSrcRow = null;
+
+function onDragStart(e) {
+  const tr = e.target.closest('tr[data-id]');
+  if (!tr) return;
+  dragSrcRow = tr;
+  tr.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', tr.dataset.id);
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+}
+
+function onDragEnter(e) {
+  e.preventDefault();
+  const tr = e.target.closest('tr[data-id]');
+  if (!tr || tr === dragSrcRow) return;
+  document.querySelectorAll('tr.drag-over, tr.drag-over-below').forEach(r => { r.classList.remove('drag-over'); r.classList.remove('drag-over-below'); });
+  const rect = tr.getBoundingClientRect();
+  const midY = rect.top + rect.height / 2;
+  if (e.clientY < midY) {
+    tr.classList.add('drag-over');
+  } else {
+    tr.classList.add('drag-over-below');
+  }
+}
+
+function onDragLeave(e) {
+  const tr = e.target.closest('tr[data-id]');
+  if (!tr) return;
+  const related = e.relatedTarget ? e.relatedTarget.closest('tr[data-id]') : null;
+  if (related !== tr) {
+    tr.classList.remove('drag-over');
+    tr.classList.remove('drag-over-below');
+  }
+}
+
+function onDragEnd(e) {
+  document.querySelectorAll('tr.dragging, tr.drag-over, tr.drag-over-below').forEach(r => {
+    r.classList.remove('dragging');
+    r.classList.remove('drag-over');
+    r.classList.remove('drag-over-below');
+  });
+  dragSrcRow = null;
+}
+
+function onDrop(e) {
+  e.preventDefault();
+  const targetTr = e.target.closest('tr[data-id]');
+  if (!targetTr || !dragSrcRow || targetTr === dragSrcRow) { onDragEnd(e); return; }
+
+  const dragId = parseInt(dragSrcRow.dataset.id);
+  const targetId = parseInt(targetTr.dataset.id);
+  const dragIdx = images.findIndex(i => i.id === dragId);
+  const targetIdx = images.findIndex(i => i.id === targetId);
+  if (dragIdx < 0 || targetIdx < 0) { onDragEnd(e); return; }
+
+  const rect = targetTr.getBoundingClientRect();
+  const midY = rect.top + rect.height / 2;
+  const insertBelow = e.clientY >= midY;
+
+  const [moved] = images.splice(dragIdx, 1);
+  let newIdx = images.findIndex(i => i.id === targetId);
+  if (insertBelow) newIdx++;
+  images.splice(newIdx, 0, moved);
+
+  images.forEach((img, i) => { img.sort_order = i; });
+
+  onDragEnd(e);
+  renderElencoImmagini();
+  persistOrder();
+}
+
+async function persistOrder() {
+  const orders = images.map((img, i) => ({ id: img.id, sort_order: i }));
+  try {
+    await fetch('/api/foglio-images/reorder', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orders })
+    });
+  } catch(e) { console.error('Reorder save failed:', e); }
+}
+
+// ──── QUICK FILTERS ────────────────────────────
+
+function populateLocationFilter() {
+  const sel = document.getElementById('filter-location');
+  const currentVal = sel.value;
+  const locs = [...new Set(images.map(i => i.location).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">Tutte</option>';
+  locs.forEach(loc => {
+    const o = document.createElement('option');
+    o.value = loc;
+    o.textContent = loc;
+    if (loc === currentVal) o.selected = true;
+    sel.appendChild(o);
+  });
+}
+
+function applyFilters() {
+  const search = (document.getElementById('filter-search').value || '').toLowerCase().trim();
+  const location = document.getElementById('filter-location').value;
+  const status = document.getElementById('filter-status').value;
+
+  const tbody = document.getElementById('sheet-tbody');
+  const rows = tbody.querySelectorAll('tr[data-id]');
+  let visibleCount = 0;
+
+  rows.forEach(row => {
+    const id = parseInt(row.dataset.id);
+    const img = images.find(i => i.id === id);
+    if (!img) return;
+
+    let show = true;
+
+    if (search && !(img.image_name || '').toLowerCase().includes(search)) {
+      show = false;
+    }
+
+    if (location && img.location !== location) {
+      show = false;
+    }
+
+    if (status && columns.length > 0) {
+      const pv = img.phase_values || {};
+      const totalPhases = columns.length;
+      let completedPhases = 0;
+      columns.forEach(c => {
+        const val = pv[c.column_key];
+        if (val && val >= 1) completedPhases++;
+      });
+      const allDone = completedPhases === totalPhases && totalPhases > 0;
+      if (status === 'completed' && !allDone) show = false;
+      if (status === 'pending' && allDone) show = false;
+    }
+
+    row.style.display = show ? '' : 'none';
+    const expandRow = tbody.querySelector(`tr.expand-row[data-expand-for="${id}"]`);
+    if (expandRow) expandRow.style.display = show ? '' : 'none';
+
+    if (show) visibleCount++;
+  });
+
+  const info = document.getElementById('toolbar-info');
+  if (search || location || status) {
+    info.textContent = `${visibleCount} di ${images.length} immagini`;
+  } else {
+    info.textContent = images.length ? `${images.length} immagini` : 'Nessuna immagine';
+  }
+}
+
+function clearFilters() {
+  document.getElementById('filter-search').value = '';
+  document.getElementById('filter-location').value = '';
+  document.getElementById('filter-status').value = '';
+  applyFilters();
+}
 
 loadJobs();
 </script>

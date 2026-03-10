@@ -1,8 +1,3 @@
-// ═══════════════════════════════════════════════════════════════
-// AUTH GUARD - Protegge le pagine riservate
-// ═══════════════════════════════════════════════════════════════
-
-// Show loading overlay
 function showAuthLoading(){
   const overlay=document.createElement('div');
   overlay.id='auth-loading-overlay';
@@ -18,136 +13,102 @@ function showAuthLoading(){
 
 function hideAuthLoading(){
   const overlay=document.getElementById('auth-loading-overlay');
-  if(overlay){
-    overlay.remove();
-  }
+  if(overlay) overlay.remove();
 }
 
-// Check authentication on page load
 (async function checkAuth(){
-  // Skip if on login page
-  if(window.location.pathname.includes('login.html')){
-    return;
-  }
-  
-  // Show loading
+  if(window.location.pathname.includes('login.html')) return;
+
   showAuthLoading();
-  
-  // Wait a bit for supabaseClient to be ready
-  await new Promise(resolve=>setTimeout(resolve,100));
-  
+
   try{
-    if(!supabaseClient){
-      console.error('Supabase client not initialized');
-      window.location.href='login.html';
+    const res = await fetch('/api/auth/user', { credentials: 'include' });
+    if(res.status === 401){
+      window.location.href='/api/login';
       return;
     }
-    
-    const {data,error}=await supabaseClient.auth.getSession();
-    
-    if(error){
-      console.error('Session error:',error);
-      window.location.href='login.html';
+    if(!res.ok){
+      window.location.href='/api/login';
       return;
     }
-    
-    if(!data.session){
-      // Not logged in - redirect to login
-      console.log('No session found - redirecting to login');
-      window.location.href='login.html';
+    const user = await res.json();
+    if(!user || !user.id){
+      window.location.href='/api/login';
       return;
     }
-    
-    // User is logged in - show UI
-    console.log('Session valid - user:',data.session.user.email);
-    initAuthUI(data.session.user);
+    window.__currentUser = user;
+    initAuthUI(user);
     hideAuthLoading();
-    
   }catch(err){
-    console.error('Auth check failed:',err);
-    window.location.href='login.html';
+    console.error('Auth check failed:', err);
+    window.location.href='/api/login';
   }
 })();
 
-// Initialize auth UI elements
 function initAuthUI(user){
-  // Add user info to header if not already present
-  const header=document.querySelector('.header');
-  if(!header){
-    console.warn('No .header element found - skipping UI');
-    return;
-  }
-  
-  if(document.getElementById('auth-user-info')){
-    return; // Already initialized
-  }
-  
-  const userInfo=document.createElement('div');
-  userInfo.id='auth-user-info';
-  userInfo.style.cssText=`
-    display:flex;
-    align-items:center;
-    gap:12px;
-    margin-left:auto;
-    margin-right:12px;
-    padding:8px 16px;
-    background:var(--paper-h);
-    border-radius:8px;
-    border:1px solid var(--paper-l);
+  const header = document.querySelector('.header');
+  if(!header) return;
+  if(document.getElementById('auth-user-info')) return;
+
+  const userInfo = document.createElement('div');
+  userInfo.id = 'auth-user-info';
+  userInfo.style.cssText = `
+    display:flex;align-items:center;gap:12px;
+    margin-left:auto;margin-right:12px;
+    padding:8px 16px;background:var(--paper-h,#16161f);
+    border-radius:8px;border:1px solid var(--paper-l,#24242d);
   `;
-  
-  const userName=user.user_metadata?.full_name||user.email.split('@')[0];
-  const userInitials=userName.split(' ').map(n=>n[0]).join('').toUpperCase().substring(0,2);
-  
-  userInfo.innerHTML=`
-    <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:#fff">
-      ${userInitials}
-    </div>
-    <div style="display:flex;flex-direction:column;gap:2px">
-      <div style="font-size:.75rem;font-weight:600;color:var(--paper-t)">${userName}</div>
-      <div style="font-size:.65rem;color:var(--paper-m)">${user.email}</div>
-    </div>
-    <button onclick="handleLogout()" style="padding:6px 12px;border-radius:6px;background:var(--paper-l);border:1px solid var(--paper-l);color:var(--paper-s);font-size:.7rem;font-weight:600;cursor:pointer;font-family:'Sora',sans-serif;transition:all .15s" onmouseover="this.style.background='var(--paper)'" onmouseout="this.style.background='var(--paper-l)'">
-      Esci
-    </button>
-  `;
-  
-  // Try to insert before navigation buttons, or just append
-  const navButtons=header.querySelector('div:last-child');
-  if(navButtons && navButtons.parentNode===header){
-    header.insertBefore(userInfo,navButtons);
-  }else{
+
+  const displayName = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email?.split('@')[0] || 'Utente';
+  const initials = displayName.split(' ').map(n=>n[0]).join('').toUpperCase().substring(0,2);
+
+  if(user.profileImageUrl){
+    const img = document.createElement('img');
+    img.src = user.profileImageUrl;
+    img.style.cssText = 'width:32px;height:32px;border-radius:50%;object-fit:cover';
+    img.alt = '';
+    userInfo.appendChild(img);
+  } else {
+    const av = document.createElement('div');
+    av.style.cssText = 'width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:#fff';
+    av.textContent = initials;
+    userInfo.appendChild(av);
+  }
+
+  const infoDiv = document.createElement('div');
+  infoDiv.style.cssText = 'display:flex;flex-direction:column;gap:2px';
+  const nameEl = document.createElement('div');
+  nameEl.style.cssText = 'font-size:.75rem;font-weight:600;color:var(--paper-t,#f9fafb)';
+  nameEl.textContent = displayName;
+  const emailEl = document.createElement('div');
+  emailEl.style.cssText = 'font-size:.65rem;color:var(--paper-m,#737889)';
+  emailEl.textContent = user.email || '';
+  infoDiv.appendChild(nameEl);
+  infoDiv.appendChild(emailEl);
+  userInfo.appendChild(infoDiv);
+
+  const logoutBtn = document.createElement('button');
+  logoutBtn.setAttribute('data-testid', 'button-logout');
+  logoutBtn.style.cssText = 'padding:6px 12px;border-radius:6px;background:var(--paper-l,#24242d);border:1px solid var(--paper-l,#24242d);color:var(--paper-s,#cdd0de);font-size:.7rem;font-weight:600;cursor:pointer;font-family:Sora,sans-serif;transition:all .15s';
+  logoutBtn.textContent = 'Esci';
+  logoutBtn.onclick = handleLogout;
+  userInfo.appendChild(logoutBtn);
+
+  const navButtons = header.querySelector('div:last-child');
+  if(navButtons && navButtons.parentNode === header){
+    header.insertBefore(userInfo, navButtons);
+  } else {
     header.appendChild(userInfo);
   }
 }
 
-// Logout handler
-async function handleLogout(){
-  if(!confirm('Vuoi davvero uscire?')){
-    return;
-  }
-  
-  try{
-    await supabaseClient.auth.signOut();
-    window.location.href='login.html';
-  }catch(err){
-    console.error('Logout failed:',err);
-    alert('Errore durante il logout');
-  }
+function handleLogout(){
+  if(!confirm('Vuoi davvero uscire?')) return;
+  window.location.href = '/api/logout';
 }
 
-// Get current user
-async function getCurrentUser(){
-  try{
-    const {data,error}=await supabaseClient.auth.getSession();
-    if(error||!data.session){
-      return null;
-    }
-    return data.session.user;
-  }catch(err){
-    console.error('Get user failed:',err);
-    return null;
-  }
+function getCurrentUser(){
+  return window.__currentUser || null;
 }
 
 console.log('✅ Auth Guard loaded');

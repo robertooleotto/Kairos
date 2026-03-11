@@ -1227,10 +1227,12 @@ export async function registerRoutes(
   app.get("/api/sprint", async (req, res) => {
     const { date } = req.query;
     if (!date) return res.status(400).json({ error: "date required" });
+    console.log(`[sprint] Querying sprint_items for date: '${date}'`);
     const rows = await query(
       "SELECT * FROM sprint_items WHERE sprint_date=$1 ORDER BY column_key, sort_order",
       [date]
     );
+    console.log(`[sprint] Found ${rows.length} items for date '${date}'`);
     res.json(rows);
   });
 

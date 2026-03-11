@@ -317,7 +317,10 @@ function getMonday(d) {
 }
 
 function formatDate(d) {
-  return d.toISOString().split('T')[0];
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
 function formatDateIT(d) {
@@ -399,9 +402,12 @@ async function loadJobs() {
 
 async function loadSprint() {
   document.getElementById('weekLabel').textContent = formatDateIT(currentDate);
+  const dateStr = formatDate(currentDate);
+  console.log('Loading sprint for date:', dateStr);
   try {
-    items = await apiFetch('/api/sprint?date=' + formatDate(currentDate));
-  } catch(e) { items = []; }
+    items = await apiFetch('/api/sprint?date=' + dateStr + '&_t=' + Date.now());
+  } catch(e) { console.error('Sprint load error:', e); items = []; }
+  console.log('Sprint items loaded:', items.length);
   renderBoard();
 }
 

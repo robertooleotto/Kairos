@@ -92,6 +92,15 @@ Project management tool for NuDesign creative studio. Manages jobs (commesse), t
 - **Google Calendar sync**: Sync job phase deadlines to Google Calendar. createEvent/updateEvent/deleteEvent in googleCalendar.ts. Sync status indicator on job detail
 - Team photo upload, Google Calendar availability checking, Gantt with dhtmlxGantt, Review/Proofing with drawing tools and department workflow
 
+## Data Population (Sprint Week 2026-03-09)
+- **43 clients** in `clients` table (40 from PDF + 3 preexisting)
+- **59 commesse/jobs** in `jobs` table (58 from PDF + 1 preexisting Boffi|Catalogo 2026)
+  - All jobs have: `code`, `client`, `name`, `client_id` (FK to clients)
+  - Code format: 3-letter client prefix + 3-letter project (e.g., ILL-CVE, BOF-VRT, GLA-STD)
+- **114 sprint items** for week 2026-03-09 across 17 department columns
+  - Each item: sprint_date, column_key, job_id (FK to jobs), title, assignees, content, sort_order
+  - Includes "IN PROGRAMMAZIONE" items (future planning)
+
 ## Notes
 - The React/Vite setup exists but is not used; app is static HTML
 - Default route (/) serves dashboard.html for authenticated users, index.html for unauthenticated

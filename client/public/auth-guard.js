@@ -8,7 +8,8 @@ function showAuthLoading(){
     z-index:99999;
   `;
   overlay.innerHTML='<div style="text-align:center;color:var(--paper-t,#f9fafb)"><div style="font-size:2rem;margin-bottom:12px">📊</div><div>Caricamento...</div></div>';
-  document.body.appendChild(overlay);
+  const target = document.body || document.documentElement;
+  target.appendChild(overlay);
 }
 
 function hideAuthLoading(){

@@ -11,7 +11,7 @@
   --paper-s:#cdd0de;--paper-m:#737889;--paper-t:#f9fafb;
 }
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);min-height:100vh;overflow:hidden}
+body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);min-height:100vh;overflow:hidden;display:flex;flex-direction:column}
 
 .header{
   display:flex;align-items:center;gap:16px;
@@ -60,16 +60,59 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
 .tb-btn:hover{background:var(--paper-l);color:var(--paper-t)}
 .tb-btn.primary{background:#6366f1;border-color:#6366f1;color:#fff}
 .tb-btn.primary:hover{background:#4f46e5}
+.tb-btn.active{background:var(--paper-l);color:var(--paper-t);border-color:var(--paper-m)}
 .tb-spacer{flex:1}
+
+.filter-bar{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 24px;background:var(--paper-h);
+  border-bottom:1px solid var(--paper-l);
+  overflow-x:auto;
+  flex-shrink:0;
+}
+.filter-bar::-webkit-scrollbar{height:0}
+.filter-label{font-size:.65rem;font-weight:600;color:var(--paper-m);margin-right:4px;white-space:nowrap}
+.filter-pill{
+  padding:4px 10px;border-radius:12px;border:1px solid var(--paper-l);
+  background:transparent;color:var(--paper-m);
+  font-family:'Sora',sans-serif;font-size:.62rem;font-weight:600;
+  cursor:pointer;transition:all .15s;white-space:nowrap;
+  display:flex;align-items:center;gap:4px;
+}
+.filter-pill:hover{background:var(--paper-l);color:var(--paper-t)}
+.filter-pill.active{background:rgba(99,102,241,.2);border-color:#6366f1;color:#a5b4fc}
+.filter-pill .pill-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.filter-pill.all-pill.active{background:rgba(99,102,241,.2);border-color:#6366f1;color:#a5b4fc}
+
+.board-container{
+  position:relative;
+  flex:1;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+.scroll-arrow{
+  position:absolute;top:50%;transform:translateY(-50%);
+  width:32px;height:64px;border:none;border-radius:8px;
+  background:rgba(99,102,241,.85);color:#fff;
+  font-size:1rem;cursor:pointer;z-index:20;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:opacity .2s;
+  backdrop-filter:blur(4px);
+}
+.scroll-arrow:hover{background:rgba(99,102,241,1)}
+.board-container:hover .scroll-arrow.visible{opacity:1}
+.scroll-arrow.left{left:4px}
+.scroll-arrow.right{right:4px}
 
 .board-wrap{
   display:flex;overflow-x:auto;overflow-y:hidden;
-  height:calc(100vh - 110px);
+  height:100%;
   scroll-behavior:smooth;
 }
-.board-wrap::-webkit-scrollbar{height:8px}
-.board-wrap::-webkit-scrollbar-track{background:var(--paper)}
-.board-wrap::-webkit-scrollbar-thumb{background:var(--paper-l);border-radius:4px}
+.board-wrap::-webkit-scrollbar{height:10px}
+.board-wrap::-webkit-scrollbar-track{background:var(--paper-h)}
+.board-wrap::-webkit-scrollbar-thumb{background:#6366f1;border-radius:5px;border:2px solid var(--paper-h)}
 
 .area-group{display:flex;flex-direction:column;flex-shrink:0}
 .area-header{
@@ -206,8 +249,9 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
 .toast.error{background:#ef4444}
 
 @media print{
-  body{overflow:visible!important}
-  .header,.toolbar,.card-actions,.add-btn,.modal-overlay,.toast{display:none!important}
+  body{overflow:visible!important;display:block!important}
+  .header,.toolbar,.filter-bar,.card-actions,.add-btn,.modal-overlay,.toast,.scroll-arrow{display:none!important}
+  .board-container{overflow:visible!important;height:auto!important}
   .board-wrap{overflow:visible!important;height:auto!important;flex-wrap:wrap}
   .sprint-col{min-width:180px;width:auto;page-break-inside:avoid;border:1px solid #ccc}
   .sprint-card{border:1px solid #ddd;break-inside:avoid}
@@ -249,12 +293,21 @@ body{font-family:'Sora',sans-serif;background:var(--paper);color:var(--paper-t);
   </div>
   <button class="tb-btn" onclick="goToday()" data-testid="btn-today">Oggi</button>
   <span class="tb-spacer"></span>
+  <button class="tb-btn" id="btnSortDeadline" onclick="toggleSortDeadline()" data-testid="btn-sort-deadline">📅 Ordina per scadenza</button>
   <button class="tb-btn" onclick="duplicateSprint()" data-testid="btn-duplicate">⧉ Duplica da sett. precedente</button>
   <button class="tb-btn" onclick="exportSprintCSV()" data-testid="btn-export-csv">⬇ CSV</button>
   <button class="tb-btn" onclick="window.print()" data-testid="btn-print">🖨 Stampa</button>
 </div>
 
-<div class="board-wrap" id="boardWrap" data-testid="sprint-board">
+<div class="filter-bar" id="filterBar" data-testid="filter-bar">
+  <span class="filter-label">Reparti:</span>
+</div>
+
+<div class="board-container" id="boardContainer">
+  <button class="scroll-arrow left" id="scrollLeft" onclick="scrollBoard(-400)" data-testid="btn-scroll-left">◀</button>
+  <button class="scroll-arrow right" id="scrollRight" onclick="scrollBoard(400)" data-testid="btn-scroll-right">▶</button>
+  <div class="board-wrap" id="boardWrap" data-testid="sprint-board">
+  </div>
 </div>
 
 <div class="modal-overlay" id="cardModal" data-testid="modal-card">
@@ -306,6 +359,12 @@ let items = [];
 let jobs = [];
 let editingId = null;
 let editingColKey = null;
+let activeFilters = new Set();
+let sortByDeadline = false;
+
+const AREA_LIST = [...new Set(SPRINT_COLUMNS.map(c => c.area))];
+const AREA_COLORS = {};
+SPRINT_COLUMNS.forEach(c => { if (!AREA_COLORS[c.area]) AREA_COLORS[c.area] = c.color; });
 
 function getMonday(d) {
   const dt = new Date(d);
@@ -411,9 +470,138 @@ async function loadSprint() {
   renderBoard();
 }
 
+function initFilters() {
+  const bar = document.getElementById('filterBar');
+  bar.innerHTML = '<span class="filter-label">Reparti:</span>';
+
+  const allBtn = document.createElement('button');
+  allBtn.className = 'filter-pill all-pill active';
+  allBtn.textContent = 'Tutti';
+  allBtn.dataset.testid = 'filter-all';
+  allBtn.onclick = () => {
+    activeFilters.clear();
+    updateFilterUI();
+    renderBoard();
+  };
+  bar.appendChild(allBtn);
+
+  AREA_LIST.forEach(area => {
+    const pill = document.createElement('button');
+    pill.className = 'filter-pill';
+    pill.dataset.area = area;
+    pill.dataset.testid = 'filter-' + area.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+
+    const dot = document.createElement('span');
+    dot.className = 'pill-dot';
+    dot.style.background = AREA_COLORS[area];
+    pill.appendChild(dot);
+
+    const txt = document.createTextNode(area);
+    pill.appendChild(txt);
+
+    const count = document.createElement('span');
+    count.className = 'pill-count';
+    count.style.cssText = 'font-size:.55rem;opacity:.6;margin-left:2px';
+    pill.appendChild(count);
+
+    pill.onclick = () => {
+      if (activeFilters.has(area)) {
+        activeFilters.delete(area);
+      } else {
+        activeFilters.add(area);
+      }
+      updateFilterUI();
+      renderBoard();
+    };
+    bar.appendChild(pill);
+  });
+}
+
+function updateFilterUI() {
+  const bar = document.getElementById('filterBar');
+  const allBtn = bar.querySelector('.all-pill');
+  const pills = bar.querySelectorAll('.filter-pill:not(.all-pill)');
+
+  if (activeFilters.size === 0) {
+    allBtn.classList.add('active');
+  } else {
+    allBtn.classList.remove('active');
+  }
+
+  pills.forEach(pill => {
+    const area = pill.dataset.area;
+    const count = SPRINT_COLUMNS.filter(c => c.area === area)
+      .reduce((sum, c) => sum + items.filter(i => i.column_key === c.key).length, 0);
+    const countEl = pill.querySelector('.pill-count');
+    if (countEl) countEl.textContent = count > 0 ? `(${count})` : '';
+
+    if (activeFilters.has(area)) {
+      pill.classList.add('active');
+    } else {
+      pill.classList.remove('active');
+    }
+  });
+
+  document.getElementById('btnSortDeadline').classList.toggle('active', sortByDeadline);
+}
+
+function toggleSortDeadline() {
+  sortByDeadline = !sortByDeadline;
+  updateFilterUI();
+  renderBoard();
+}
+
+function extractDeadline(item) {
+  const content = (item.content || '').toLowerCase();
+  const patterns = [
+    /scadenza[:\s]*(\w+)\s+(\d{1,2})/i,
+    /deadline[:\s]*(\w+)\s+(\d{1,2})/i,
+    /entro[:\s]*(\w+)\s+(\d{1,2})/i,
+    /(lun|mar|mer|gio|ven|sab|dom)\s+(\d{1,2})/i,
+  ];
+  for (const pat of patterns) {
+    const m = content.match(pat);
+    if (m) {
+      const dayNum = parseInt(m[2]);
+      if (dayNum >= 1 && dayNum <= 31) return dayNum;
+    }
+  }
+
+  if (item.job_id) {
+    const job = jobs.find(j => j.id === item.job_id);
+    if (job && job.due_date) {
+      const d = new Date(job.due_date);
+      return d.getDate();
+    }
+  }
+  return 99;
+}
+
+function scrollBoard(delta) {
+  const wrap = document.getElementById('boardWrap');
+  wrap.scrollBy({ left: delta, behavior: 'smooth' });
+}
+
+function updateScrollArrows() {
+  const wrap = document.getElementById('boardWrap');
+  const leftBtn = document.getElementById('scrollLeft');
+  const rightBtn = document.getElementById('scrollRight');
+  if (!wrap || !leftBtn || !rightBtn) return;
+
+  leftBtn.classList.toggle('visible', wrap.scrollLeft > 10);
+  rightBtn.classList.toggle('visible', wrap.scrollLeft < wrap.scrollWidth - wrap.clientWidth - 10);
+}
+
+function getVisibleColumns() {
+  if (activeFilters.size === 0) return SPRINT_COLUMNS;
+  return SPRINT_COLUMNS.filter(c => activeFilters.has(c.area));
+}
+
 function renderBoard() {
   const wrap = document.getElementById('boardWrap');
   wrap.innerHTML = '';
+
+  const visibleCols = getVisibleColumns();
 
   const grouped = {};
   SPRINT_COLUMNS.forEach(c => { grouped[c.key] = []; });
@@ -422,7 +610,7 @@ function renderBoard() {
   });
 
   let prevArea = '';
-  SPRINT_COLUMNS.forEach(col => {
+  visibleCols.forEach(col => {
     const colDiv = document.createElement('div');
     colDiv.className = 'sprint-col';
     colDiv.dataset.colKey = col.key;
@@ -443,6 +631,11 @@ function renderBoard() {
       nameSpan.appendChild(areaTag);
       prevArea = col.area;
     }
+
+    const countBadge = document.createElement('span');
+    countBadge.style.cssText = 'font-size:.6rem;background:' + col.color + '22;color:' + col.color + ';padding:1px 6px;border-radius:8px;font-weight:700';
+    countBadge.textContent = grouped[col.key].length;
+    header.appendChild(countBadge);
 
     const addBtn = document.createElement('button');
     addBtn.className = 'add-btn';
@@ -473,7 +666,13 @@ function renderBoard() {
       if (cardId) moveCard(parseInt(cardId), col.key);
     });
 
-    const colItems = grouped[col.key].sort((a,b) => a.sort_order - b.sort_order);
+    let colItems = grouped[col.key];
+    if (sortByDeadline) {
+      colItems = colItems.slice().sort((a, b) => extractDeadline(a) - extractDeadline(b));
+    } else {
+      colItems = colItems.slice().sort((a, b) => a.sort_order - b.sort_order);
+    }
+
     if (colItems.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'empty-col';
@@ -488,6 +687,9 @@ function renderBoard() {
     colDiv.appendChild(body);
     wrap.appendChild(colDiv);
   });
+
+  updateFilterUI();
+  setTimeout(updateScrollArrows, 100);
 }
 
 function createCard(item, col) {
@@ -737,6 +939,10 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeModal();
 });
 
+initFilters();
+const boardWrap = document.getElementById('boardWrap');
+boardWrap.addEventListener('scroll', updateScrollArrows);
+window.addEventListener('resize', updateScrollArrows);
 Promise.all([loadJobs(), loadClients()]).then(() => loadSprint());
 </script>
 </body>

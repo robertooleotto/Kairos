@@ -368,6 +368,21 @@ function goToday() {
   loadSprint();
 }
 
+let clientsMap = {};
+async function loadClients() {
+  try {
+    const cls = await apiFetch('/api/clients');
+    cls.forEach(c => { clientsMap[c.name] = c; });
+  } catch(e) {}
+}
+function getClientLogoHtml(clientName) {
+  const c = clientsMap[clientName];
+  if (!c) return '';
+  const src = c.logo_url || c.logo;
+  if (!src || !src.startsWith('/')) return '';
+  return `<img src="${src}" alt="" style="width:16px;height:16px;object-fit:contain;border-radius:3px;background:#fff;padding:1px;margin-right:4px;vertical-align:middle">`;
+}
+
 async function loadJobs() {
   try {
     jobs = await apiFetch('/api/jobs');
@@ -506,6 +521,15 @@ function createCard(item, col) {
   actions.appendChild(moveBtn);
   actions.appendChild(delBtn);
   card.appendChild(actions);
+
+  const clientName = (item.title || '').split('|')[0].trim();
+  const logoHtml = getClientLogoHtml(clientName);
+  if (logoHtml) {
+    const logoSpan = document.createElement('span');
+    logoSpan.innerHTML = logoHtml;
+    logoSpan.style.cssText = 'display:inline-block;margin-bottom:2px';
+    card.appendChild(logoSpan);
+  }
 
   const titleDiv = document.createElement('div');
   titleDiv.className = 'card-title';
@@ -707,8 +731,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeModal();
 });
 
-loadJobs();
-loadSprint();
+Promise.all([loadJobs(), loadClients()]).then(() => loadSprint());
 </script>
 </body>
 </html>

@@ -1044,7 +1044,7 @@ function renderJobs(){
       <div class="job-code" onclick="openJobDetail('${j.id}')">
         <span class="job-emoji">${emoji}</span>${j.code}
       </div>
-      <div class="job-client" onclick="openJobDetail('${j.id}')">${j.client}</div>
+      <div class="job-client" onclick="openJobDetail('${j.id}')">${getClientLogo(j.client)}${j.client}</div>
       <div onclick="openJobDetail('${j.id}')">
         <span class="job-type type-${j.type}">${j.type}</span>
         <span class="prio-badge prio-${j.prio}">${j.prio}</span>
@@ -1427,6 +1427,13 @@ async function togglePhaseComplete(jobId,phaseId,completed){
 
 let CLIENTS_LIST=[];
 let COLLABS_LIST=[];
+function getClientLogo(clientName){
+  const c=CLIENTS_LIST.find(cl=>cl.name===clientName);
+  if(!c)return '';
+  const src=c.logo_url||c.logo;
+  if(!src||!src.startsWith('/'))return '';
+  return `<img src="${src}" alt="" style="width:20px;height:20px;object-fit:contain;border-radius:4px;background:#fff;padding:1px;margin-right:6px;vertical-align:middle">`;
+}
 let EDITING_JOB=null;
 
 async function loadFormData(){
@@ -1613,7 +1620,7 @@ async function syncJobToGoogleCalendar(jobId){
 
 async function init(){
   document.getElementById('jobs-list').innerHTML='<div class="empty-state">Caricamento commesse...</div>';
-  await loadData();
+  await Promise.all([loadData(), loadFormData()]);
   filteredJobs=[...JOBS];
   const clientFilter=document.getElementById('filter-client');
   clientFilter.innerHTML='<option value="">Tutti i clienti</option>';

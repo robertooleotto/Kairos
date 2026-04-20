@@ -1,18 +1,26 @@
-// Google Calendar Integration (Replit Connector)
+// Google Calendar Integration
 import { google } from 'googleapis';
 
 let connectionSettings: any;
 
+function isReplitEnvironment() {
+  return !!(process.env.REPL_IDENTITY || process.env.WEB_REPL_RENEWAL);
+}
+
 async function getAccessToken() {
+  if (!isReplitEnvironment()) {
+    throw new Error('Google Calendar non configurato in questo ambiente');
+  }
+
   if (connectionSettings && connectionSettings.settings.expires_at && new Date(connectionSettings.settings.expires_at).getTime() > Date.now()) {
     return connectionSettings.settings.access_token;
   }
-  
+
   const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
-  const xReplitToken = process.env.REPL_IDENTITY 
-    ? 'repl ' + process.env.REPL_IDENTITY 
-    : process.env.WEB_REPL_RENEWAL 
-    ? 'depl ' + process.env.WEB_REPL_RENEWAL 
+  const xReplitToken = process.env.REPL_IDENTITY
+    ? 'repl ' + process.env.REPL_IDENTITY
+    : process.env.WEB_REPL_RENEWAL
+    ? 'depl ' + process.env.WEB_REPL_RENEWAL
     : null;
 
   if (!xReplitToken) {

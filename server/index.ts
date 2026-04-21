@@ -63,6 +63,16 @@ app.use((req, res, next) => {
   next();
 });
 
+// Prevent unhandled promise rejections and exceptions from crashing the process
+process.on('unhandledRejection', (reason: any, promise: any) => {
+  console.error('[unhandledRejection]', reason?.message || reason);
+  // Do NOT re-throw - just log and continue
+});
+process.on('uncaughtException', (err: any) => {
+  console.error('[uncaughtException]', err?.message || err);
+  // Do NOT exit - just log
+});
+
 (async () => {
   await setupAuth(app);
   registerAuthRoutes(app);

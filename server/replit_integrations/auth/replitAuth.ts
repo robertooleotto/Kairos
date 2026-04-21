@@ -2,20 +2,18 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import session from "express-session";
 import type { Express, RequestHandler } from "express";
-import connectPg from "connect-pg-simple";
+import MemoryStore from "memorystore";
 
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
-  const pgStore = connectPg(session);
-  const sessionStore = new pgStore({
-    conString: process.env.DATABASE_URL,
-    createTableIfMissing: false,
-    ttl: sessionTtl,
-    tableName: "sessions",
-  });
+  const secret = process.env.SESSION_SECRET || "kairos-dev-secret-change-me";
+
+  // Use in-memory session store to avoid startup DB connection issues
+  // Sessions are valid until server restarts - acceptable for this app
+  const MemStore = MemoryStore(session);
   return session({
-    secret: process.env.SESSION_SECRET || "kairos-dev-secret-change-me",
-    store: sessionStore,
+    secret,
+    store: new MemStore({ checkPeriod: sessionTtl }),
     resave: false,
     saveUninitialized: false,
     cookie: {

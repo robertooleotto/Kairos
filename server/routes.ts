@@ -29,26 +29,9 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  await query(`CREATE TABLE IF NOT EXISTS revision_comments (
-    id SERIAL PRIMARY KEY,
-    revision_id INTEGER NOT NULL REFERENCES foglio_revisions(id) ON DELETE CASCADE,
-    author_id INTEGER,
-    author_name VARCHAR(255),
-    content TEXT,
-    pin_x REAL,
-    pin_y REAL,
-    resolved BOOLEAN DEFAULT false,
-    parent_comment_id INTEGER,
-    shape_type TEXT,
-    shape_data JSONB,
-    department_id TEXT,
-    sent BOOLEAN DEFAULT false,
-    created_at TIMESTAMP DEFAULT NOW()
-  )`);
-  await query(`ALTER TABLE revision_comments ADD COLUMN IF NOT EXISTS shape_type TEXT`);
-  await query(`ALTER TABLE revision_comments ADD COLUMN IF NOT EXISTS shape_data JSONB`);
-  await query(`ALTER TABLE revision_comments ADD COLUMN IF NOT EXISTS department_id TEXT`);
-  await query(`ALTER TABLE revision_comments ADD COLUMN IF NOT EXISTS sent BOOLEAN DEFAULT false`);
+  // DB migrations are now in database-init.sql - run manually via Railway SQL editor
+  // Do NOT run migration queries at startup to avoid crashing if DB is temporarily unavailable
+  console.log("[startup] routes initializing...");
 
   app.get("/", (req: any, res) => {
     const publicPath = path.resolve(process.cwd(), "client/public");
@@ -59,7 +42,9 @@ export async function registerRoutes(
     }
   });
 
-  app.use("/uploads", (await import("express")).default.static(uploadsDir));
+  // Serve uploaded files (static middleware)
+  const expressForStatic = (await import("express")).default;
+  app.use("/uploads", expressForStatic.static(uploadsDir));
 
   app.post("/api/upload-avatar", (req, res) => {
     upload.single("avatar")(req, res, (err) => {
@@ -1065,7 +1050,7 @@ export async function registerRoutes(
     res.json({ ok: true });
   });
 
-  await query(`CREATE TABLE IF NOT EXISTS calendar_sync_events (
+  try { await query(`CREATE TABLE IF NOT EXISTS calendar_sync_events (
     id SERIAL PRIMARY KEY,
     job_id INTEGER NOT NULL,
     phase_id INTEGER NOT NULL,
@@ -1073,7 +1058,7 @@ export async function registerRoutes(
     google_event_id TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
-  )`);
+  )`); } catch(e: any) { console.error("[startup] calendar_sync_events migration warning:", e.message); }
 
   app.post("/api/calendar/sync-job/:jobId", async (req, res) => {
     try {
@@ -1176,7 +1161,7 @@ export async function registerRoutes(
     }
   });
 
-  await query(`CREATE TABLE IF NOT EXISTS notifications (
+  try { await query(`CREATE TABLE IF NOT EXISTS notifications (
     id SERIAL PRIMARY KEY,
     user_email VARCHAR(255),
     type VARCHAR(50) NOT NULL,
@@ -1185,7 +1170,7 @@ export async function registerRoutes(
     link VARCHAR(500),
     read BOOLEAN DEFAULT false,
     created_at TIMESTAMP DEFAULT NOW()
-  )`);
+  )`); } catch(e: any) { console.error("[startup] notifications migration warning:", e.message); }
 
   app.get("/api/notifications", async (req: any, res) => {
     const email = req.user?.claims?.email || null;
@@ -1210,7 +1195,7 @@ export async function registerRoutes(
     res.json({ ok: true });
   });
 
-  await query(`CREATE TABLE IF NOT EXISTS sprint_items (
+  try { await query(`CREATE TABLE IF NOT EXISTS sprint_items (
     id SERIAL PRIMARY KEY,
     sprint_date DATE NOT NULL,
     column_key TEXT NOT NULL,
@@ -1221,8 +1206,8 @@ export async function registerRoutes(
     sort_order INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
-  )`);
-  await query(`CREATE INDEX IF NOT EXISTS idx_sprint_items_date ON sprint_items(sprint_date, column_key, sort_order)`);
+  )`); } catch(e: any) { console.error("[startup] sprint_items migration warning:", e.message); }
+  try { await query(`CREATE INDEX IF NOT EXISTS idx_sprint_items_date ON sprint_items(sprint_date, column_key, sort_order)`); } catch(e: any) { console.error("[startup] sprint index warning:", e.message); }
 
   app.get("/api/sprint", async (req, res) => {
     const { date } = req.query;

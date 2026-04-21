@@ -77,7 +77,7 @@ process.on('uncaughtException', (err: any) => {
   await setupAuth(app);
   registerAuthRoutes(app);
 
-  const publicApiPaths = ['/api/login', '/api/callback', '/api/logout', '/api/auth/user'];
+  const publicApiPaths = ['/api/login', '/api/callback', '/api/logout', '/api/auth/user', '/api/health'];
   app.use((req: any, res, next) => {
     const reqPath = req.path;
     if (reqPath.startsWith('/api/') && !publicApiPaths.includes(reqPath)) {

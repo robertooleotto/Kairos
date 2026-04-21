@@ -33,6 +33,11 @@ export async function registerRoutes(
   // Do NOT run migration queries at startup to avoid crashing if DB is temporarily unavailable
   console.log("[startup] routes initializing...");
 
+  // Dedicated healthcheck endpoint - always returns 200, no auth required
+  app.get("/api/health", (_req, res) => {
+    res.json({ status: "ok" });
+  });
+
   app.get("/", (req: any, res) => {
     const publicPath = path.resolve(process.cwd(), "client/public");
     if (req.isAuthenticated && req.isAuthenticated()) {
